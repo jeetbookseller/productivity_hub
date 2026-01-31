@@ -134,6 +134,83 @@ The original PWA implementation (v9.2.1) used blob URLs for both the web app man
 - "X selected" counter
 - Clear selection option
 
+
+### 2. 🔍 Global "Command Palette" Search (High Priority)
+**Goal:** Allow users to instantly find tasks, notes, or lists without navigating tabs.
+**UI Pattern:** `Ctrl+K` / `Cmd+K` modal.
+
+### Implementation Plan
+- [ ] **Create Component:** `<CommandPalette isOpen={...} onClose={...} />`
+- [ ] **State Management:**
+  - Track `query` string.
+  - Filter `todos`, `notes`, `lists`, and `reminders` arrays based on `query`.
+- [ ] **Keyboard Listener:** Add `window.addEventListener('keydown')` to toggle visibility on `Ctrl+K`.
+- [ ] **Action Logic:**
+  - Clicking a **Task** → Switches to "To-Do" tab, expands quadrant.
+  - Clicking a **Note** → Switches to "Notes" tab, opens Edit Modal.
+  - Clicking a **List** → Switches to "Lists" tab, selects that list.
+
+
+### 3. 🔁 Recurring Tasks (Critical Logic)
+**Goal:** Automate the creation of repetitive tasks (e.g., "Pay Rent", "Weekly Review").
+**Current Gap:** Tasks are one-off only.
+
+### Implementation Plan
+- [ ] **Data Model Update:** Add `recurrence` field to Todo items (`'daily' | 'weekly' | 'monthly'`).
+- [ ] **UI Update:** Add a dropdown in the `EditModal` (Task type) to select recurrence.
+- [ ] **Logic Hook:**
+  - Inside the main `useEffect` (on app load):
+  - Iterate through completed tasks with `recurrence`.
+  - Check `lastCompletedDate`.
+  - If due for renewal:
+    1. Clone the task.
+    2. Set new `id` (using `uid()`).
+    3. Update `deadline` based on interval.
+    4. Set `done: false`.
+    5. Save to `todos` state.
+
+
+### 4. 📝 Markdown Support for Notes
+**Goal:** Allow rich text formatting (bold, lists, headers) in Notes without adding heavy libraries.
+**Constraint:** Must be lightweight (Regex-based).
+
+### Implementation Plan
+- [ ] **Parser Function:** Create a `parseMarkdown(text)` function using Regex:
+  - `**bold**` → `<strong>`
+  - `# Header` → `<h1>`
+  - `- List item` → `<li>`
+- [ ] **UI Toggle:** Add a "Preview / Edit" toggle button in the Note card/modal.
+- [ ] **Sanitization:** Ensure basic HTML escaping to prevent XSS (since we are rendering raw HTML).
+
+
+
+### 5. 🖱️ Eisenhower Matrix Drag-and-Drop
+**Goal:** Allow moving tasks between quadrants (e.g., from "Schedule" to "Do First") via drag-and-drop.
+**Current State:** D&D only exists in Focus Queue.
+
+### Implementation Plan
+- [ ] **Draggable Items:** Add `draggable="true"` to Matrix task cards.
+- [ ] **Drop Zones:** Make the 4 Quadrant containers (`Do First`, `Schedule`, etc.) valid drop targets (`onDragOver`, `onDrop`).
+- [ ] **Update Logic:**
+  - On Drop: Identify `sourceId` and `targetQuad`.
+  - Update the task's `quad` property in the `todos` state.
+  - Persist change via `S.set()`.
+
+
+
+### 6. 🔥 Streak & Heatmap Visualization
+**Goal:** Increase user retention with a visual "Don't Break the Chain" graph.
+**Location:** "Stats" tab.
+
+### Implementation Plan
+- [ ] **Data Structure:** Utilize the existing `dHist` (Daily History) array.
+- [ ] **Grid Component:** Render a 7x5 grid of small squares (last 35 days).
+- [ ] **Color Logic:**
+  - 0 tasks/poms: `bg-sand-200` (Gray)
+  - 1-3 tasks: `bg-sage-200` (Light Green)
+  - 4-8 tasks: `bg-sage-300` (Medium Green)
+  - 9+ tasks: `bg-sage-500` (Dark Green)
+
 ---
 
 ## 📝 Feature Specifications
