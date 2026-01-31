@@ -1,0 +1,31 @@
+{
+  "name": "Productivity Hub",
+  "short_name": "Productivity",
+  "description": "Focus timer, tasks, lists, reminders & notes - all in one place",
+  "id": "productivity-hub-pwa",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F5F0",
+  "theme_color": "#7CB69D",
+  "prefer_related_applications": false,
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
