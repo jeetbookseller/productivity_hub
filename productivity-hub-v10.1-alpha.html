@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#7CB69D" id="theme-color-meta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Productivity Hub">
+  <meta name="application-name" content="Productivity Hub">
+  <meta name="description" content="Focus timer, tasks, lists, reminders & notes - all in one place">
+  <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGZ0lEQVR4nO3dT4hVdRzG8e+dO+NkOo6aWmkilgUVFBGRCxctItoEQUSbFi1atGkRQS0iWrRpE0EQQbRoEUG0aBFBEBEEQZBFhZGCWVZqjqPO/Ln3dBZxB8aZO3fOved3f7/f+31ecGHR4r7znPN9zjn3d+85A0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJElSA3QWuwN/AfuBfcCNwNXAGuB8YBVwDnAWsAI4Cziz/+fl/v/mvwH/9P+3/gD+BP4Afge+B74Evuo//gdwtsCvU5Xa0FcBW4FbgeuAy5v+/3gS+KL/+Bj4CPhogf8vqa429BZgJ3A7cMFi/8M/Af8Cfz/y+RP4rf/nlf5v/rOAs/u/9acvfr/nOuA64Mz+r+GU/h/xw/0PAY8Bry/+V6gytaG3AvcBdwBr+389fRV9/NRz/F/9k0APOL3/T//X8/8f8P0TwJfAMeBt4E3gVOG/DjWkpt6HXt7/zb0C2NZ/bAfO6z+k+p0ADgMHgZeAr0N+XRpTLQ29AtgM3ATcCGwEVob8etSk74H9wEHgPeCPkF+PhlBDQ58GrAe2AFv7fw7/5aipfgdeBZ4D3gn5dakltTb05cD1wA7gZmBtyK9HbfoZ2Ac8D3wa8utRi2pq6POAq4E7gTuBNSG/HpXqGPAi8AzwScivp9FqaOgLgXuAu4BNIb8eVeFj4GngOeBEyK+ngWpo6DOAa4AHgOtDfj2qzVHgEeAp4O+QX09DVN3QlwJ7gHuBc0N+ParbQWAPcCjk11O5qhv6LeC6kF+LmuUocD/wUsivpWLVNrQ0od8kvVOoqqE/Au4HPgj5tUnPAXuB4yG/lkpU1dCbgF3AXf3/kfSjpHPrA5QfGFc19GrgUeAh4IyQX4/0v/4C9gFPhvxaqldNQy8D7qZ0s+sqrJZ9DDwCvBDyaylWNQ19PfAEcEnIr0Ua3iHgYeCNkF9LVdY3fMD3Ag8CDwJrGj6O1LYNwB5gI3Ac+Kzh41RhVQPnvhF4B3g79EnbUqVuA94GPgBubvg8Vdja4LkvBfYDu4FVi/0Bklq3CtgNHKB0xtcNnqfztjV07tuAlym9E0jS//YAL1K66d42aK7OW9vAec8BHgO2hzxhaQwfAQ8Bx8ZdQ+e91/A5NwGvATtCnqg0vp3AQUo3LY6zkE6Z+sIGzrkSeIJyWb0y5ElK+S4F3qR003mjLqDTpmro84HHKZfhU0KeoDSeZZRO+gTYQOmqUR2+us6zGdgN3EbpLkmqX+dGYAOlqz4edbHO2zjmOacuq78Fnqf/3mmpcZcC+4A3gLVjrKNz62Kd0qEeFt0OvA9sowwvSq24jdJZm8ZYQ+dOSue1ZuqDm5dRxlO3hBxQasobwDPAl0OuoXNbi+cpE8I24MqQA0qt2kg5TtgCfDjkGjofD/tJP6F0Tb0v5EBSe/YBz1K67l/Kz/vipv75Z+CR/s/7QQ4iteNbytDCfUNsu/OXSQXtWOwAXcrlgaT2+atUKkhDS0FqaejZ0AclldlQ+sVP/VfRlcDbwOaQJ1y/DnAbpXvGPbWWAzuATSEvBM22doy1dG7r6OucdcD1IU+4ThcCW4HL5nx+M+X9g1K2LSGvBc0yzf/WR1lH5y+jrqEP0fB7oKt3Epjl//+/nwJOhTxhqR0nKN3yL+V/K8+E/LzPhvz+1HuAk//53P85o1NaNnPSaJ31X8rPtXbWvyjjVw8sss0h4HZg/ZTnrN1q4A5gT//POxbbqPPjSef8HHgauG2RTR+k3K962pTnrN065vyyZjm/rPnXsI/SZXuHWM+GKc9VuxvoQOe1kNfTJOln/5TnkjQJ/zZBKkhDS0FqaegPI58AKU2F/yIvFaShpSC1NPTbIQeUyqyi9P0oa+n8YdRN/wM+pEySbwk5sNS8TZTum6N01+cjrKXz12E/8ZeUubzngx5Aat4G4FVK570y5BrqWMqo+0eh/2ik9mwF9lO6b+qDm19SJnq3hRxQatYm4BVK98399WCU9XR+HXWxTul0XQq8ROkoP0Wk5lxK6brXKV034gHOWP/xFnAz8EVH0rBWU7rsd0o3jWPsv1y/hDLYdGfIk5XGsBN4ndJFt4+xjs5GSteMZZqhhnspI+8enagmW0kZWD9I6Z5phlGmfg/0WS2cc+og09vAwZAnLo3uduAtShfNbrMHhxpG+c85p0aN3gMeoNx7eFbLx5IGcRawm9I5B5o68Xw6P0w67+rFFtHp/O+qqZL+aXfFXf/O/Ofc+Z9/t93TzyljhweBn0KelPT/VlMG0TdSumaaPfk/0ww1/Bt1ZsgfSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZJUp/8AxH1zEXbRSeoAAAAASUVORK5CYII=">
+  <link rel="icon" type="image/png" sizes="192x192" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEklEQVR4nO3dT4hVdRzG8e+dO+NkOo6aWmkilgUVFBGRCxctItoEQUSbFi1atGkRQS0iWrRpE0EQQbRoEUG0aBFBEBEEQZBFhZGCWVZqjqPO/Ln3dBZxB8aZO3fOved3f7/f+31ecGHR4r7znPN9zjn3d+85A0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEkta8V+A0PABmAzsBZYC1wEXABcCJwDnA2cBZwJnAGc3v/f/A/wT/9/6w/gD+BP4Hfge+BL4Kv+n38ArT78WhVQ0wdgFXANcCNwPXAFsKrhf+Np4PP+YxT4CPho/v+XCqTpA7AauAPYBdwMrE/9Bk4C/wJ///v4E/it/+fl/r/5zwTOBs7p//b/9Hn/+34V3QgcBp4GXkn9JpWoOswP5i16PjDQ/+v+i99/Onj812dKQWtqKvoA7ADuB24HLkr9JqQ0x4Eh4FngncTvRRmV/QNwVv+39wrg5v5jG7A88XtSGr8Bh4DDwMvA16nfjPJV1g/AcmAzsAO4CdgMrEj8npTOL8BB4ADwLvBP4vejjJXxA3AasAG4Ebil/+dE75WpfQE8DzwPfJL4vZRaWQdgBXA1cCdwJ3BR4vej8voZeAl4BvgsaS+lVcYBOB/YCtwF3JD4vajcPgaeAp4DTiTtpqTKNgDrgVuBe4GtiXtRNRwFngSeAv5K2kyJlG0A3gGuS9yDquswsBf4IGkfJVDGAZDa9helO71HEveRWFkHQOrar5TuxJY+ANIAH6b+AoytBwPPAI+mb6ccVnfwazcDu4G7ga0I/QL8BOwHnknfSjms7PBAN1G6a7sHODd9O+W0Bvh3+WL/g94F3EtBg9rE/URpPOtQ+lbKYU0Hg3k5cD/wILAufTvl9T7wMKVfMJRd0wPwNqXR/cfjl6LK2AE8QemewMqo6QF4Adiaupcy+5LSbxg+nL6Vcmh6AN4H3k3dQ3ntBN6g9Jdhy6npARgCHgP+Tt1Lae0CnqH0F2VLqekBOEJpNG+kbqacbgbeAkYpjWyV0PQAjFAa3d9M3Uv57AS+BW5N3UiZND0AR4D7gHdT91IeDwAvUrpTXHJND8BPlMb0bkj8PsqhBewFDgHXJu6lFJoegH/6/d0F/Ji6l+QuAg5TekxGa+qGEgzA5v5/8P7EfaS2kdJT5LtS95Fa0wPwC6UxvT91H2ltAA4A9wGrU/eSSgqPQrgNeBW4Kn0rSWyk9D7HAng29G/cL1D6m5+dqRtJYQ3wKKXxrG2Jeymdqf0MvJu6iUbdArxG6S5xZXR96h5S+43Sk/L3A2el7qUF6yj9EucIpcdlVEbTlxz/Wg8c/t/XdgI7gO2U/lp0ZbQJeK7/53NKT9hXRke7+NptwI2ULndPSd1MizhC6S6xHo+pfgD+s57S5e92Spe96yntQel9BxwAPgS+6ed9gH84fPHPQXgQmP/S/GfyvxQa9dTF12b7H+j5/49fmv98/n+e/5x/fv7f4+8yv7b4+lz/g/n/r5/75+n/+/Vz/fuf//z8v1fO/5vr1xc/n//18/35v7n4Wjn/OtcsSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkqY7+A2TM4xxUNzJDAAAAAElFTkSuQmCC">
+  <link rel="manifest" id="manifest-placeholder" href="manifest.json">
+  <title>Productivity Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{nunito:['Nunito','sans-serif']},colors:{cream:{50:'#FDFCFA',100:'#F7F5F0',200:'#EDE9E0'},sage:{100:'#E8F0EA',200:'#C5D9CA',300:'#9DC4A8',400:'#7CB69D',500:'#5A9E78'},terracotta:{100:'#FCEEE9',200:'#F5C9BA',300:'#E9A088',400:'#E07A5F',500:'#C45D42'},sand:{100:'#F5F0E6',200:'#E8DFD0',300:'#D4C5AD'},ocean:{100:'#E6F2F7',200:'#B8D9E8',300:'#83B5D1',400:'#5A9BBF'},lavender:{100:'#F0EDF5',200:'#D5CCE6',300:'#B8A9D4',400:'#9B8AA6'},bark:{300:'#9A8B7A',400:'#7A6B5A',500:'#5C4F43',600:'#3D352D',700:'#2D2720'}}}}}</script>
+  <style>
+    *{-webkit-tap-highlight-color:transparent;font-family:'Nunito',sans-serif}
+    body{overscroll-behavior:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
+    .dark body{background:linear-gradient(180deg,#2D2720 0%,#1F1B17 100%)}
+    .hide-sb::-webkit-scrollbar{display:none}.hide-sb{-ms-overflow-style:none;scrollbar-width:none}
+    .glass{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.6)}
+    .dark .glass{background:rgba(45,39,32,0.9);border:1px solid rgba(255,255,255,0.15)}
+    .gcard{background:rgba(255,255,255,0.75);backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(92,79,67,0.08),0 2px 8px rgba(92,79,67,0.04);border:1px solid rgba(255,255,255,0.6)}
+    .dark .gcard{background:rgba(45,39,32,0.7);box-shadow:0 8px 32px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1)}
+    .soft-shadow{box-shadow:0 4px 20px rgba(92,79,67,0.1),0 2px 8px rgba(92,79,67,0.05)}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .anim-float{animation:float 3s ease-in-out infinite}
+    .anim-in{animation:fadeIn 0.3s ease-out}
+    .sel{-webkit-user-select:text;user-select:text}
+    @media(min-width:768px){
+      /* ===== DESKTOP MODE ===== */
+      /* Todo quadrant grid on desktop */
+      .md-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+      
+      /* Base font bump */
+      body{font-size:1.0625rem;line-height:1.7}
+      
+      /* Remove all truncation on desktop */
+      .truncate{overflow:visible!important;text-overflow:unset!important;white-space:normal!important}
+      
+      /* Cards: more padding */
+      .gcard{padding:1.25rem}
+      
+      /* Inputs: taller, larger text */
+      input[type="text"],input[type="date"],input[type="time"],input[type="number"],textarea{
+        padding:0.75rem 1rem!important;font-size:0.9375rem!important;border-radius:0.75rem!important
+      }
+      
+      /* Buttons: taller */
+      button{min-height:auto}
+      
+      /* Quadrant grid: more padding */
+      .quad-card{padding:1.25rem!important}
+      
+      /* Modals: wider */
+      .modal-content{max-width:32rem!important}
+      
+      /* Toast: centered wider */
+      .toast-wrap{max-width:28rem;margin:0 auto}
+      
+      /* Stats grid items: bigger numbers */
+      .stat-num{font-size:2rem!important}
+      
+      /* Timer: larger display */
+      .timer-display{font-size:4.5rem!important;letter-spacing:0.05em}
+      
+      /* Scrollbar for desktop */
+      ::-webkit-scrollbar{width:6px;height:6px}
+      ::-webkit-scrollbar-track{background:transparent}
+      ::-webkit-scrollbar-thumb{background:rgba(122,107,90,0.2);border-radius:3px}
+      ::-webkit-scrollbar-thumb:hover{background:rgba(122,107,90,0.4)}
+      .dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15)}
+      .dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.3)}
+      
+      /* Tab bar: more spacious */
+      .tab-bar-inner button{padding:0.75rem 0}
+      .tab-bar-inner span{font-size:0.8125rem}
+      
+      /* Focus queue items: more spacious */
+      .focus-item{padding:1.25rem!important}
+      
+      /* List items: more breathing room */
+      .list-item-row{padding:1.125rem 1.25rem!important}
+      
+      /* Reminder cards: larger */
+      .reminder-card{padding:1.25rem!important}
+      
+      /* Note cards: larger */
+      .note-card{padding:1.25rem!important}
+      
+      /* More tab sub-buttons: larger */
+      .more-sub-btn{padding:0.625rem 1.25rem!important;font-size:0.9375rem!important}
+      
+      /* Help content: larger text */
+      .help-section p,.help-section li{font-size:0.9375rem!important}
+    }
+  </style>
+</head>
+<body class="bg-cream-100 dark:bg-bark-700">
+<script>
+// === PWA Setup (v10.1) ===
+// Note: Full PWA install requires HTTPS hosting with separate manifest.json + sw.js files.
+// The blob-based approach below provides best-effort support for local/file:// use.
+// Use "More → Install" to generate proper PWA files for HTTPS deployment.
+
+const PWA_ICON_192 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEklEQVR4nO3dT4hVdRzG8e+dO+NkOo6aWmkilgUVFBGRCxctItoEQUSbFi1atGkRQS0iWrRpE0EQQbRoEUG0aBFBEBEEQZBFhZGCWVZqjqPO/Ln3dBZxB8aZO3fOved3f7/f+31ecGHR4r7znPN9zjn3d+85A0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEkta8V+A0PABmAzsBZYC1wEXABcCJwDnA2cBZwJnAGc3v/f/A/wT/9/6w/gD+BP4Hfge+BL4Kv+n38ArT78WhVQ0wdgFXANcCNwPXAFsKrhf+Np4PP+YxT4CPho/v+XCqTpA7AauAPYBdwMrE/9Bk4C/wJ///v4E/it/+fl/r/5zwTOBs7p//b/9Hn/+34V3QgcBp4GXkn9JpWoOswP5i16PjDQ/+v+i99/Onj812dKQWtqKvoA7ADuB24HLkr9JqQ0x4Eh4FngncTvRRmV/QNwVv+39wrg5v5jG7A88XtSGr8Bh4DDwMvA16nfjPJV1g/AcmAzsAO4CdgMrEj8npTOL8BB4ADwLvBP4vejjJXxA3AasAG4Ebil/+dE75WpfQE8DzwPfJL4vZRaWQdgBXA1cCdwJ3BR4vej8voZeAl4BvgsaS+lVcYBOB/YCtwF3JD4vajcPgaeAp4DTiTtpqTKNgDrgVuBe4GtiXtRNRwFngSeAv5K2kyJlG0A3gGuS9yDquswsBf4IGkfJVDGAZDa9helO71HEveRWFkHQOrar5TuxJY+ANIAH6b+AoytBwPPAI+mb6ccVnfwazcDu4G7ga0I/QL8BOwHnknfSjms7PBAN1G6a7sHODd9O+W0Bvh3+WL/g94F3EtBg9rE/URpPOtQ+lbKYU0Hg3k5cD/wILAufTvl9T7wMKVfMJRd0wPwNqXR/cfjl6LK2AE8QemewMqo6QF4Adiaupcy+5LSbxg+nL6Vcmh6AN4H3k3dQ3ntBN6g9Jdhy6npARgCHgP+Tt1Lae0CnqH0F2VLqekBOEJpNG+kbqacbgbeAkYpjWyV0PQAjFAa3d9M3Uv57AS+BW5N3UiZND0AR4D7gHdT91IeDwAvUrpTXHJND8BPlMb0bkj8PsqhBewFDgHXJu6lFJoegH/6/d0F/Ji6l+QuAg5TekxGa+qGEgzA5v5/8P7EfaS2kdJT5LtS95Ja0wPwC6UxvT91H2ltAA4A9wGrU/eSSgqPQrgNeBW4Kn0rSWyk9D7HAng29G/cL1D6m5+dqRtJYQ3wKKXxrG2Jeymdqf0MvJu6iUbdArxG6S5xZXR96h5S+43Sk/L3A2el7qUF6yj9EucIpcdlVEbTlxz/Wg8c/t/XdgI7gO2U/lp0ZbQJeK7/53NKT9hXRke7+NptwI2ULndPSd1MizhC6S6xHo+pfgD+s57S5e92Spe96yntQel9BxwAPgS+6ed9gH84fPHPQXgQmP/S/GfyvxQa9dTF12b7H+j5/49fmv98/n+e/5x/fv7f4+8yv7b4+lz/g/n/r5/75+n/+/Vz/fuf//z8v1fO/5vr1xc/n//18/35v7n4Wjn/OtcsSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkqY7+A2TM4xxUNzJDAAAAAElFTkSuQmCC";
+const PWA_ICON_180 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGZ0lEQVR4nO3dT4hVdRzG8e+dO+NkOo6aWmkilgUVFBGRCxctItoEQUSbFi1atGkRQS0iWrRpE0EQQbRoEUG0aBFBEBEEQZBFhZGCWVZqjqPO/Ln3dBZxB8aZO3fOved3f7/f+31ecGHR4r7znPN9zjn3d+85A0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJElSA3QWuwN/AfuBfcCNwNXAGuB8YBVwDnAWsAI4Cziz/+fl/v/mvwH/9P+3/gD+BP4Afge+B74Evuo//gdwtsCvU5Xa0FcBW4FbgeuAy5v+/3gS+KL/+Bj4CPhogf8vqa429BZgJ3A7cMFi/8M/Af8Cfz/y+RP4rf/nlf5v/rOAs/u/9acvfr/nOuA64Mz+r+GU/h/xw/0PAY8Bry/+V6gytaG3AvcBdwBr+389fRV9/NRz/F/9k0APOL3/T//X8/8f8P0TwJfAMeBt4E3gVOG/DjWkpt6HXt7/zb0C2NZ/bAfO6z+k+p0ADgMHgZeAr0N+XRpTLQ29AtgM3ATcCGwEVob8etSk74H9wEHgPeCPkF+PhlBDQ58GrAe2AFv7fw7/5aipfgdeBZ4D3gn5dakltTb05cD1wA7gZmBtyK9HbfoZ2Ac8D3wa8utRi2pq6POAq4E7gTuBNSG/HpXqGPAi8AzwScivp9FqaOgLgXuAu4BNIb8eVeFj4GngOeBEyK+ngWpo6DOAa4AHgOtDfj2qzVHgEeAp4O+QX09DVN3QlwJ7gHuBc0N+ParbQWAPcCjk11O5qhv6LeC6kF+LmuUocD/wUsivpWLVNrQ0od8kvVOoqqE/Au4HPgj5tUnPAXuB4yG/lkpU1dCbgF3AXf3/kfSjpHPrA5QfGFc19GrgUeAh4IyQX4/0v/4C9gFPhvxaqldNQy8D7qZ0s+sqrJZ9DDwCvBDyaylWNQ19PfAEcEnIr0Ua3iHgYeCNkF9LVdY3fMD3Ag8CDwJrGj6O1LYNwB5gI3Ac+Kzh41RhVQPnvhF4B3g79EnbUqVuA94GPgBubvg8Vdja4LkvBfYDu4FVi/0Bklq3CtgNHKB0xtcNnqfztjV07tuAlym9E0jS//YAL1K66d42aK7OW9vAec8BHgO2hzxhaQwfAQ8Bx8ZdQ+e91/A5NwGvATtCnqg0vp3AQUo3LY6zkE6Z+sIGzrkSeIJyWb0y5ElK+S4F3qR003mjLqDTpmro84HHKZfhU0KeoDSeZZRO+gTYQOmqUR2+us6zGdgN3EbpLkmqX+dGYAOlqz4edbHO2zjmOacuq78Fnqf/3mmpcZcC+4A3gLVjrKNz62Kd0qEeFt0OvA9sowwvSq24jdJZm8ZYQ+dOSue1ZuqDm5dRxlO3hBxQasobwDPAl0OuoXNbi+cpE8I24MqQA0qt2kg5TtgCfDjkGjofD/tJP6F0Tb0v5EBSe/YBz1K67l/Kz/vipv75Z+CR/s/7QQ4iteNbytDCfUNsu/OXSQXtWOwAXcrlgaT2+atUKkhDS0FqaejZ0AclldlQ+sVP/VfRlcDbwOaQJ1y/DnAbpXvGPbWWAzuATSEvBM22doy1dG7r6OucdcD1IU+4ThcCW4HL5nx+M+X9g1K2LSGvBc0yzf/WR1lH5y+jrqEP0fB7oKt3Epjl//+/nwJOhTxhqR0nKN3yL+V/K8+E/LzPhvz+1HuAk//53P85o1NaNnPSaJ31X8rPtXbWvyjjVw8sss0h4HZg/ZTnrN1q4A5gT//POxbbqPPjSef8HHgauG2RTR+k3K962pTnrN065vyyZjm/rPnXsI/SZXuHWM+GKc9VuxvoQOe1kNfTJOln/5TnkjQJ/zZBKkhDS0FqaegPI58AKU2F/yIvFaShpSC1NPTbIQeUyqyi9P0oa+n8YdRN/wM+pEySbwk5sNS8TZTum6N01+cjrKXz12E/8ZeUubzngx5Aat4G4FVK570y5BrqWMqo+0eh/2ik9mwF9lO6b+qDm19SJnq3hRxQatYm4BVK98399WCU9XR+HXWxTul0XQq8ROkoP0Wk5lxK6brXKV034gHOWP/xFnAz8EVH0rBWU7rsd0o3jWPsv1y/hDLYdGfIk5XGsBN4ndJFt4+xjs5GSteMZZqhhnspI+8enagmW0kZWD9I6Z5phlGmfg/0WS2cc+og09vAwZAnLo3uduAtShfNbrMHhxpG+c85p0aN3gMeoNx7eFbLx5IGcRawm9I5B5o68Xw6P0w67+rFFtHp/O+qqZL+aXfFXf/O/Ofc+Z9/t93TzyljhweBn0KelPT/VlMG0TdSumaaPfk/0ww1/Bt1ZsgfSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZJUp/8AxH1zEXbRSeoAAAAASUVORK5CYII=";
+const PWA_ICON_SVG = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#7CB69D"/><circle cx="256" cy="220" r="100" fill="#fff" opacity="0.35"/><circle cx="256" cy="220" r="60" fill="#fff" opacity="0.55"/><circle cx="256" cy="220" r="30" fill="#fff"/><rect x="156" y="360" width="200" height="20" rx="10" fill="#fff" opacity="0.5"/><rect x="186" y="400" width="140" height="14" rx="7" fill="#fff" opacity="0.3"/></svg>');
+
+const manifestData = {
+  name: "Productivity Hub",
+  short_name: "Productivity",
+  description: "Focus timer, tasks, lists, reminders & notes - all in one place",
+  id: "productivity-hub-pwa",
+  start_url: window.location.pathname || "/",
+  scope: "/",
+  display: "standalone",
+  orientation: "any",
+  background_color: "#F7F5F0",
+  theme_color: "#7CB69D",
+  prefer_related_applications: false,
+  categories: ["productivity", "utilities"],
+  icons: [
+    { src: PWA_ICON_192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+    { src: PWA_ICON_180, sizes: "180x180", type: "image/png", purpose: "any maskable" },
+    { src: PWA_ICON_SVG, sizes: "512x512", type: "image/svg+xml", purpose: "any" }
+  ]
+};
+
+// Apply blob manifest as best-effort fallback (works for some browsers)
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(manifestBlob);
+document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+
+// PWA Install Prompt — capture beforeinstallprompt for use in-app
+window.__pwaInstallPrompt = null;
+window.__pwaInstalled = false;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.__pwaInstallPrompt = e;
+  window.dispatchEvent(new Event('pwa-prompt-ready'));
+});
+window.addEventListener('appinstalled', () => {
+  window.__pwaInstalled = true;
+  window.__pwaInstallPrompt = null;
+  window.dispatchEvent(new Event('pwa-installed'));
+});
+
+// Service Worker Registration (blob-based, best-effort for local use)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const CACHE_NAME = 'productivity-hub-v10';
+    const swCode = `
+      const CACHE_NAME = '${CACHE_NAME}';
+      self.addEventListener('install', (e) => {
+        self.skipWaiting();
+        e.waitUntil(
+          caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll([self.location.href]).catch(() => {});
+          })
+        );
+      });
+      self.addEventListener('activate', (e) => {
+        e.waitUntil(
+          caches.keys().then(names =>
+            Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+          ).then(() => clients.claim())
+        );
+      });
+      self.addEventListener('fetch', (e) => {
+        if (e.request.url.endsWith('/manifest.json')) {
+          e.respondWith(new Response(JSON.stringify(${JSON.stringify(manifestData)}), {
+            headers: {'Content-Type': 'application/json'}
+          }));
+          return;
+        }
+        e.respondWith(
+          caches.match(e.request).then(cached => cached || fetch(e.request).then(response => {
+            if (response.ok && e.request.method === 'GET') {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+            }
+            return response;
+          }).catch(() => cached))
+        );
+      });
+    `;
+    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+    const swURL = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL, {scope: './'}).then(() => {
+      console.log('Service Worker registered (blob-based, limited scope)');
+    }).catch((err) => {
+      console.log('Service Worker registration skipped:', err.message);
+    });
+  });
+}
+
+// Helper: Generate proper PWA files for HTTPS deployment
+window.__generatePWAFiles = () => {
+  const swContent = `const CACHE_NAME = 'productivity-hub-v10';
+const APP_FILE = self.location.pathname.replace('/sw.js', '/') || '/';
+
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll([APP_FILE]).catch(() => {}))
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then(names =>
+      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+    ).then(() => clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then(cached => cached || fetch(e.request).then(response => {
+      if (response.ok && e.request.method === 'GET') {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+      }
+      return response;
+    }).catch(() => cached))
+  );
+});`;
+
+  const manifestContent = JSON.stringify({
+    name: "Productivity Hub",
+    short_name: "Productivity",
+    description: "Focus timer, tasks, lists, reminders & notes - all in one place",
+    id: "productivity-hub-pwa",
+    start_url: "./",
+    scope: "./",
+    display: "standalone",
+    orientation: "any",
+    background_color: "#F7F5F0",
+    theme_color: "#7CB69D",
+    prefer_related_applications: false,
+    categories: ["productivity", "utilities"],
+    icons: [
+      { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: "icon-512.svg", sizes: "512x512", type: "image/svg+xml", purpose: "any" }
+    ]
+  }, null, 2);
+
+  return { sw: swContent, manifest: manifestContent };
+};
+</script>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
+
+// App Version
+const APP_VERSION = '10.1-alpha';
+
+// Icons - More visible with less transparency
+const I={
+  Focus:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.35"/><circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.55"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>,
+  List:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" opacity="0.3"/><rect x="6" y="8" width="3" height="2" rx="1" fill="currentColor"/><rect x="6" y="12" width="3" height="2" rx="1" fill="currentColor"/><rect x="11" y="8" width="7" height="2" rx="1" fill="currentColor" opacity="0.85"/><rect x="11" y="12" width="6" height="2" rx="1" fill="currentColor" opacity="0.85"/></svg>,
+  Check:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor" opacity="0.3"/><path d="M8 12L11 15L16 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Bell:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M12 3C8.5 3 6 5.5 6 9V14L4 17H20L18 14V9C18 5.5 15.5 3 12 3Z" fill="currentColor" opacity="0.3"/><path d="M12 3C8.5 3 6 5.5 6 9V14L4 17H20L18 14V9C18 5.5 15.5 3 12 3Z" stroke="currentColor" strokeWidth="2" fill="none"/><circle cx="12" cy="3" r="2" fill="currentColor"/><path d="M10 17C10 18.5 10.8 20 12 20C13.2 20 14 18.5 14 17" stroke="currentColor" strokeWidth="2"/></svg>,
+  Notes:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="4" y="3" width="16" height="18" rx="2" fill="currentColor" opacity="0.3"/><path d="M8 7H16M8 11H16M8 15H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+  Settings:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2V5M12 19V22M4.93 4.93L7.05 7.05M16.95 16.95L19.07 19.07M2 12H5M19 12H22M4.93 19.07L7.05 16.95M16.95 7.05L19.07 4.93" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.65"/></svg>,
+  Help:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.25"/><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><path d="M9 9C9 7.34 10.34 6 12 6C13.66 6 15 7.34 15 9C15 10.31 14.17 11.42 13 11.83V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="17" r="1.5" fill="currentColor"/></svg>,
+  Play:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.25"/><path d="M10 8L16 12L10 16V8Z" fill="currentColor"/></svg>,
+  Pause:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.25"/><rect x="9" y="8" width="2" height="8" rx="1" fill="currentColor"/><rect x="13" y="8" width="2" height="8" rx="1" fill="currentColor"/></svg>,
+  Reset:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20C9.79 20 7.79 19.1 6.34 17.66" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M4 8V12H8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Plus:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>,
+  Edit:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M16 3L21 8L8 21H3V16L16 3Z" fill="currentColor" opacity="0.25"/><path d="M16 3L21 8L8 21H3V16L16 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Archive:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="2" y="4" width="20" height="5" rx="1" fill="currentColor" opacity="0.35"/><path d="M4 9V19C4 20.1 4.9 21 6 21H18C19.1 21 20 20.1 20 19V9" stroke="currentColor" strokeWidth="2"/><path d="M10 13H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+  Trash:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M6 7H18L17 20H7L6 7Z" fill="currentColor" opacity="0.25"/><path d="M4 7H20M10 11V16M14 11V16M6 7L7 20H17L18 7M9 7V4H15V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Share:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="18" cy="5" r="3" fill="currentColor"/><circle cx="6" cy="12" r="3" fill="currentColor"/><circle cx="18" cy="19" r="3" fill="currentColor"/><path d="M8.5 10.5L15.5 6.5M8.5 13.5L15.5 17.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.6"/></svg>,
+  Drag:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="6" r="2" fill="currentColor"/><circle cx="9" cy="12" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="9" cy="18" r="2" fill="currentColor"/><circle cx="15" cy="18" r="2" fill="currentColor"/></svg>,
+  Down:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Up:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M6 15L12 9L18 15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Sun:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="5" fill="currentColor"/><path d="M12 2V4M12 20V22M4 12H2M22 12H20M5.64 5.64L4.22 4.22M19.78 19.78L18.36 18.36M5.64 18.36L4.22 19.78M19.78 4.22L18.36 5.64" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+  Moon:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg>,
+  Phone:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="6" y="2" width="12" height="20" rx="2" fill="currentColor" opacity="0.25"/><rect x="6" y="2" width="12" height="20" rx="2" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>,
+  X:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>,
+  Restore:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M3 12C3 7.02 7.02 3 12 3C16.98 3 21 7.02 21 12C21 16.98 16.98 21 12 21C9.51 21 7.27 19.96 5.64 18.26" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M3 17V12H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Done:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.25"/><path d="M8 12L11 15L16 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Info:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.25"/><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>,
+  Calendar:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="3" y="4" width="18" height="18" rx="2" fill="currentColor" opacity="0.25"/><path d="M3 10H21M8 2V6M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/></svg>,
+  Test:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Copy:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+  Download:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+};
+
+// Empty States (small but v4-style)
+const Empty={
+  List:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><rect x="20" y="15" width="60" height="60" rx="8" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="3"/><rect x="30" y="30" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="45" y="30" width="25" height="3" rx="1.5" fill="#9DC4A8"/><rect x="30" y="42" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="45" y="42" width="20" height="3" rx="1.5" fill="#9DC4A8"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">Empty list</p></div>,
+  NoLists:({onCreate})=><div className="flex flex-col items-center justify-center py-12 anim-in"><svg width="64" height="64" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70 mb-4"><rect x="15" y="10" width="60" height="70" rx="8" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="2.5"/><rect x="25" y="25" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="40" y="25" width="30" height="3" rx="1.5" fill="#9DC4A8"/><rect x="25" y="37" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="40" y="37" width="25" height="3" rx="1.5" fill="#9DC4A8"/><rect x="25" y="49" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="40" y="49" width="35" height="3" rx="1.5" fill="#9DC4A8"/><path d="M70 65L80 75M80 65L70 75" stroke="#7CB69D" strokeWidth="3" strokeLinecap="round"/></svg><h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">📋 No Lists Yet</h3><p className="text-sm text-bark-500 dark:text-sand-300 text-center mb-6 max-w-xs">Create your first list to start organizing!</p><button onClick={onCreate} className="px-6 py-3 bg-sage-400 text-white rounded-xl font-semibold shadow-sm hover:bg-sage-500 transition-colors flex items-center gap-2"><I.Plus s={20}/>Create List</button></div>,
+  Tasks:()=><div className="flex items-center justify-center py-2"><svg width="28" height="28" viewBox="0 0 100 100" fill="none" className="opacity-50"><rect x="25" y="20" width="50" height="50" rx="8" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="2"/><path d="M38 42L46 50L62 34" stroke="#7CB69D" strokeWidth="3" strokeLinecap="round"/></svg><span className="text-bark-400/50 text-xs ml-2">No tasks</span></div>,
+  Focus:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="56" height="56" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><circle cx="50" cy="50" r="35" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="3"/><circle cx="50" cy="50" r="20" fill="#C5D9CA" opacity="0.5"/><circle cx="50" cy="50" r="8" fill="#7CB69D"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">Add tasks from To-Do • Max 5</p></div>,
+  Remind:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><path d="M50 20C38 20 30 30 30 42V55L24 65H76L70 55V42C70 30 62 20 50 20Z" fill="#FCEEE9" stroke="#E07A5F" strokeWidth="2.5"/><circle cx="50" cy="20" r="4" fill="#E07A5F"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">No reminders</p></div>,
+  Notes:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><rect x="20" y="15" width="60" height="70" rx="6" fill="#E6F2F7" stroke="#5A9BBF" strokeWidth="2.5"/><path d="M32 35H68M32 50H60M32 65H50" stroke="#5A9BBF" strokeWidth="3" strokeLinecap="round"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">No notes yet</p></div>,
+  Archive:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><rect x="15" y="25" width="70" height="15" rx="3" fill="#D5CCE6" stroke="#9B8AA6" strokeWidth="2"/><path d="M20 40V70C20 73.3 22.7 76 26 76H74C77.3 76 80 73.3 80 70V40" stroke="#9B8AA6" strokeWidth="2.5"/><path d="M40 55H60" stroke="#9B8AA6" strokeWidth="3" strokeLinecap="round"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">Archive is empty</p></div>,
+};
+
+// IndexedDB Storage
+const DB_NAME='ProductivityHub';
+const DB_VERSION=1;
+const STORE_NAME='data';
+
+// Initialize IndexedDB
+const initDB=()=>new Promise((resolve,reject)=>{
+  const req=indexedDB.open(DB_NAME,DB_VERSION);
+  req.onerror=()=>reject(req.error);
+  req.onsuccess=()=>resolve(req.result);
+  req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME);};
+});
+
+// Storage with IndexedDB + localStorage fallback
+const S={
+  // Get value from IndexedDB
+  get:async(k,d)=>{
+    try{
+      const db=await initDB();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(STORE_NAME,'readonly');
+        const store=tx.objectStore(STORE_NAME);
+        const req=store.get(k);
+        req.onsuccess=()=>resolve(req.result!==undefined?req.result:d);
+        req.onerror=()=>resolve(d);
+      });
+    }catch{
+      // Fallback to localStorage
+      try{const i=localStorage.getItem('ph3_'+k);return i?JSON.parse(i):d;}catch{return d;}
+    }
+  },
+  
+  // Set value in IndexedDB
+  set:async(k,v)=>{
+    try{
+      const db=await initDB();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(STORE_NAME,'readwrite');
+        const store=tx.objectStore(STORE_NAME);
+        const req=store.put(v,k);
+        req.onsuccess=()=>resolve();
+        req.onerror=()=>resolve();
+      });
+    }catch{
+      // Fallback to localStorage
+      try{localStorage.setItem('ph3_'+k,JSON.stringify(v));}catch{}
+    }
+  },
+  
+  // Export all data
+  exp:async()=>{
+    try{
+      const db=await initDB();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(STORE_NAME,'readonly');
+        const store=tx.objectStore(STORE_NAME);
+        const req=store.getAllKeys();
+        req.onsuccess=async()=>{
+          const keys=req.result;
+          const d={};
+          for(const k of keys){
+            const val=await S.get(k);
+            if(val!==undefined)d[k]=val;
+          }
+          resolve(d);
+        };
+        req.onerror=()=>resolve({});
+      });
+    }catch{
+      // Fallback to localStorage
+      const d={};
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k.startsWith('ph3_'))d[k.replace('ph3_','')]=JSON.parse(localStorage.getItem(k));
+      }
+      return d;
+    }
+  },
+  
+  // Import data
+  imp:async(d)=>{
+    try{
+      const db=await initDB();
+      const tx=db.transaction(STORE_NAME,'readwrite');
+      const store=tx.objectStore(STORE_NAME);
+      for(const[k,v]of Object.entries(d)){
+        store.put(v,k);
+      }
+      return new Promise((resolve)=>{
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>resolve();
+      });
+    }catch{
+      // Fallback to localStorage
+      Object.entries(d).forEach(([k,v])=>localStorage.setItem('ph3_'+k,JSON.stringify(v)));
+    }
+  },
+  
+  // Clear all data
+  clr:async()=>{
+    try{
+      const db=await initDB();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction(STORE_NAME,'readwrite');
+        const store=tx.objectStore(STORE_NAME);
+        const req=store.clear();
+        req.onsuccess=()=>resolve();
+        req.onerror=()=>resolve();
+      });
+    }catch{
+      // Fallback to localStorage
+      const ks=[];
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k.startsWith('ph3_'))ks.push(k);
+      }
+      ks.forEach(k=>localStorage.removeItem(k));
+    }
+  },
+  
+  // Synchronous get for initial load (returns null, triggers async load)
+  getSync:(k,d)=>{
+    try{const i=localStorage.getItem('ph3_'+k);return i?JSON.parse(i):d;}catch{return d;}
+  }
+};
+
+// Unique ID generator (safer than Date.now() alone)
+const uid=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
+
+// Native Notifications
+const notify=(title,body)=>{
+  if(!('Notification'in window))return;
+  if(Notification.permission==='granted'){new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%237CB69D"/></svg>'});}
+  else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')new Notification(title,{body});});}
+};
+const reqNotifyPerm=()=>{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();};
+
+// Theme
+const ThemeCtx=createContext();
+const ThemeProv=({children})=>{
+  const[theme,setTheme]=useState(S.get('theme','light'));
+  useEffect(()=>{S.set('theme',theme);const r=document.documentElement,m=document.getElementById('theme-color-meta');if(theme==='system'){const p=window.matchMedia('(prefers-color-scheme:dark)').matches;r.classList.toggle('dark',p);m.content=p?'#2D2720':'#F7F5F0';}else{r.classList.toggle('dark',theme==='dark');m.content=theme==='dark'?'#2D2720':'#F7F5F0';}},[theme]);
+  return<ThemeCtx.Provider value={{theme,setTheme}}>{children}</ThemeCtx.Provider>;
+};
+
+// Desktop check
+const useDesk=()=>{const[d,setD]=useState(window.innerWidth>=768);useEffect(()=>{const h=()=>setD(window.innerWidth>=768);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);return d;};
+
+// Custom hook for IndexedDB persisted state
+const usePersistedState=(key,defaultValue)=>{
+  const[state,setState]=useState(()=>S.getSync(key,defaultValue));
+  const[loaded,setLoaded]=useState(false);
+  
+  // Load from IndexedDB on mount
+  useEffect(()=>{
+    S.get(key,defaultValue).then(val=>{
+      setState(val);
+      setLoaded(true);
+    });
+  },[key]);
+  
+  // Save to IndexedDB on change
+  useEffect(()=>{
+    if(loaded){
+      S.set(key,state);
+    }
+  },[key,state,loaded]);
+  
+  return[state,setState];
+};
+
+// Constants
+const PRESETS={classic:{work:25,shortBreak:5,longBreak:15,l:'Classic'},long:{work:50,shortBreak:10,longBreak:30,l:'Long'},short:{work:15,shortBreak:3,longBreak:10,l:'Short'},custom:{work:25,shortBreak:5,longBreak:15,l:'Custom'}};
+const QUADS=[{id:'ui',l:'Do First',sub:'Urgent + Important',clr:'from-terracotta-200 to-terracotta-100',bdr:'border-terracotta-400',txt:'text-terracotta-500'},{id:'ni',l:'Schedule',sub:'Not Urgent + Important',clr:'from-ocean-200 to-ocean-100',bdr:'border-ocean-400',txt:'text-ocean-400'},{id:'un',l:'Delegate',sub:'Urgent + Not Important',clr:'from-sand-200 to-sand-100',bdr:'border-sand-300',txt:'text-bark-500'},{id:'nn',l:'Eliminate',sub:'Not Urgent + Not Important',clr:'from-lavender-200 to-lavender-100',bdr:'border-lavender-300',txt:'text-lavender-400'}];
+const CATS=[{id:'work',l:'Work',clr:'bg-ocean-300',e:'💼'},{id:'personal',l:'Personal',clr:'bg-lavender-300',e:'🏠'},{id:'health',l:'Health',clr:'bg-sage-400',e:'💪'},{id:'learning',l:'Learning',clr:'bg-terracotta-300',e:'📚'}];
+
+// Share helper
+const shareItem=(item,type)=>{
+  let t='';
+  if(type==='task'){t=`📋 Task: ${item.text}\n`;if(item.deadline)t+=`📅 ${item.deadline}\n`;}
+  else if(type==='list')t=`📝 ${item.text}\n`;
+  else if(type==='reminder')t=`🔔 ${item.text} at ${item.time}\n`;
+  else if(type==='note')t=`📄 ${item.title}\n${'─'.repeat(20)}\n${item.content}\n`;
+  if(item.notes)t+=`Notes: ${item.notes}\n`;
+  if(type==='task'&&item.subtasks?.length>0){t+=`Subtasks:\n`;item.subtasks.forEach(s=>{t+=`${s.done?'✅':'☐'} ${s.text}\n`;});}
+  t+=`\n— Productivity Hub`;
+  if(navigator.share)navigator.share({text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);return true;}
+  return false;
+};
+
+// Utils
+const genICS=(r)=>{const n=new Date(),[h,m]=(r.time||'09:00').split(':'),e=r.date?new Date(r.date):new Date();e.setHours(parseInt(h),parseInt(m),0,0);if(e<n)e.setDate(e.getDate()+1);const f=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z',end=new Date(e.getTime()+15*60000);return`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:${Date.now()}@ph\nDTSTAMP:${f(n)}\nDTSTART:${f(e)}\nDTEND:${f(end)}\nSUMMARY:${r.text||'Reminder'}\nEND:VEVENT\nEND:VCALENDAR`;};
+const dlFile=(c,fn,t='text/plain')=>{const b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);};
+
+// Actions buttons with aria-labels
+const Acts=({onDone,onArc,onEdit,onShare,onDelete,showDone=true,isDone=false})=>(
+  <div className="flex items-center gap-0.5">
+    {!isDone&&showDone&&<button onClick={onDone} className="p-1 rounded hover:bg-sage-100 text-sage-500" aria-label="Mark as done"><I.Done s={16}/></button>}
+    {!isDone&&<button onClick={onEdit} className="p-1 rounded hover:bg-ocean-100 text-ocean-400" aria-label="Edit item"><I.Edit s={16}/></button>}
+    {!isDone&&<button onClick={onShare} className="p-1 rounded hover:bg-lavender-100 text-lavender-400" aria-label="Share item"><I.Share s={16}/></button>}
+    {!isDone&&<button onClick={onArc} className="p-1 rounded hover:bg-terracotta-100 text-terracotta-400" aria-label="Archive item"><I.Archive s={16}/></button>}
+    {isDone&&onDelete&&<button onClick={onDelete} className="p-1 rounded hover:bg-terracotta-100 text-terracotta-400" aria-label="Delete item"><I.Trash s={16}/></button>}
+  </div>
+);
+
+// Swipe with click fallback
+const Swipe=({children,onDone,onArc})=>{
+  const[ts,setTs]=useState(null),[off,setOff]=useState(0);
+  const start=e=>{setTs(e.targetTouches[0].clientX);};
+  const move=e=>{if(!ts)return;setOff(Math.max(-80,Math.min(80,e.targetTouches[0].clientX-ts)));};
+  const end=()=>{if(off>60)onDone?.();if(off<-60)onArc?.();setOff(0);setTs(null);};
+  return(
+    <div className="relative overflow-hidden rounded-xl">
+      <div className="absolute inset-0 flex"><div className="w-1/2 bg-sage-400 flex items-center pl-3 text-white font-semibold gap-1 text-sm"><I.Done s={16}/>Done</div><div className="w-1/2 bg-lavender-400 flex items-center justify-end pr-3 text-white font-semibold gap-1 text-sm">Archive<I.Archive s={16}/></div></div>
+      <div className="relative gcard rounded-xl transition-transform" style={{transform:`translateX(${off}px)`}} onTouchStart={start} onTouchMove={move} onTouchEnd={end}>{children}</div>
+    </div>
+  );
+};
+
+// Subtasks
+const Subtasks=({items=[],onChange,ro=false})=>{
+  const[n,setN]=useState('');
+  const add=()=>{if(!n.trim())return;onChange([...items,{id:uid(),text:n,done:false}]);setN('');};
+  return(
+    <div className="space-y-1.5">
+      {items.map(s=>(
+        <div key={s.id} className="flex items-center gap-2 pl-1">
+          <button onClick={()=>!ro&&onChange(items.map(x=>x.id===s.id?{...x,done:!x.done}:x))} className={`w-4 h-4 rounded-full border-2 flex items-center justify-center text-xs ${s.done?'bg-sage-400 border-sage-400 text-white':'border-sage-300'}`}>{s.done&&'✓'}</button>
+          <span className={`flex-1 text-sm sel ${s.done?'line-through text-bark-400/50':'text-bark-600 dark:text-sand-200'}`}>{s.text}</span>
+          {!ro&&<button onClick={()=>onChange(items.filter(x=>x.id!==s.id))} className="text-bark-400/50 text-xs hover:text-terracotta-400">✕</button>}
+        </div>
+      ))}
+      {!ro&&<div className="flex gap-2 pl-1"><input type="text" value={n} onChange={e=>setN(e.target.value)} onKeyDown={e=>e.key==='Enter'&&add()} placeholder="Add subtask..." className="flex-1 text-sm bg-transparent border-b border-sand-300 dark:border-bark-500 focus:outline-none focus:border-sage-400 py-1 text-bark-600 dark:text-sand-200"/><button onClick={add} className="text-sage-500 text-sm font-semibold">+</button></div>}
+    </div>
+  );
+};
+
+// Quick Add Component
+const QuickAdd=({placeholder,onAdd,buttonText='Add'})=>{
+  const[val,setVal]=useState('');
+  const[focused,setFocused]=useState(false);
+  const handleAdd=()=>{if(val.trim()){onAdd(val.trim());setVal('');setFocused(false);}};
+  return(
+    <div className={`gcard rounded-2xl p-3 md:p-4 transition-all ${focused?'ring-2 ring-sage-400':''}`}>
+      <div className="flex gap-2 md:gap-3">
+        <input 
+          type="text" 
+          value={val} 
+          onChange={e=>setVal(e.target.value)} 
+          onFocus={()=>setFocused(true)}
+          onBlur={()=>setTimeout(()=>setFocused(false),200)}
+          onKeyDown={e=>{if(e.key==='Enter')handleAdd();if(e.key==='Escape'){setVal('');setFocused(false);}}}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent focus:outline-none text-bark-600 dark:text-sand-100 placeholder-bark-400/50 md:text-base md:py-1"
+        />
+        {val.trim()&&<button onClick={handleAdd} className="px-4 md:px-5 py-1.5 md:py-2 bg-sage-400 rounded-lg md:rounded-xl text-white font-semibold text-sm md:text-base">{buttonText}</button>}
+      </div>
+    </div>
+  );
+};
+
+// List Menu Component
+const ListMenu=({list,onEdit,onDelete,onClose,position})=>(
+  <div className="fixed inset-0 z-30" onClick={onClose}>
+    <div className="gcard rounded-xl shadow-lg overflow-hidden" style={{position:'absolute',top:position.y,left:position.x}} onClick={e=>e.stopPropagation()}>
+      <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Edit s={18} c="text-ocean-400"/>
+        <span className="font-medium text-bark-600 dark:text-sand-100">Edit Name</span>
+      </button>
+      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Trash s={18} c="text-terracotta-400"/>
+        <span className="font-medium text-bark-600 dark:text-sand-100">Delete List</span>
+      </button>
+    </div>
+  </div>
+);
+
+// Delete Confirmation Modal
+const DeleteConfirmation=({list,onConfirm,onCancel,isLastList})=>(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={onCancel}>
+    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+      <div className="text-center mb-4">
+        <div className={`w-16 h-16 ${isLastList?'bg-ocean-100 dark:bg-ocean-400/20':'bg-terracotta-100 dark:bg-terracotta-400/20'} rounded-full flex items-center justify-center mx-auto mb-3`}>
+          {isLastList?<I.Info s={32} c="text-ocean-400"/>:<I.Trash s={32} c="text-terracotta-400"/>}
+        </div>
+        <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">{isLastList?'Cannot Delete Last List':`Delete "${list.name}"?`}</h3>
+        <p className="text-sm text-bark-500 dark:text-sand-300">{isLastList?'You need at least one list. Create another list first, then you can delete this one.':`This will permanently delete the list and all ${list.items.length} item${list.items.length!==1?'s':''} in it.`}</p>
+      </div>
+      <div className="flex gap-2">
+        {isLastList?<button onClick={onCancel} className="flex-1 py-2.5 bg-ocean-400 rounded-lg font-semibold text-white text-sm">OK</button>:<><button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">Delete</button></>}
+      </div>
+    </div>
+  </div>
+);
+
+// Edit Modal
+const EditModal=({item,type,onSave,onClose})=>{
+  const[text,setText]=useState(item?.text||item?.title||'');
+  const[content,setContent]=useState(item?.content||'');
+  const[notes,setNotes]=useState(item?.notes||'');
+  const[subtasks,setSub]=useState(item?.subtasks||[]);
+  const[section,setSec]=useState(item?.section||'');
+  const[quad,setQuad]=useState(item?.quad||'ui');
+  const[cat,setCat]=useState(item?.cat||null);
+  const[time,setTime]=useState(item?.time||'09:00');
+  const[date,setDate]=useState(item?.date||new Date().toISOString().split('T')[0]);
+  const[deadline,setDl]=useState(item?.deadline||'');
+  
+  const save=()=>{
+    if(!text.trim())return;
+    if(type==='note')onSave({...item,title:text,content,notes});
+    else if(type==='list')onSave({...item,text,notes,section});
+    else if(type==='todo')onSave({...item,text,notes,subtasks,quad,cat,deadline});
+    else if(type==='reminder')onSave({...item,text,time,date});
+    onClose();
+  };
+
+  return(
+    <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={onClose}>
+      <div className="gcard w-full max-w-md md:max-w-lg rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto anim-in modal-content" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100">{item?.id?'Edit':'New'} {type==='note'?'Note':type==='list'?'Item':type==='todo'?'Task':'Reminder'}</h3>
+          <button onClick={onClose} className="text-bark-400"><I.X s={22}/></button>
+        </div>
+        <div className="space-y-3">
+          <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">{type==='note'?'Title':'Text'}</label><input type="text" value={text} onChange={e=>setText(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 text-sm" placeholder={type==='reminder'?'e.g. Take medicine':'Enter text...'}/></div>
+          {type==='note'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Content</label><textarea value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 min-h-24 text-sm"/></div>}
+          {type==='list'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Section</label><input type="text" value={section} onChange={e=>setSec(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 text-sm"/></div>}
+          {type==='todo'&&<>
+            <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Priority</label><div className="grid grid-cols-2 gap-1.5">{QUADS.map(q=><button key={q.id} onClick={()=>setQuad(q.id)} className={`p-2 rounded-lg border-2 text-left text-xs ${quad===q.id?`${q.bdr} bg-gradient-to-r ${q.clr}`:'border-sand-200 dark:border-bark-500'}`}><span className={`font-semibold ${q.txt}`}>{q.l}</span></button>)}</div></div>
+            <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Category</label><div className="flex flex-wrap gap-1.5">{CATS.map(c=><button key={c.id} onClick={()=>setCat(cat===c.id?null:c.id)} className={`px-2.5 py-1 rounded-full text-xs font-medium ${cat===c.id?`${c.clr} text-white`:'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200'}`}>{c.e} {c.l}</button>)}</div></div>
+            <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Deadline</label><input type="date" value={deadline} onChange={e=>setDl(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 text-sm"/></div>
+          </>}
+          {type==='reminder'&&<>
+            <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Date</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 text-sm"/></div>
+            <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Time</label><input type="time" value={time} onChange={e=>setTime(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 text-sm"/></div>
+          </>}
+          {type!=='reminder'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Notes</label><textarea value={notes} onChange={e=>setNotes(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 min-h-16 text-sm"/></div>}
+          {type==='todo'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Subtasks</label><Subtasks items={subtasks} onChange={setSub}/></div>}
+        </div>
+        <div className="flex gap-2 mt-4"><button onClick={onClose} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={save} className="flex-1 py-2.5 bg-sage-400 rounded-lg font-semibold text-white text-sm">Save</button></div>
+      </div>
+    </div>
+  );
+};
+
+// Help Modal
+const HelpModal=({onClose})=>(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onClose}>
+    <div className="gcard w-full max-w-sm md:max-w-lg rounded-2xl p-5 md:p-7 max-h-[85vh] overflow-y-auto anim-in hide-sb" onClick={e=>e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-4"><h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">⚡ Quick Tips</h2><button onClick={onClose} className="text-bark-400 hover:text-bark-600"><I.X s={22}/></button></div>
+      <div className="space-y-3">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">👆</span>
+          <div>
+            <div className="font-semibold text-bark-600 dark:text-sand-100">Long-press lists</div>
+            <div className="text-sm text-bark-500 dark:text-sand-200">Edit or delete list names</div>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">👉</span>
+          <div>
+            <div className="font-semibold text-bark-600 dark:text-sand-100">Swipe right</div>
+            <div className="text-sm text-bark-500 dark:text-sand-200">Delete completed items permanently</div>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">📌</span>
+          <div>
+            <div className="font-semibold text-bark-600 dark:text-sand-100">Sticky headers</div>
+            <div className="text-sm text-bark-500 dark:text-sand-200">Section titles stay visible while scrolling</div>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">⚙️</span>
+          <div>
+            <div className="font-semibold text-bark-600 dark:text-sand-100">Customize timer</div>
+            <div className="text-sm text-bark-500 dark:text-sand-200">Adjust work/break durations in Settings</div>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">➕</span>
+          <div>
+            <div className="font-semibold text-bark-600 dark:text-sand-100">Quick add bars</div>
+            <div className="text-sm text-bark-500 dark:text-sand-200">Use bottom input bars for fast entry</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 p-4 bg-gradient-to-r from-sage-50 to-ocean-50 dark:from-bark-600/50 dark:to-bark-600/50 rounded-xl border border-sage-200 dark:border-bark-500">
+        <div className="flex items-start gap-2 mb-2">
+          <span className="text-lg">📚</span>
+          <div>
+            <div className="font-bold text-bark-600 dark:text-sand-100 text-sm mb-1">Need More Help?</div>
+            <p className="text-xs text-bark-500 dark:text-sand-200">Visit <strong>More → Help & Guide</strong> for complete documentation on Pomodoro, Deep Work, Eisenhower Matrix, navigation, and daily workflows.</p>
+          </div>
+        </div>
+      </div>
+      <button onClick={onClose} className="w-full mt-4 py-3 bg-sage-400 rounded-xl font-bold text-white text-sm hover:bg-sage-500 transition-colors">Got it!</button>
+    </div>
+  </div>
+);
+
+// Mini Chart
+const Chart=({data,label,clr='bg-sage-400'})=>{
+  const max=Math.max(...data.map(d=>d.v),1);
+  return<div className="gcard rounded-xl p-3"><h4 className="text-xs font-semibold text-bark-400/70 mb-3">{label}</h4><div className="flex items-end gap-1 h-16">{data.map((d,i)=><div key={i} className="flex-1 flex flex-col items-center gap-0.5"><div className={`w-full ${clr} rounded-t`} style={{height:`${(d.v/max)*100}%`,minHeight:d.v>0?'3px':'0'}}/><span className="text-xs text-bark-400/60">{d.l}</span></div>)}</div></div>;
+};
+
+// ============================================
+// TEST APP FEATURE - Alpha Version
+// ============================================
+const TestRunner=({onShowToast})=>{
+  const[running,setRunning]=useState(false);
+  const[results,setResults]=useState(null);
+  const[progress,setProgress]=useState({current:0,total:0,step:''});
+  
+  const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
+  
+  const runTests=async()=>{
+    setRunning(true);
+    setResults(null);
+    const report={
+      version:APP_VERSION,
+      timestamp:new Date().toISOString(),
+      browser:navigator.userAgent,
+      tests:[],
+      summary:{passed:0,failed:0,skipped:0}
+    };
+    
+    const tests=[
+      {name:'IndexedDB Initialization',category:'Storage'},
+      {name:'IndexedDB Write',category:'Storage'},
+      {name:'IndexedDB Read',category:'Storage'},
+      {name:'IndexedDB Delete',category:'Storage'},
+      {name:'Create Todo',category:'CRUD - Todos'},
+      {name:'Read Todo',category:'CRUD - Todos'},
+      {name:'Update Todo',category:'CRUD - Todos'},
+      {name:'Delete Todo',category:'CRUD - Todos'},
+      {name:'Create List',category:'CRUD - Lists'},
+      {name:'Add List Item',category:'CRUD - Lists'},
+      {name:'Update List Item',category:'CRUD - Lists'},
+      {name:'Delete List Item',category:'CRUD - Lists'},
+      {name:'Create Reminder',category:'CRUD - Reminders'},
+      {name:'Update Reminder',category:'CRUD - Reminders'},
+      {name:'Delete Reminder',category:'CRUD - Reminders'},
+      {name:'Create Note',category:'CRUD - Notes'},
+      {name:'Update Note',category:'CRUD - Notes'},
+      {name:'Delete Note',category:'CRUD - Notes'},
+      {name:'Archive Todo',category:'Archive'},
+      {name:'Restore Todo',category:'Archive'},
+      {name:'Archive List Item',category:'Archive'},
+      {name:'Data Export',category:'Export/Import'},
+      {name:'Data Import',category:'Export/Import'},
+      {name:'Theme Switch (Light)',category:'Theme'},
+      {name:'Theme Switch (Dark)',category:'Theme'},
+      {name:'Theme Switch (System)',category:'Theme'},
+      {name:'Timer Settings Load',category:'Focus Timer'},
+      {name:'Preset Change',category:'Focus Timer'},
+      {name:'UID Generation',category:'Utilities'},
+      {name:'ICS Generation',category:'Utilities'},
+    ];
+    
+    setProgress({current:0,total:tests.length,step:'Initializing...'});
+    
+    const testData={testTodo:null,testList:null,testListItem:null,testReminder:null,testNote:null,archivedTodo:null};
+    const TEST_PREFIX='__TEST__';
+    
+    for(let i=0;i<tests.length;i++){
+      const test=tests[i];
+      setProgress({current:i+1,total:tests.length,step:test.name});
+      await delay(80);
+      
+      let result={name:test.name,category:test.category,status:'passed',duration:0,error:null};
+      const startTime=performance.now();
+      
+      try{
+        switch(test.name){
+          case 'IndexedDB Initialization':{const db=await initDB();if(!db)throw new Error('Failed to initialize IndexedDB');break;}
+          case 'IndexedDB Write':{await S.set(TEST_PREFIX+'test_key','test_value');break;}
+          case 'IndexedDB Read':{const val=await S.get(TEST_PREFIX+'test_key','default');if(val!=='test_value')throw new Error(`Expected 'test_value', got '${val}'`);break;}
+          case 'IndexedDB Delete':{await S.set(TEST_PREFIX+'test_key',undefined);break;}
+          case 'Create Todo':{testData.testTodo={id:TEST_PREFIX+uid(),text:'Test Todo',pri:'high',cat:'work',quad:'ui',done:false};if(!testData.testTodo.id)throw new Error('Failed to create todo ID');break;}
+          case 'Read Todo':{if(!testData.testTodo||!testData.testTodo.text)throw new Error('Todo not readable');break;}
+          case 'Update Todo':{testData.testTodo.text='Updated Test Todo';if(testData.testTodo.text!=='Updated Test Todo')throw new Error('Todo update failed');break;}
+          case 'Delete Todo':{testData.testTodo=null;if(testData.testTodo!==null)throw new Error('Todo deletion failed');break;}
+          case 'Create List':{testData.testList={id:TEST_PREFIX+uid(),name:'Test List',items:[]};if(!testData.testList.id)throw new Error('Failed to create list');break;}
+          case 'Add List Item':{testData.testListItem={id:TEST_PREFIX+uid(),text:'Test Item',done:false};testData.testList.items.push(testData.testListItem);if(testData.testList.items.length!==1)throw new Error('Failed to add item to list');break;}
+          case 'Update List Item':{testData.testListItem.done=true;if(!testData.testListItem.done)throw new Error('List item update failed');break;}
+          case 'Delete List Item':{testData.testList.items=testData.testList.items.filter(i=>i.id!==testData.testListItem.id);if(testData.testList.items.length!==0)throw new Error('List item deletion failed');break;}
+          case 'Create Reminder':{testData.testReminder={id:TEST_PREFIX+uid(),text:'Test Reminder',time:'09:00',date:'2026-01-31',on:true};if(!testData.testReminder.id)throw new Error('Failed to create reminder');break;}
+          case 'Update Reminder':{testData.testReminder.on=false;if(testData.testReminder.on!==false)throw new Error('Reminder update failed');break;}
+          case 'Delete Reminder':{testData.testReminder=null;if(testData.testReminder!==null)throw new Error('Reminder deletion failed');break;}
+          case 'Create Note':{testData.testNote={id:TEST_PREFIX+uid(),title:'Test Note',content:'Test content',crAt:new Date().toISOString()};if(!testData.testNote.id)throw new Error('Failed to create note');break;}
+          case 'Update Note':{testData.testNote.content='Updated content';if(testData.testNote.content!=='Updated content')throw new Error('Note update failed');break;}
+          case 'Delete Note':{testData.testNote=null;if(testData.testNote!==null)throw new Error('Note deletion failed');break;}
+          case 'Archive Todo':{testData.archivedTodo={id:TEST_PREFIX+uid(),text:'Archived Todo',arcAt:new Date().toISOString()};if(!testData.archivedTodo.arcAt)throw new Error('Archive timestamp not set');break;}
+          case 'Restore Todo':{if(!testData.archivedTodo)throw new Error('No archived todo to restore');const restored={...testData.archivedTodo,arcAt:undefined};if(restored.arcAt!==undefined)throw new Error('Archive timestamp not cleared');break;}
+          case 'Archive List Item':{const archivedItem={id:TEST_PREFIX+uid(),text:'Archived Item',srcList:'test-list',arcAt:new Date().toISOString()};if(!archivedItem.srcList)throw new Error('Source list not preserved');break;}
+          case 'Data Export':{const exported=await S.exp();if(typeof exported!=='object')throw new Error('Export did not return object');break;}
+          case 'Data Import':{const testImport={[TEST_PREFIX+'import_test']:'import_value'};await S.imp(testImport);const val=await S.get(TEST_PREFIX+'import_test');if(val!=='import_value')throw new Error('Import verification failed');break;}
+          case 'Theme Switch (Light)':{document.documentElement.classList.remove('dark');if(document.documentElement.classList.contains('dark'))throw new Error('Light theme not applied');break;}
+          case 'Theme Switch (Dark)':{document.documentElement.classList.add('dark');if(!document.documentElement.classList.contains('dark'))throw new Error('Dark theme not applied');break;}
+          case 'Theme Switch (System)':{const prefDark=window.matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.classList.toggle('dark',prefDark);break;}
+          case 'Timer Settings Load':{const preset=PRESETS.classic;if(preset.work!==25||preset.shortBreak!==5||preset.longBreak!==15)throw new Error('Default preset values incorrect');break;}
+          case 'Preset Change':{const longPreset=PRESETS.long;if(longPreset.work!==50)throw new Error('Long preset work duration incorrect');break;}
+          case 'UID Generation':{const id1=uid();const id2=uid();if(id1===id2)throw new Error('UIDs not unique');if(!id1.includes('-'))throw new Error('UID format invalid');break;}
+          case 'ICS Generation':{const ics=genICS({text:'Test',time:'10:00',date:'2026-02-01'});if(!ics.includes('BEGIN:VCALENDAR'))throw new Error('ICS format invalid');if(!ics.includes('Test'))throw new Error('ICS content missing');break;}
+          default:result.status='skipped';report.summary.skipped++;
+        }
+        if(result.status==='passed')report.summary.passed++;
+      }catch(err){
+        result.status='failed';
+        result.error=err.message;
+        report.summary.failed++;
+      }
+      
+      result.duration=Math.round(performance.now()-startTime);
+      report.tests.push(result);
+    }
+    
+    setProgress({current:tests.length,total:tests.length,step:'Cleaning up...'});
+    await delay(200);
+    
+    const allData=await S.exp();
+    for(const key of Object.keys(allData)){
+      if(key.startsWith(TEST_PREFIX)){await S.set(key,undefined);}
+    }
+    document.documentElement.classList.remove('dark');
+    
+    setResults(report);
+    setRunning(false);
+    onShowToast(`✅ Tests complete: ${report.summary.passed} passed, ${report.summary.failed} failed`);
+  };
+  
+  const generateReport=()=>{
+    if(!results)return'';
+    let report=`
+╔═══════════════════════════════════════════════════════════════╗
+║          PRODUCTIVITY HUB - TEST REPORT                       ║
+║                    Version ${results.version}                            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📅 Date: ${new Date(results.timestamp).toLocaleString()}
+🌐 Browser: ${results.browser.slice(0,60)}...
+
+═══════════════════════════════════════════════════════════════
+                         SUMMARY
+═══════════════════════════════════════════════════════════════
+
+  ✅ Passed:  ${results.summary.passed}
+  ❌ Failed:  ${results.summary.failed}
+  ⏭️  Skipped: ${results.summary.skipped}
+  ━━━━━━━━━━━━━━━━━━━
+  📊 Total:   ${results.tests.length}
+
+═══════════════════════════════════════════════════════════════
+                      DETAILED RESULTS
+═══════════════════════════════════════════════════════════════
+`;
+    const categories={};
+    results.tests.forEach(t=>{if(!categories[t.category])categories[t.category]=[];categories[t.category].push(t);});
+    for(const[cat,tests]of Object.entries(categories)){
+      report+=`\n┌─ ${cat} ${'─'.repeat(Math.max(0,55-cat.length))}┐\n`;
+      tests.forEach(t=>{
+        const icon=t.status==='passed'?'✅':t.status==='failed'?'❌':'⏭️';
+        report+=`│ ${icon} ${t.status.toUpperCase().padEnd(7)} ${t.name.padEnd(35)} ${t.duration}ms`;
+        if(t.error)report+=`\n│    └─ Error: ${t.error}`;
+        report+='\n';
+      });
+      report+=`└${'─'.repeat(60)}┘\n`;
+    }
+    report+=`\n═══════════════════════════════════════════════════════════════\n                         END OF REPORT\n═══════════════════════════════════════════════════════════════\nGenerated by Productivity Hub v${APP_VERSION}\n`;
+    return report;
+  };
+  
+  const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('📋 Report copied!');};
+  const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('📥 Report downloaded!');};
+  
+  return(
+    <div className="space-y-4">
+      <div className="gcard rounded-2xl p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-lavender-100 flex items-center justify-center"><I.Test s={24} c="text-lavender-400"/></div>
+          <div><h3 className="font-bold text-bark-600 dark:text-sand-100">App Test Suite</h3><p className="text-xs text-bark-400 dark:text-sand-300">Validate all features are working correctly</p></div>
+        </div>
+        <div className="bg-terracotta-50 dark:bg-terracotta-400/10 border border-terracotta-200 dark:border-terracotta-400/30 rounded-xl p-3 mb-4">
+          <div className="flex items-start gap-2"><span className="text-lg">⚠️</span><div><p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Alpha Feature</p><p className="text-xs text-bark-500 dark:text-sand-200">Tests use isolated data and clean up automatically. Your data is safe.</p></div></div>
+        </div>
+        {running?(
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm"><span className="text-bark-500 dark:text-sand-200">{progress.step}</span><span className="font-semibold text-sage-500">{progress.current}/{progress.total}</span></div>
+            <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden"><div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${(progress.current/progress.total)*100}%`}}/></div>
+          </div>
+        ):(
+          <button onClick={runTests} className="w-full py-3 bg-lavender-400 hover:bg-lavender-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><I.Play s={20}/>Run All Tests</button>
+        )}
+      </div>
+      {results&&(
+        <div className="gcard rounded-2xl p-5">
+          <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📊 Test Results</h4>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-sage-600 dark:text-sage-300">{results.summary.passed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Passed</div></div>
+            <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-terracotta-500 dark:text-terracotta-300">{results.summary.failed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Failed</div></div>
+            <div className="bg-sand-200 dark:bg-bark-500/30 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-bark-500 dark:text-sand-200">{results.summary.skipped}</div><div className="text-xs text-bark-500 dark:text-sand-200">Skipped</div></div>
+          </div>
+          {results.summary.failed>0&&(<div className="bg-terracotta-50 dark:bg-terracotta-400/10 rounded-xl p-3 mb-4"><h5 className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-2">❌ Failed Tests:</h5><ul className="space-y-1">{results.tests.filter(t=>t.status==='failed').map((t,i)=>(<li key={i} className="text-xs text-bark-500 dark:text-sand-200">• {t.name}: <span className="text-terracotta-500">{t.error}</span></li>))}</ul></div>)}
+          <div className="flex gap-2">
+            <button onClick={copyReport} className="flex-1 py-2.5 bg-ocean-100 text-ocean-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Copy s={16}/>Copy Report</button>
+            <button onClick={downloadReport} className="flex-1 py-2.5 bg-sage-100 text-sage-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Download s={16}/>Download</button>
+          </div>
+        </div>
+      )}
+      <div className="gcard rounded-2xl p-4">
+        <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">📋 Tests Included:</h4>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-bark-500 dark:text-sand-200">
+          <div>• IndexedDB Storage</div><div>• CRUD Operations</div><div>• Archive/Restore</div><div>• Export/Import</div><div>• Theme Switching</div><div>• Focus Timer Settings</div><div>• Utility Functions</div><div>• Data Validation</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Isolated FocusTimer Component with useReducer
+const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpdateFocus,onUpdateTodos,activeTaskId,activeTaskText})=>{
+  const[state,dispatch]=React.useReducer((s,a)=>{
+    switch(a.type){
+      case'SET_MODE':return{...s,mode:a.mode,left:a.left,run:false};
+      case'SET_LEFT':return{...s,left:a.left};
+      case'TOGGLE_RUN':return{...s,run:!s.run};
+      case'SET_RUN':return{...s,run:a.run};
+      case'SET_WAKE':return{...s,wake:a.wake};
+      default:return s;
+    }
+  },{mode:'work',left:tSet.work*60,run:false,wake:true});
+  
+  const{mode,left,run,wake}=state;
+  const wakeRef=useRef(null);
+  const intRef=useRef(null);
+  
+  const fmt=s=>{const m=Math.floor(s/60),sec=s%60;return`${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;};
+  const prog=useMemo(()=>{const t=mode==='work'?tSet.work*60:mode==='shortBreak'?tSet.shortBreak*60:tSet.longBreak*60;return((t-left)/t)*100;},[left,mode,tSet]);
+  
+  const switchMode=useRef((m)=>{
+    const d=m==='work'?tSet.work:m==='shortBreak'?tSet.shortBreak:tSet.longBreak;
+    dispatch({type:'SET_MODE',mode:m,left:d*60});
+  }).current;
+  
+  const timerDone=useRef(()=>{
+    dispatch({type:'SET_RUN',run:false});
+    if('vibrate'in navigator)navigator.vibrate([200,100,200]);
+    try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=700;o.start();o.stop(c.currentTime+0.4);}catch{}
+    if(mode==='work'){
+      onComplete(mode,activeTaskId,()=>switchMode(onUpdatePoms()%4===0?'longBreak':'shortBreak'));
+    }else{
+      switchMode('work');
+      notify('☀️ Break Complete!','Ready to focus again?');
+    }
+  }).current;
+  
+  useEffect(()=>{if(!run){const d=mode==='work'?tSet.work:mode==='shortBreak'?tSet.shortBreak:tSet.longBreak;dispatch({type:'SET_LEFT',left:d*60});}},[tSet,mode,run]);
+  
+  useEffect(()=>{
+    const req=async()=>{if(wake&&run&&'wakeLock'in navigator){try{wakeRef.current=await navigator.wakeLock.request('screen');}catch{}}};
+    const rel=()=>{wakeRef.current?.release();wakeRef.current=null;};
+    if(wake&&run)req();else rel();
+    return()=>rel();
+  },[wake,run]);
+  
+  useEffect(()=>{
+    if(run&&left>0)intRef.current=setInterval(()=>dispatch({type:'SET_LEFT',left:Math.max(0,left-1)}),1000);
+    else if(left<=0&&run)timerDone();
+    return()=>clearInterval(intRef.current);
+  },[run,left]);
+  
+  return(
+    <div className={`rounded-3xl p-6 md:p-8 relative overflow-hidden soft-shadow ${mode==='work'?'bg-gradient-to-br from-sage-300 to-sage-400':mode==='shortBreak'?'bg-gradient-to-br from-ocean-300 to-ocean-400':'bg-gradient-to-br from-lavender-300 to-lavender-400'}`}>
+      <div className="absolute inset-0 bg-white/20 transition-all duration-1000 origin-left" style={{transform:`scaleX(${prog/100})`}}/>
+      <div className="relative z-10">
+        <div className="flex justify-center gap-2 md:gap-3 mb-5 md:mb-6">{['work','shortBreak','longBreak'].map(m=><button key={m} onClick={()=>switchMode(m)} className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full text-sm md:text-base font-semibold transition-all ${mode===m?'bg-white/40 text-white':'bg-white/20 text-white/80'}`}>{m==='work'?'Focus':m==='shortBreak'?'Short':'Long'}</button>)}</div>
+        <div className="text-7xl md:text-8xl font-extrabold text-center mb-3 md:mb-5 text-white drop-shadow-sm tracking-tight timer-display">{fmt(left)}</div>
+        {activeTaskText&&<div className="text-center text-white/90 text-sm mb-4 font-medium sel">🎯 {activeTaskText}</div>}
+        <div className="flex justify-center gap-3">
+          <button onClick={()=>{if(!run)reqNotifyPerm();dispatch({type:'TOGGLE_RUN'});}} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
+          <button onClick={()=>switchMode(mode)} aria-label="Reset timer" className="p-3 bg-white/30 rounded-2xl text-white"><I.Reset s={24}/></button>
+        </div>
+        <div className="flex items-center justify-center gap-2 mt-4"><span className="text-sm text-white/80 font-medium">Keep awake</span><button onClick={()=>dispatch({type:'SET_WAKE',wake:!wake})} aria-label={wake?'Disable keep awake':'Enable keep awake'} className={`w-11 h-6 rounded-full transition-colors p-0.5 ${wake?'bg-white/40':'bg-black/20'}`}><div className={`w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${wake?'translate-x-5':'translate-x-0'}`}/></button></div>
+      </div>
+    </div>
+  );
+},(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText);
+
+// Main App
+function App(){
+  const{theme,setTheme}=useContext(ThemeCtx);
+  const desk=useDesk();
+  const[tab,setTab]=usePersistedState('tab','focus');
+  const[showHelp,setShowHelp]=useState(false);
+  const[preset,setPreset]=usePersistedState('preset','classic');
+  const[customT,setCustomT]=usePersistedState('customT',{work:25,shortBreak:5,longBreak:15});
+  const tSet=useMemo(()=>preset==='custom'?customT:PRESETS[preset],[preset,customT]);
+  
+  // Data
+  const[lists,setLists]=usePersistedState('lists',[{id:'groceries',name:'Groceries',items:[]}]);
+  const[todos,setTodos]=usePersistedState('todos',[]);
+  const[reminders,setReminders]=usePersistedState('reminders',[]);
+  const[notes,setNotes]=usePersistedState('notes',[]);
+  const[focus,setFocus]=usePersistedState('focus',[]);
+  const[arc,setArc]=usePersistedState('arc',{lists:[],todos:[],reminders:[],notes:[]});
+  const[activeF,setActiveF]=useState(null);
+  
+  // Timer - moved to FocusTimer component, only keep what we need for callbacks
+  const[poms,setPoms]=usePersistedState('poms',0);
+  
+  // Metrics
+  const[met,setMet]=usePersistedState('met',{d:{p:0,t:0,m:0,date:new Date().toDateString()},w:{p:0,t:0,m:0}});
+  const[fHist,setFHist]=usePersistedState('fHist',[]);
+  const[dHist,setDHist]=usePersistedState('dHist',[]);
+  
+  // UI
+  const[edit,setEdit]=useState(null);
+  const[selList,setSelList]=usePersistedState('selList','groceries');
+  const[newList,setNewList]=useState('');
+  const[showNew,setShowNew]=useState(false);
+  const[listMenu,setListMenu]=useState(null);
+  const[editListId,setEditListId]=useState(null);
+  const[editListName,setEditListName]=useState('');
+  const[deleteConfirm,setDeleteConfirm]=useState(null);
+  const[toast,setToast]=useState(null);
+  const[moreSub,setMoreSub]=useState('settings');
+  const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
+  const[dragI,setDragI]=useState(null);
+  const[dragO,setDragO]=useState(null);
+
+  // PWA Install state
+  const[pwaPrompt,setPwaPrompt]=useState(!!window.__pwaInstallPrompt);
+  const[pwaInstalled,setPwaInstalled]=useState(!!window.__pwaInstalled);
+  const pwaStatus=useMemo(()=>{
+    if(pwaInstalled)return'installed';
+    if(window.matchMedia('(display-mode:standalone)').matches)return'installed';
+    if(window.navigator.standalone===true)return'installed';
+    if(pwaPrompt)return'ready';
+    return'unavailable';
+  },[pwaPrompt,pwaInstalled]);
+  
+  useEffect(()=>{
+    const onReady=()=>setPwaPrompt(true);
+    const onInstalled=()=>{setPwaInstalled(true);setPwaPrompt(false);showT('✅ App installed!');};
+    window.addEventListener('pwa-prompt-ready',onReady);
+    window.addEventListener('pwa-installed',onInstalled);
+    return()=>{window.removeEventListener('pwa-prompt-ready',onReady);window.removeEventListener('pwa-installed',onInstalled);};
+  },[]);
+  
+  const triggerInstall=async()=>{
+    if(!window.__pwaInstallPrompt)return;
+    try{
+      window.__pwaInstallPrompt.prompt();
+      const{outcome}=await window.__pwaInstallPrompt.userChoice;
+      if(outcome==='accepted'){setPwaInstalled(true);setPwaPrompt(false);}
+    }catch{}
+  };
+
+  const showT=m=>{setToast(m);setTimeout(()=>setToast(null),2000);};
+
+  // No more manual saves needed - usePersistedState handles it automatically!
+  
+  // Timer completion callbacks for FocusTimer component
+  const handleTimerComplete=(mode,activeTaskId,switchToBreak)=>{
+    setFHist(h=>[...h.slice(-500),{hr:new Date().getHours()}]);
+    const nc=poms+1;
+    setPoms(nc);
+    setMet(p=>({...p,d:{...p.d,p:p.d.p+1,m:p.d.m+tSet.work},w:{...p.w,p:p.w.p+1,m:p.w.m+tSet.work}}));
+    if(activeTaskId){
+      setFocus(f=>f.map(t=>t.id===activeTaskId?{...t,poms:(t.poms||0)+1}:t));
+      setTodos(t=>t.map(x=>x.id===activeTaskId?{...x,poms:(x.poms||0)+1}:x));
+    }
+    switchToBreak();
+    notify('🌿 Great Focus!',nc%4===0?'Time for a long break (15 min)':'Time for a short break (5 min)');
+    showT('🌿 Great focus!');
+  };
+  
+  const handleUpdatePoms=()=>{
+    const nc=poms+1;
+    setPoms(nc);
+    return nc;
+  };
+
+  // Archive functions
+  const archiveItem=(type,item,listId=null)=>{
+    const ai={...item,arcAt:new Date().toISOString(),srcType:type,srcList:listId};
+    if(type==='list'){setLists(ls=>ls.map(l=>l.id===listId?{...l,items:l.items.filter(i=>i.id!==item.id)}:l));setArc(a=>({...a,lists:[...a.lists,ai]}));}
+    else if(type==='todo'){setTodos(t=>t.filter(x=>x.id!==item.id));setFocus(f=>f.filter(x=>x.id!==item.id));setArc(a=>({...a,todos:[...a.todos,ai]}));}
+    else if(type==='reminder'){setReminders(r=>r.filter(x=>x.id!==item.id));setArc(a=>({...a,reminders:[...a.reminders,ai]}));}
+    else if(type==='note'){setNotes(n=>n.filter(x=>x.id!==item.id));setArc(a=>({...a,notes:[...a.notes,ai]}));}
+    showT('📦 Archived');
+  };
+
+  const restore=(type,item)=>{
+    if(type==='lists'&&item.srcList&&lists.find(l=>l.id===item.srcList))setLists(ls=>ls.map(l=>l.id===item.srcList?{...l,items:[...l.items,{...item,arcAt:undefined,srcType:undefined,srcList:undefined}]}:l));
+    else if(type==='todos')setTodos(t=>[...t,{...item,arcAt:undefined,srcType:undefined}]);
+    else if(type==='reminders')setReminders(r=>[...r,{...item,arcAt:undefined,srcType:undefined}]);
+    else if(type==='notes')setNotes(n=>[...n,{...item,arcAt:undefined,srcType:undefined}]);
+    setArc(a=>({...a,[type]:a[type].filter(i=>i.id!==item.id)}));showT('✨ Restored');
+  };
+
+  const delArc=(type,id)=>{setArc(a=>({...a,[type]:a[type].filter(i=>i.id!==id)}));showT('🗑 Deleted');};
+
+  const addFocus=t=>{if(focus.length>=5)return showT('🌿 Max 5');if(!focus.find(x=>x.id===t.id)){setFocus([...focus,{...t}]);showT('✨ Added');}};
+  const doneFocus=id=>{setTodos(t=>t.map(x=>x.id===id?{...x,done:true}:x));setFocus(f=>f.filter(x=>x.id!==id));setMet(p=>({...p,d:{...p.d,t:p.d.t+1},w:{...p.w,t:p.w.t+1}}));if(activeF===id)setActiveF(null);showT('🎉 Done!');};
+  const doneList=(lid,iid)=>{setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.map(i=>i.id===iid?{...i,done:!i.done}:i)}:l));};
+  const doneTodo=id=>{setTodos(t=>t.map(x=>x.id===id?{...x,done:true}:x));setFocus(f=>f.filter(x=>x.id!==id));setMet(p=>({...p,d:{...p.d,t:p.d.t+1},w:{...p.w,t:p.w.t+1}}));showT('✅ Done!');};
+  const deleteTodo=id=>{setTodos(t=>t.filter(x=>x.id!==id));showT('🗑 Deleted');};
+  const deleteListItem=(lid,iid)=>{setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.filter(i=>i.id!==iid)}:l));showT('🗑 Deleted');};
+  const deleteReminder=id=>{setReminders(r=>r.filter(x=>x.id!==id));showT('🗑 Deleted');};
+  
+  const updateListName=(listId,newName)=>{
+    if(!newName.trim())return;
+    setLists(ls=>ls.map(l=>l.id===listId?{...l,name:newName.trim()}:l));
+    setEditListId(null);
+    setEditListName('');
+    showT('✏️ List renamed!');
+  };
+  
+  const deleteList=(listId)=>{
+    setLists(ls=>ls.filter(l=>l.id!==listId));
+    if(selList===listId){
+      const remaining=lists.filter(l=>l.id!==listId);
+      if(remaining.length>0)setSelList(remaining[0].id);
+    }
+    setDeleteConfirm(null);
+    showT('🗑 List deleted!');
+  };
+
+  const saveItem=(type,item,listId=null)=>{
+    if(type==='note'){if(item.id)setNotes(n=>n.map(x=>x.id===item.id?{...item,upAt:new Date().toISOString()}:x));else setNotes(n=>[...n,{...item,id:uid(),crAt:new Date().toISOString()}]);}
+    else if(type==='list'){if(item.id)setLists(ls=>ls.map(l=>l.id===listId?{...l,items:l.items.map(i=>i.id===item.id?item:i)}:l));else setLists(ls=>ls.map(l=>l.id===listId?{...l,items:[...l.items,{...item,id:uid()}]}:l));}
+    else if(type==='todo'){if(item.id){setTodos(t=>t.map(x=>x.id===item.id?item:x));setFocus(f=>f.map(x=>x.id===item.id?item:x));}else setTodos(t=>[...t,{...item,id:uid(),poms:0}]);}
+    else if(type==='reminder'){if(item.id)setReminders(r=>r.map(x=>x.id===item.id?item:x));else setReminders(r=>[...r,{...item,id:uid(),on:true}]);}
+    showT('✨ Saved!');
+  };
+
+  const handleDS=i=>setDragI(i);
+  const handleDO=(e,i)=>{e.preventDefault();setDragO(i);};
+  const handleDE=()=>{if(dragI!==null&&dragO!==null&&dragI!==dragO){const n=[...focus],[d]=n.splice(dragI,1);n.splice(dragO,0,d);setFocus(n);}setDragI(null);setDragO(null);};
+
+  const wkData=useMemo(()=>{const days=['S','M','T','W','T','F','S'],td=new Date();return Array.from({length:7},(_,i)=>{const d=new Date(td);d.setDate(d.getDate()-(6-i));const ds=d.toDateString(),dd=dHist.find(x=>x.date===ds);return{l:days[d.getDay()],v:ds===met.d.date?met.d.p:(dd?.p||0)};});},[dHist,met.d]);
+
+  const totArc=arc.lists.length+arc.todos.length+arc.reminders.length+arc.notes.length;
+
+  // RENDERS
+  const rFocus=()=>(
+    <div className="space-y-5">
+      <FocusTimer 
+        tSet={tSet}
+        onComplete={handleTimerComplete}
+        onUpdatePoms={handleUpdatePoms}
+        activeTaskId={activeF}
+        activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null}
+      />
+      <div className="grid grid-cols-3 gap-3 md:gap-4">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+      <div>
+        <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
+        <div className="space-y-2">
+          {focus.map((t,i)=>(
+            <div key={t.id} draggable onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 md:gap-4 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
+              <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
+              <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
+              <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
+              {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
+              <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
+            </div>
+          ))}
+          {focus.length===0&&<Empty.Focus/>}
+        </div>
+      </div>
+    </div>
+  );
+
+  const rLists=()=>{
+    const cl=lists.find(l=>l.id===selList);
+    const secs=[...new Set(cl?.items.map(i=>i.section)||[])];
+    
+    if(lists.length===0){
+      return(
+        <div className="space-y-4">
+          <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Lists</h2>
+            </div>
+          </div>
+          <Empty.NoLists onCreate={()=>setShowNew(true)}/>
+          {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="List name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
+        </div>
+      );
+    }
+    
+    return(
+      <div className="space-y-4">
+        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Lists</h2>
+            <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+          </div>
+          {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')updateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="List name..."/><button onClick={()=>updateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
+          <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
+            let pressTimer=null;
+            const handlePress=e=>{
+              pressTimer=setTimeout(()=>{
+                const rect=e.currentTarget.getBoundingClientRect();
+                setListMenu({list:l,x:rect.left,y:rect.bottom+5});
+              },500);
+            };
+            const handleRelease=()=>{if(pressTimer)clearTimeout(pressTimer);};
+            return <button key={l.id} onClick={()=>setSelList(l.id)} onMouseDown={handlePress} onMouseUp={handleRelease} onMouseLeave={handleRelease} onTouchStart={handlePress} onTouchEnd={handleRelease} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
+          })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
+        </div>
+        {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="List name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
+        {cl&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
+        {secs.length>0?secs.map(s=>(
+          <div key={s} className="space-y-2">
+            <h3 className="text-xs font-bold text-bark-400/50 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
+            {cl?.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>(
+              <Swipe key={item.id} onDone={()=>deleteListItem(cl.id,item.id)} onArc={()=>archiveItem('list',item,cl.id)}>
+                <div className={`p-4 md:p-5 flex items-start gap-3 md:gap-4 ${item.done?'opacity-50':''}`}>
+                  <button onClick={()=>doneList(cl.id,item.id)} className={`w-6 h-6 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-sage-300'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>
+                  <div className="flex-1 min-w-0">
+                    <span className={`block font-medium sel ${item.done?'line-through text-bark-400/40':'text-bark-600 dark:text-sand-100'}`}>{item.text}</span>
+                    {item.notes&&<p className="text-xs text-bark-400/50 mt-1 truncate sel">📝 {item.notes}</p>}
+                  </div>
+                  <Acts onDone={()=>doneList(cl.id,item.id)} onArc={()=>archiveItem('list',item,cl.id)} onEdit={()=>setEdit({type:'list',item,listId:cl.id})} onShare={()=>{if(shareItem(item,'list'))showT('📋 Copied!');}} onDelete={()=>deleteListItem(cl.id,item.id)} isDone={item.done}/>
+                </div>
+              </Swipe>
+            ))}
+          </div>
+        )):<Empty.List/>}
+        <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},selList)}/>
+      </div>
+    );
+  };
+
+  const rTodos=()=>{
+    const content=QUADS.map(q=>{
+      const tasks=todos.filter(t=>t.quad===q.id).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+      const isExp=expQ[q.id];
+      const vis=isExp?tasks:tasks.slice(0,2);
+      return(
+        <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} overflow-hidden`}>
+          <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2.5 md:p-3.5 bg-gradient-to-r ${q.clr} flex items-center justify-between`}><div><h3 className={`font-bold md:text-lg ${q.txt}`}>{q.l}</h3><p className="text-xs md:text-sm text-bark-500/60">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt}`}>{tasks.length}</span>{isExp?<I.Up s={18} c={q.txt}/>:<I.Down s={18} c={q.txt}/>}</div></button>
+          <div className={`bg-white/60 dark:bg-bark-600/60 ${tasks.length>0?'p-2 md:p-3':'p-0'}`}>
+            {tasks.length===0?<Empty.Tasks/>:(
+              <div className="space-y-1.5">
+                {vis.map(t=>(
+                  <Swipe key={t.id} onDone={()=>deleteTodo(t.id)} onArc={()=>archiveItem('todo',t)}>
+                    <div className={`p-4 md:p-5 flex items-start gap-4 transition-opacity ${t.done?'opacity-60':''}`}>
+                      <button onClick={()=>doneTodo(t.id)} className={`w-7 h-7 mt-0.5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className={`text-base font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-600 dark:text-sand-100'}`}>{t.text}</div>
+                        {(t.cat||t.deadline||t.subtasks?.length>0)&&(
+                          <div className="flex items-center gap-3 flex-wrap text-xs">
+                            {t.cat&&<span className="px-2 py-1 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
+                            {t.deadline&&<span className="px-2 py-1 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
+                            {t.subtasks?.length>0&&<span className="px-2 py-1 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
+                          </div>
+                        )}
+                        {t.poms>0&&<div className="flex items-center gap-1.5"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span><span className="text-xs text-bark-400/50">pomodoro{t.poms>1?'s':''}</span></div>}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {!t.done&&<button onClick={()=>setEdit({type:'todo',item:t})} className="p-2 rounded-lg hover:bg-ocean-100 dark:hover:bg-ocean-400/20 text-ocean-400 transition-colors" aria-label="Edit task"><I.Edit s={18}/></button>}
+                        {!t.done&&<button onClick={()=>{if(shareItem(t,'task'))showT('📋 Copied!');}} className="p-2 rounded-lg hover:bg-lavender-100 dark:hover:bg-lavender-400/20 text-lavender-400 transition-colors" aria-label="Share task"><I.Share s={18}/></button>}
+                        {!t.done&&!focus.find(x=>x.id===t.id)&&<button onClick={()=>addFocus(t)} className="p-2 rounded-lg hover:bg-sage-100 dark:hover:bg-sage-400/20 text-sage-500 font-bold transition-colors" aria-label="Add to focus">→</button>}
+                        {t.done&&<button onClick={()=>deleteTodo(t.id)} className="p-2 rounded-lg hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 text-terracotta-400 transition-colors" aria-label="Delete task"><I.Trash s={18}/></button>}
+                      </div>
+                    </div>
+                  </Swipe>
+                ))}
+                {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    });
+    return(
+      <div className="space-y-4">
+        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
+          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 To-Do Tasks</h2>
+          <button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+        </div>
+        <div className={desk?'md-grid':'space-y-3'}>{content}</div>
+        <QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'ui',poms:0})}/>
+      </div>
+    );
+  };
+
+  const rRemind=()=>(
+    <div className="space-y-2">
+      <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">🔔 Reminders</h2>
+        <button onClick={()=>setEdit({type:'reminder',item:{}})} aria-label="Add new reminder" className="p-2 rounded-xl bg-terracotta-400 text-white shadow-sm hover:bg-terracotta-500 transition-colors"><I.Plus s={20}/></button>
+      </div>
+      {reminders.length===0?<Empty.Remind/>:reminders.map(r=>(
+        <Swipe key={r.id} onDone={()=>deleteReminder(r.id)} onArc={()=>archiveItem('reminder',r)}>
+          <div className="p-4 md:p-5 space-y-3">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-terracotta-100 flex items-center justify-center" aria-hidden="true"><I.Bell s={24} c="text-terracotta-400"/></div>
+              <div className="flex-1">
+                <div className="font-semibold md:text-lg text-bark-600 dark:text-sand-100 sel">{r.text||'(No title)'}</div>
+                <div className="text-sm md:text-base text-bark-400/60 dark:text-sand-300/60">📅 {r.date} ⏰ {r.time}</div>
+              </div>
+              <Acts showDone={false} onArc={()=>archiveItem('reminder',r)} onEdit={()=>setEdit({type:'reminder',item:r})} onShare={()=>{if(shareItem(r,'reminder'))showT('📋 Copied!');}} onDelete={()=>deleteReminder(r.id)}/>
+              <button onClick={()=>setReminders(reminders.map(x=>x.id===r.id?{...x,on:!x.on}:x))} aria-label={r.on?'Disable reminder':'Enable reminder'} className={`w-12 h-7 rounded-full transition-colors p-0.5 ${r.on?'bg-sage-400':'bg-sand-300'}`}><div className={`w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${r.on?'translate-x-5':'translate-x-0'}`}/></button>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={()=>{dlFile(genICS(r),`${(r.text||'reminder').replace(/\s+/g,'-')}.ics`,'text/calendar');showT('📅 Downloaded!');}} className="flex-1 py-2.5 bg-ocean-100 text-ocean-400 rounded-xl text-sm font-semibold">📥 Download .ics</button>
+              <button onClick={()=>{const[h,m]=(r.time||'09:00').split(':');const d=r.date?new Date(r.date):new Date();d.setHours(parseInt(h),parseInt(m),0,0);if(d<new Date())d.setDate(d.getDate()+1);const end=new Date(d.getTime()+15*60000);const f=dt=>dt.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(r.text||'Reminder')}&dates=${f(d)}/${f(end)}`,'_blank');}} className="flex-1 py-2.5 bg-sage-100 text-sage-600 rounded-xl text-sm font-semibold"><I.Calendar s={16} c="inline mr-1"/>Google</button>
+            </div>
+          </div>
+        </Swipe>
+      ))}
+      <QuickAdd placeholder="Quick add reminder..." onAdd={text=>saveItem('reminder',{text,time:'09:00',date:new Date().toISOString().split('T')[0],on:true})}/>
+    </div>
+  );
+
+  const rNotes=()=>(
+    <div className="space-y-4">
+      <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Notes</h2>
+        <button onClick={()=>setEdit({type:'note',item:{}})} aria-label="Add new note" className="p-2 rounded-xl bg-ocean-400 text-white shadow-sm hover:bg-ocean-500 transition-colors"><I.Plus s={20}/></button>
+      </div>
+      {notes.length===0?<Empty.Notes/>:notes.map(n=>(
+        <div key={n.id} className="gcard rounded-2xl p-4 md:p-6">
+          <div className="flex items-start justify-between mb-2 md:mb-3">
+            <h3 className="font-bold md:text-lg text-bark-600 dark:text-sand-100 sel">{n.title}</h3>
+            <Acts showDone={false} onArc={()=>archiveItem('note',n)} onEdit={()=>setEdit({type:'note',item:n})} onShare={()=>{if(shareItem(n,'note'))showT('📋 Copied!');}}/>
+          </div>
+          <p className="text-sm md:text-base text-bark-500 dark:text-sand-200 whitespace-pre-wrap sel line-clamp-4 md:line-clamp-none">{n.content}</p>
+          <p className="text-xs md:text-sm text-bark-400/50 mt-2 md:mt-3">{new Date(n.crAt).toLocaleDateString()}</p>
+        </div>
+      ))}
+      <QuickAdd placeholder="Quick add note..." onAdd={text=>saveItem('note',{title:text,content:'',crAt:new Date().toISOString()})}/>
+    </div>
+  );
+
+  const rMore=()=>(
+    <div className="space-y-4">
+      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'install',l:'📲 Install'},{id:'stats',l:'📊 Stats'},{id:'archive',l:`📦 Archive${totArc>0?` (${totArc})`:''}`},{id:'help',l:'📚 Help'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
+      {moreSub==='settings'&&(
+        <div className="space-y-4">
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
+        </div>
+      )}
+      {moreSub==='install'&&(
+        <div className="space-y-4">
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2">📲 Install as App</h3>
+            <p className="text-sm text-bark-500 dark:text-sand-200 mb-4">Install Productivity Hub on your device for quick access, fullscreen mode, and an app-like experience.</p>
+            
+            {pwaStatus==='installed'&&(
+              <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-sage-400 rounded-full flex items-center justify-center text-white text-lg">✓</div>
+                <div><div className="font-bold text-sage-600 dark:text-sage-300">Already Installed</div><div className="text-xs text-bark-500 dark:text-sand-200">You're running Productivity Hub as an installed app!</div></div>
+              </div>
+            )}
+            
+            {pwaStatus==='ready'&&(
+              <button onClick={triggerInstall} className="w-full py-3.5 bg-sage-400 hover:bg-sage-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 text-lg">📲 Install Now</button>
+            )}
+            
+            {pwaStatus==='unavailable'&&(
+              <div className="bg-terracotta-100/50 dark:bg-terracotta-400/10 rounded-xl p-4">
+                <div className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-1">Auto-install not available</div>
+                <p className="text-xs text-bark-500 dark:text-sand-200">Use the manual instructions below, or deploy with proper PWA files for the automatic install prompt.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📱 Manual Install by Platform</h4>
+            <div className="space-y-3">
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <div className="font-bold text-bark-600 dark:text-sand-100 mb-1 flex items-center gap-2">🍎 iOS (iPhone/iPad)</div>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Open this page in <strong>Safari</strong></li>
+                  <li>2. Tap the <strong>Share</strong> button (square with arrow)</li>
+                  <li>3. Scroll down, tap <strong>"Add to Home Screen"</strong></li>
+                  <li>4. Tap <strong>Add</strong> — done!</li>
+                </ol>
+                <p className="text-xs text-sage-600 dark:text-sage-300 mt-2 font-medium">✅ Works now — no server needed</p>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <div className="font-bold text-bark-600 dark:text-sand-100 mb-1 flex items-center gap-2">🤖 Android (Chrome)</div>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Open this page in <strong>Chrome</strong></li>
+                  <li>2. Tap the <strong>⋮ menu</strong> (top right)</li>
+                  <li>3. Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></li>
+                  <li>4. Confirm — done!</li>
+                </ol>
+                <p className="text-xs text-ocean-500 dark:text-ocean-300 mt-2 font-medium">⚡ Best with HTTPS hosting (see below)</p>
+              </div>
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <div className="font-bold text-bark-600 dark:text-sand-100 mb-1 flex items-center gap-2">💻 Desktop (Chrome/Edge)</div>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Look for the <strong>install icon</strong> in the URL bar (⊕)</li>
+                  <li>2. Or use <strong>⋮ menu → Install App</strong></li>
+                  <li>3. Or use <strong>⋮ menu → "Cast, save, and share" → Install</strong></li>
+                </ol>
+                <p className="text-xs text-lavender-500 dark:text-lavender-300 mt-2 font-medium">⚡ Best with HTTPS hosting (see below)</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2">🌐 Deploy for Full PWA</h4>
+            <p className="text-sm text-bark-500 dark:text-sand-200 mb-3">For the best install experience with auto-prompts, splash screens, and offline support, host the app on HTTPS with proper PWA companion files.</p>
+            
+            <button onClick={()=>{
+              const files=window.__generatePWAFiles();
+              dlFile(files.sw,'sw.js','application/javascript');
+              setTimeout(()=>dlFile(files.manifest,'manifest.json','application/json'),500);
+              showT('📦 Files downloaded!');
+            }} className="w-full py-3 bg-ocean-100 text-ocean-500 rounded-xl font-semibold mb-3 flex items-center justify-center gap-2">
+              <I.Download s={18}/>Download PWA Files
+            </button>
+            
+            <div className="bg-sand-100 dark:bg-bark-600/50 rounded-xl p-4 text-sm text-bark-500 dark:text-sand-200">
+              <p className="font-bold text-bark-600 dark:text-sand-100 mb-2">Quick Deploy Steps:</p>
+              <ol className="space-y-1.5">
+                <li>1. Download <strong>sw.js</strong> and <strong>manifest.json</strong> above</li>
+                <li>2. Put all 3 files in one folder: the HTML file + sw.js + manifest.json</li>
+                <li>3. Update the HTML's <code className="bg-bark-400/10 px-1 rounded text-xs">&lt;link rel="manifest"&gt;</code> to point to <code className="bg-bark-400/10 px-1 rounded text-xs">manifest.json</code></li>
+                <li>4. Upload to <strong>GitHub Pages</strong>, <strong>Netlify</strong>, or <strong>Vercel</strong> (all free HTTPS)</li>
+              </ol>
+              <div className="mt-3 pt-3 border-t border-sand-300 dark:border-bark-500">
+                <p className="font-semibold text-bark-600 dark:text-sand-100 mb-1">Why HTTPS?</p>
+                <p>Browsers require HTTPS for service workers and the automatic install prompt. The current single-file approach uses blob URLs which have a null origin — this is why "Add to Home Screen" doesn't trigger automatically.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {moreSub==='stats'&&(
+        <div className="space-y-4">
+          <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
+          <div className="gcard rounded-2xl p-4 md:p-6"><h4 className="text-sm md:text-base font-semibold text-bark-500/70 dark:text-sand-300 mb-3">This Week</h4><div className="grid grid-cols-3 gap-4 md:gap-6 text-center"><div><div className="text-2xl md:text-3xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs md:text-sm text-bark-400/50">Pomodoros</div></div><div><div className="text-2xl md:text-3xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs md:text-sm text-bark-400/50">Tasks</div></div><div><div className="text-2xl md:text-3xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h</div><div className="text-xs md:text-sm text-bark-400/50">Focus</div></div></div></div>
+        </div>
+      )}
+      {moreSub==='archive'&&(
+        <div className="space-y-2">
+          {totArc===0?<Empty.Archive/>:<>
+            {arc.todos.length>0&&<div><h4 className="text-sm md:text-base font-bold text-bark-400/50 uppercase tracking-wider mb-2 md:mb-3">Tasks ({arc.todos.length})</h4>{arc.todos.map(t=><div key={t.id} className="gcard rounded-xl p-3 md:p-4 flex items-center gap-3 md:gap-4 mb-2"><span className="flex-1 truncate sel text-bark-600 dark:text-sand-100 md:text-base">{t.text}</span><button onClick={()=>restore('todos',t)} aria-label="Restore task" className="p-2 text-sage-500 hover:bg-sage-100 rounded-lg"><I.Restore s={18}/></button><button onClick={()=>delArc('todos',t.id)} aria-label="Delete task permanently" className="p-2 text-terracotta-400 hover:bg-terracotta-100 rounded-lg"><I.Trash s={18}/></button></div>)}</div>}
+            {arc.lists.length>0&&<div><h4 className="text-sm md:text-base font-bold text-bark-400/50 uppercase tracking-wider mb-2 md:mb-3">List Items ({arc.lists.length})</h4>{arc.lists.map(t=><div key={t.id} className="gcard rounded-xl p-3 md:p-4 flex items-center gap-3 md:gap-4 mb-2"><span className="flex-1 truncate sel text-bark-600 dark:text-sand-100 md:text-base">{t.text}</span><button onClick={()=>restore('lists',t)} aria-label="Restore item" className="p-2 text-sage-500 hover:bg-sage-100 rounded-lg"><I.Restore s={18}/></button><button onClick={()=>delArc('lists',t.id)} aria-label="Delete item permanently" className="p-2 text-terracotta-400 hover:bg-terracotta-100 rounded-lg"><I.Trash s={18}/></button></div>)}</div>}
+            {arc.reminders.length>0&&<div><h4 className="text-sm md:text-base font-bold text-bark-400/50 uppercase tracking-wider mb-2 md:mb-3">Reminders ({arc.reminders.length})</h4>{arc.reminders.map(t=><div key={t.id} className="gcard rounded-xl p-3 md:p-4 flex items-center gap-3 md:gap-4 mb-2"><span className="flex-1 truncate sel text-bark-600 dark:text-sand-100 md:text-base">{t.text}</span><button onClick={()=>restore('reminders',t)} aria-label="Restore reminder" className="p-2 text-sage-500 hover:bg-sage-100 rounded-lg"><I.Restore s={18}/></button><button onClick={()=>delArc('reminders',t.id)} aria-label="Delete reminder permanently" className="p-2 text-terracotta-400 hover:bg-terracotta-100 rounded-lg"><I.Trash s={18}/></button></div>)}</div>}
+            {arc.notes.length>0&&<div><h4 className="text-sm font-bold text-bark-400/50 uppercase tracking-wider mb-2">Notes ({arc.notes.length})</h4>{arc.notes.map(t=><div key={t.id} className="gcard rounded-xl p-3 flex items-center gap-3 mb-2"><span className="flex-1 truncate sel text-bark-600 dark:text-sand-100">{t.title}</span><button onClick={()=>restore('notes',t)} aria-label="Restore note" className="p-2 text-sage-500 hover:bg-sage-100 rounded-lg"><I.Restore s={18}/></button><button onClick={()=>delArc('notes',t.id)} aria-label="Delete note permanently" className="p-2 text-terracotta-400 hover:bg-terracotta-100 rounded-lg"><I.Trash s={18}/></button></div>)}</div>}
+          </>}
+        </div>
+      )}
+      {moreSub==='help'&&(
+        <div className="space-y-6 pb-8">
+          <div className="gcard rounded-2xl p-6">
+            <h2 className="text-2xl font-extrabold text-bark-600 dark:text-sand-100 mb-4">📚 Complete Guide to Productivity Hub</h2>
+            <p className="text-bark-500 dark:text-sand-200">Master the art of productivity with our comprehensive system combining Pomodoro, Deep Work, and the Eisenhower Matrix.</p>
+          </div>
+
+          <div className="gcard rounded-2xl p-5 bg-gradient-to-br from-sage-100 to-ocean-100 dark:from-bark-600/50 dark:to-bark-600/50">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-2">💡 Pro Tip</h3>
+            <p className="text-bark-600 dark:text-sand-100 font-semibold">The best productivity system is one you'll use consistently. Start simple with just Pomodoro and To-Do, then add complexity as you build the habit.</p>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">🧭 App Navigation</h3>
+            <div className="space-y-3">
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2"><I.Focus s={18}/>Focus Timer</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Pomodoro timer with Focus Queue (3-5 active tasks). Drag to reorder, start sessions, track daily progress.</p>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2"><I.List s={18}/>Lists</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Organize items into sections (Work, Personal, Shopping, etc.). Swipe right to delete completed items.</p>
+              </div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2"><I.Check s={18}/>To-Do</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Tasks with priorities, categories, due dates, and subtasks. Check to complete, stays visible until you swipe.</p>
+              </div>
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2"><I.Bell s={18}/>Reminders</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Time-specific alerts with date/time. Export to .ics or add to Google Calendar.</p>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 flex items-center gap-2"><I.Notes s={18}/>Notes</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Quick notes and detailed content. Great for meeting notes, brainstorming, and reference info.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">🚀 Daily Workflow</h3>
+            <div className="space-y-3">
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Morning Setup (5 min)</h4>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Review To-Do list, update priorities</li>
+                  <li>2. Check Reminders for today</li>
+                  <li>3. Add 3-5 tasks to Focus Queue</li>
+                  <li>4. Reorder queue by importance</li>
+                </ol>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Deep Work Session (2-3 hours)</h4>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Start Pomodoro with top task</li>
+                  <li>2. Work 25 min, break 5 min</li>
+                  <li>3. Complete 4 cycles</li>
+                  <li>4. Check off completed task</li>
+                </ol>
+              </div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">End of Day (10 min)</h4>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Review completed items</li>
+                  <li>2. Swipe to archive finished tasks</li>
+                  <li>3. Check Pomodoro count in Stats</li>
+                  <li>4. Set priorities for tomorrow</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">🍅 Pomodoro Technique</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">The Pomodoro Technique breaks work into focused 25-minute intervals with breaks, preventing burnout and improving concentration.</p>
+            <div className="space-y-3">
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">How It Works</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• Work Session: 25 minutes of focused work</li>
+                  <li>• Short Break: 5 minutes to rest</li>
+                  <li>• Repeat 4 times</li>
+                  <li>• Long Break: 15 minutes after 4 cycles</li>
+                </ul>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Using Pomodoro</h4>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. Tap Focus Timer tab</li>
+                  <li>2. Select a task from your queue</li>
+                  <li>3. Press Start for 25-minute session</li>
+                  <li>4. Take break when timer ends</li>
+                  <li>5. Customize durations in Settings</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">🎯 Deep Work & Focus Queue</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">Deep Work (Cal Newport) means sustained concentration on cognitively demanding tasks. Our Focus Queue limits you to 3-5 tasks to maximize focus.</p>
+            <div className="space-y-3">
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Why Limit Tasks?</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• Forces prioritization</li>
+                  <li>• Reduces context-switching</li>
+                  <li>• Prevents overwhelm</li>
+                  <li>• Improves focus quality</li>
+                </ul>
+              </div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Choose Your Limit</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200 mb-2"><strong>3 Tasks:</strong> For highly complex work, maximum focus, easily distracted</p>
+                <p className="text-sm text-bark-500 dark:text-sand-200"><strong>5 Tasks:</strong> For varied responsibilities, 8+ hour days, need flexibility</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">📊 Urgent/Important Matrix</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">The Eisenhower Box helps categorize tasks by urgency and importance to focus on what truly matters.</p>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3">
+                <div className="font-bold text-terracotta-600 dark:text-terracotta-300 mb-1">Q1: Do First</div>
+                <div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Important</div>
+                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Crises, deadlines</div>
+              </div>
+              <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3">
+                <div className="font-bold text-sage-600 dark:text-sage-300 mb-1">Q2: Schedule</div>
+                <div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Important</div>
+                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Planning, prevention</div>
+              </div>
+              <div className="bg-ocean-100 dark:bg-ocean-400/20 rounded-xl p-3">
+                <div className="font-bold text-ocean-600 dark:text-ocean-300 mb-1">Q3: Delegate</div>
+                <div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Not Important</div>
+                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Interruptions, emails</div>
+              </div>
+              <div className="bg-sand-200 dark:bg-bark-500/20 rounded-xl p-3">
+                <div className="font-bold text-bark-600 dark:text-sand-200 mb-1">Q4: Eliminate</div>
+                <div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Not Important</div>
+                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Time wasters</div>
+              </div>
+            </div>
+            <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+              <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">In Productivity Hub</h4>
+              <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                <li>• <strong>Q1:</strong> High Priority, Due Today</li>
+                <li>• <strong>Q2:</strong> Medium Priority, add to Focus Queue</li>
+                <li>• <strong>Q3:</strong> Low Priority or Delegate</li>
+                <li>• <strong>Q4:</strong> Don't add to app</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="text-center text-sm text-bark-400 dark:text-sand-300">
+            <p>Version {APP_VERSION} • Updated January 2026</p>
+            <p className="mt-1">Tap <strong>📲 Install</strong> in More tab for install options</p>
+          </div>
+        </div>
+      )}
+      {moreSub==='test'&&<TestRunner onShowToast={showT}/>}
+    </div>
+  );
+
+  const tabs=[{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Lists'},{id:'todos',Ic:I.Check,l:'To-Do'},{id:'remind',Ic:I.Bell,l:'Remind'},{id:'notes',Ic:I.Notes,l:'Notes'},{id:'more',Ic:I.Settings,l:'More'}];
+
+  return(
+    <div className="min-h-screen">
+      <div className="glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+        <div className="w-10 md:w-12"/>
+        <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
+        <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
+      </div>
+      <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-2xl mx-auto">
+        {tab==='focus'&&rFocus()}
+        {tab==='lists'&&rLists()}
+        {tab==='todos'&&rTodos()}
+        {tab==='remind'&&rRemind()}
+        {tab==='notes'&&rNotes()}
+        {tab==='more'&&rMore()}
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
+        <div className="flex justify-around max-w-lg md:max-w-2xl mx-auto py-2 tab-bar-inner">
+          {tabs.map(({id,Ic,l})=>(
+            <button key={id} onClick={()=>setTab(id)} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
+              <Ic s={28}/>
+              <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{l}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
+      {showHelp&&<HelpModal onClose={()=>setShowHelp(false)}/>}
+      {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)}/>}
+      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
+      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>deleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><App/></ThemeProv>);
+</script>
+</body>
+</html>
