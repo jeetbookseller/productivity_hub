@@ -261,7 +261,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '10.1-alpha';
+const APP_VERSION = '11.0-alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -569,6 +569,35 @@ const QuickAdd=({placeholder,onAdd,buttonText='Add'})=>{
 };
 
 // List Menu Component
+// Batch Selection Checkbox (v10.3)
+const SelCheck=({checked,onToggle})=>(
+  <button onClick={e=>{e.stopPropagation();onToggle();}} className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked?'bg-sage-400 border-sage-400 text-white':'border-bark-300 dark:border-sand-300'}`} aria-label={checked?'Deselect':'Select'}>{checked&&<span className="text-sm font-bold">✓</span>}</button>
+);
+
+// Bulk Action Bar (v10.4)
+const BulkActionBar=({count,section,allCount,onSelectAll,onDeselectAll,onAction,onCancel})=>{
+  const allSelected=count===allCount&&allCount>0;
+  const showDone=section==='todos'||section==='lists';
+  return(
+    <div className="fixed bottom-[72px] left-0 right-0 px-3 pb-2 anim-in" style={{zIndex:25}}>
+      <div className="glass rounded-2xl soft-shadow max-w-lg md:max-w-2xl mx-auto">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-sand-200/50 dark:border-bark-500/30">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-sage-500 text-sm">{count} selected</span>
+            <button onClick={allSelected?onDeselectAll:onSelectAll} className="text-xs font-semibold text-ocean-400 hover:text-ocean-500 transition-colors">{allSelected?'Deselect All':'Select All'}</button>
+          </div>
+          <button onClick={onCancel} className="p-1.5 rounded-lg hover:bg-sand-200 dark:hover:bg-bark-600 text-bark-400 transition-colors" aria-label="Cancel selection"><I.X s={18}/></button>
+        </div>
+        <div className="flex items-center justify-around px-2 py-2.5">
+          {showDone&&<button onClick={()=>onAction('done')} className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors" aria-label="Mark done"><I.Done s={22} c="text-sage-500"/><span className="text-xs font-semibold text-sage-600 dark:text-sage-300">{section==='lists'?'Toggle':'Done'}</span></button>}
+          <button onClick={()=>onAction('archive')} className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-lavender-100 dark:hover:bg-lavender-400/20 transition-colors" aria-label="Archive selected"><I.Archive s={22} c="text-lavender-400"/><span className="text-xs font-semibold text-lavender-500 dark:text-lavender-300">Archive</span></button>
+          <button onClick={()=>onAction('delete')} className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors" aria-label="Delete selected"><I.Trash s={22} c="text-terracotta-400"/><span className="text-xs font-semibold text-terracotta-500 dark:text-terracotta-300">Delete</span></button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ListMenu=({list,onEdit,onDelete,onClose,position})=>(
   <div className="fixed inset-0 z-30" onClick={onClose}>
     <div className="gcard rounded-xl shadow-lg overflow-hidden" style={{position:'absolute',top:position.y,left:position.x}} onClick={e=>e.stopPropagation()}>
@@ -601,6 +630,26 @@ const DeleteConfirmation=({list,onConfirm,onCancel,isLastList})=>(
     </div>
   </div>
 );
+
+// Bulk Delete Confirmation (v10.5 - Step 6)
+const BulkDeleteConfirm=({count,section,onConfirm,onCancel})=>{
+  const label=section==='todos'?'task':section==='lists'?'item':section==='reminders'?'reminder':'note';
+  return(
+    <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onCancel}>
+      <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+        <div className="text-center mb-4">
+          <div className="w-16 h-16 bg-terracotta-100 dark:bg-terracotta-400/20 rounded-full flex items-center justify-center mx-auto mb-3"><I.Trash s={32} c="text-terracotta-400"/></div>
+          <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">Delete {count} {label}{count!==1?'s':''}?</h3>
+          <p className="text-sm text-bark-500 dark:text-sand-300">This will permanently delete {count} {label}{count!==1?'s':''}. This action cannot be undone.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">Delete {count}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Edit Modal
 const EditModal=({item,type,onSave,onClose})=>{
@@ -767,6 +816,13 @@ const TestRunner=({onShowToast})=>{
       {name:'Preset Change',category:'Focus Timer'},
       {name:'UID Generation',category:'Utilities'},
       {name:'ICS Generation',category:'Utilities'},
+      {name:'Batch Select Enter',category:'Batch Selection'},
+      {name:'Batch Select Toggle',category:'Batch Selection'},
+      {name:'Batch Select Exit',category:'Batch Selection'},
+      {name:'Batch Select All',category:'Batch Selection'},
+      {name:'Batch Bulk Action',category:'Batch Selection'},
+      {name:'Batch Empty Auto-Exit',category:'Batch Selection'},
+      {name:'Batch Delete Confirm Gate',category:'Batch Selection'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -814,6 +870,13 @@ const TestRunner=({onShowToast})=>{
           case 'Preset Change':{const longPreset=PRESETS.long;if(longPreset.work!==50)throw new Error('Long preset work duration incorrect');break;}
           case 'UID Generation':{const id1=uid();const id2=uid();if(id1===id2)throw new Error('UIDs not unique');if(!id1.includes('-'))throw new Error('UID format invalid');break;}
           case 'ICS Generation':{const ics=genICS({text:'Test',time:'10:00',date:'2026-02-01'});if(!ics.includes('BEGIN:VCALENDAR'))throw new Error('ICS format invalid');if(!ics.includes('Test'))throw new Error('ICS content missing');break;}
+          case 'Batch Select Enter':{const selState={mode:false,section:null,ids:new Set()};selState.mode=true;selState.section='todos';selState.ids.add('test-id-1');if(!selState.mode)throw new Error('Selection mode not activated');if(selState.section!=='todos')throw new Error('Section not set');if(selState.ids.size!==1)throw new Error('First item not selected');break;}
+          case 'Batch Select Toggle':{const ids=new Set(['id1']);ids.add('id2');if(ids.size!==2)throw new Error('Add failed');ids.delete('id1');if(ids.size!==1||ids.has('id1'))throw new Error('Remove failed');ids.add('id1');ids.add('id3');if(ids.size!==3)throw new Error('Multi-select failed');break;}
+          case 'Batch Select Exit':{const st={mode:true,section:'todos',ids:new Set(['a','b'])};st.mode=false;st.section=null;st.ids=new Set();if(st.mode||st.section||st.ids.size!==0)throw new Error('Exit did not clear state');break;}
+          case 'Batch Select All':{const allIds=['t1','t2','t3','t4'];const sel=new Set(allIds);if(sel.size!==4)throw new Error('Select all count wrong');const isAll=sel.size===allIds.length;if(!isAll)throw new Error('Select all check failed');sel.clear();if(sel.size!==0)throw new Error('Deselect all failed');break;}
+          case 'Batch Bulk Action':{const todos=[{id:'a',done:false},{id:'b',done:false},{id:'c',done:true}];const selIds=new Set(['a','b']);const afterDone=todos.map(t=>selIds.has(t.id)?{...t,done:true}:t);if(!afterDone[0].done||!afterDone[1].done)throw new Error('Bulk done failed');if(afterDone[2].done!==true)throw new Error('Non-selected item changed');const afterDel=todos.filter(t=>!selIds.has(t.id));if(afterDel.length!==1||afterDel[0].id!=='c')throw new Error('Bulk delete failed');break;}
+          case 'Batch Empty Auto-Exit':{const sel=new Set(['a']);sel.delete('a');const shouldExit=sel.size===0;if(!shouldExit)throw new Error('Empty set did not trigger exit condition');if(sel.size!==0)throw new Error('Set not empty after removal');break;}
+          case 'Batch Delete Confirm Gate':{const threshold=3;const small=new Set(['a','b']);const large=new Set(['a','b','c']);const needsConfirmSmall=small.size>=threshold;const needsConfirmLarge=large.size>=threshold;if(needsConfirmSmall)throw new Error('2 items should not need confirmation');if(!needsConfirmLarge)throw new Error('3 items should need confirmation');break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1027,6 +1090,52 @@ function App(){
   
   // UI
   const[edit,setEdit]=useState(null);
+  // Batch Selection State (v10.2)
+  const[selMode,setSelMode]=useState(false);
+  const[selSection,setSelSection]=useState(null); // 'todos'|'lists'|'reminders'|'notes'
+  const[selIds,setSelIds]=useState(new Set());
+  const[bulkConfirm,setBulkConfirm]=useState(null); // {ids:Set, section:string} when awaiting confirm
+  const exitSelMode=()=>{setSelMode(false);setSelSection(null);setSelIds(new Set());};
+  const toggleSelId=(id)=>setSelIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);if(n.size===0)setTimeout(exitSelMode,0);return n;});
+  const enterSelMode=(section,firstId)=>{setSelMode(true);setSelSection(section);setSelIds(new Set([firstId]));};
+  // Bulk helpers (v10.4)
+  const getAllIdsForSection=()=>{
+    if(selSection==='todos')return todos.map(t=>t.id);
+    if(selSection==='lists'){const cl=lists.find(l=>l.id===selList);return cl?cl.items.map(i=>i.id):[];}
+    if(selSection==='reminders')return reminders.map(r=>r.id);
+    if(selSection==='notes')return notes.map(n=>n.id);
+    return[];
+  };
+  const selectAll=()=>setSelIds(new Set(getAllIdsForSection()));
+  const deselectAll=()=>setSelIds(new Set());
+  const executeBulk=(action,sIds,sec)=>{
+    const ids=[...sIds];const cnt=ids.length;
+    if(sec==='todos'){
+      if(action==='done'){setTodos(t=>t.map(x=>sIds.has(x.id)?{...x,done:true}:x));setFocus(f=>f.filter(x=>!sIds.has(x.id)));setMet(p=>({...p,d:{...p.d,t:p.d.t+cnt},w:{...p.w,t:p.w.t+cnt}}));showT(`✅ ${cnt} task${cnt>1?'s':''} done`);}
+      if(action==='archive'){ids.forEach(id=>{const item=todos.find(t=>t.id===id);if(item)archiveItem('todo',item);});showT(`📦 ${cnt} archived`);}
+      if(action==='delete'){setTodos(t=>t.filter(x=>!sIds.has(x.id)));setFocus(f=>f.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
+    }else if(sec==='lists'){
+      const lid=selList;
+      if(action==='done'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.map(i=>sIds.has(i.id)?{...i,done:!i.done}:i)}:l));showT(`✅ ${cnt} toggled`);}
+      if(action==='archive'){ids.forEach(id=>{const cl=lists.find(l=>l.id===lid);const item=cl?.items.find(i=>i.id===id);if(item)archiveItem('list',item,lid);});showT(`📦 ${cnt} archived`);}
+      if(action==='delete'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.filter(i=>!sIds.has(i.id))}:l));showT(`🗑 ${cnt} deleted`);}
+    }else if(sec==='reminders'){
+      if(action==='archive'){ids.forEach(id=>{const item=reminders.find(r=>r.id===id);if(item)archiveItem('reminder',item);});showT(`📦 ${cnt} archived`);}
+      if(action==='delete'){setReminders(r=>r.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
+    }else if(sec==='notes'){
+      if(action==='archive'){ids.forEach(id=>{const item=notes.find(n=>n.id===id);if(item)archiveItem('note',item);});showT(`📦 ${cnt} archived`);}
+      if(action==='delete'){setNotes(n=>n.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
+    }
+    exitSelMode();
+  };
+  const bulkAction=(action)=>{
+    if(selIds.size===0)return;
+    // Confirmation gate: delete ≥3 items triggers dialog
+    if(action==='delete'&&selIds.size>=3){setBulkConfirm({ids:new Set(selIds),section:selSection});return;}
+    executeBulk(action,selIds,selSection);
+  };
+  const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
+  const cancelBulkDelete=()=>setBulkConfirm(null);
   const[selList,setSelList]=usePersistedState('selList','groceries');
   const[newList,setNewList]=useState('');
   const[showNew,setShowNew]=useState(false);
@@ -1206,8 +1315,9 @@ function App(){
       <div className="space-y-4">
         <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
           <div className="flex items-center justify-between mb-3">
+            {selMode&&selSection==='lists'?<><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></>:<>
             <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Lists</h2>
-            <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+            <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></>}
           </div>
           {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')updateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="List name..."/><button onClick={()=>updateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
           <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
@@ -1227,18 +1337,25 @@ function App(){
         {secs.length>0?secs.map(s=>(
           <div key={s} className="space-y-2">
             <h3 className="text-xs font-bold text-bark-400/50 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
-            {cl?.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>(
+            {cl?.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
+              const inSel=selMode&&selSection==='lists';
+              const isSel=inSel&&selIds.has(item.id);
+              let lpT=null;
+              const lpS=()=>{lpT=setTimeout(()=>{if(!selMode)enterSelMode('lists',item.id);},500);};
+              const lpE=()=>{if(lpT)clearTimeout(lpT);};
+              return(
               <Swipe key={item.id} onDone={()=>deleteListItem(cl.id,item.id)} onArc={()=>archiveItem('list',item,cl.id)}>
-                <div className={`p-4 md:p-5 flex items-start gap-3 md:gap-4 ${item.done?'opacity-50':''}`}>
-                  <button onClick={()=>doneList(cl.id,item.id)} className={`w-6 h-6 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-sage-300'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>
+                <div onMouseDown={lpS} onMouseUp={lpE} onMouseLeave={lpE} onTouchStart={lpS} onTouchEnd={lpE} onClick={()=>{if(inSel)toggleSelId(item.id);}} className={`p-4 md:p-5 flex items-start gap-3 md:gap-4 ${item.done?'opacity-50':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':''}`}>
+                  {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>:
+                  <button onClick={()=>doneList(cl.id,item.id)} className={`w-6 h-6 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-sage-300'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>}
                   <div className="flex-1 min-w-0">
                     <span className={`block font-medium sel ${item.done?'line-through text-bark-400/40':'text-bark-600 dark:text-sand-100'}`}>{item.text}</span>
                     {item.notes&&<p className="text-xs text-bark-400/50 mt-1 truncate sel">📝 {item.notes}</p>}
                   </div>
-                  <Acts onDone={()=>doneList(cl.id,item.id)} onArc={()=>archiveItem('list',item,cl.id)} onEdit={()=>setEdit({type:'list',item,listId:cl.id})} onShare={()=>{if(shareItem(item,'list'))showT('📋 Copied!');}} onDelete={()=>deleteListItem(cl.id,item.id)} isDone={item.done}/>
+                  {!inSel&&<Acts onDone={()=>doneList(cl.id,item.id)} onArc={()=>archiveItem('list',item,cl.id)} onEdit={()=>setEdit({type:'list',item,listId:cl.id})} onShare={()=>{if(shareItem(item,'list'))showT('📋 Copied!');}} onDelete={()=>deleteListItem(cl.id,item.id)} isDone={item.done}/>}
                 </div>
               </Swipe>
-            ))}
+            );})}
           </div>
         )):<Empty.List/>}
         <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},selList)}/>
@@ -1257,10 +1374,17 @@ function App(){
           <div className={`bg-white/60 dark:bg-bark-600/60 ${tasks.length>0?'p-2 md:p-3':'p-0'}`}>
             {tasks.length===0?<Empty.Tasks/>:(
               <div className="space-y-1.5">
-                {vis.map(t=>(
+                {vis.map(t=>{
+                  const inSel=selMode&&selSection==='todos';
+                  const isSel=inSel&&selIds.has(t.id);
+                  let lpTimer=null;
+                  const lpStart=()=>{lpTimer=setTimeout(()=>{if(!selMode)enterSelMode('todos',t.id);},500);};
+                  const lpEnd=()=>{if(lpTimer)clearTimeout(lpTimer);};
+                  return(
                   <Swipe key={t.id} onDone={()=>deleteTodo(t.id)} onArc={()=>archiveItem('todo',t)}>
-                    <div className={`p-4 md:p-5 flex items-start gap-4 transition-opacity ${t.done?'opacity-60':''}`}>
-                      <button onClick={()=>doneTodo(t.id)} className={`w-7 h-7 mt-0.5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>
+                    <div onMouseDown={lpStart} onMouseUp={lpEnd} onMouseLeave={lpEnd} onTouchStart={lpStart} onTouchEnd={lpEnd} onClick={()=>{if(inSel)toggleSelId(t.id);}} className={`p-4 md:p-5 flex items-start gap-4 transition-opacity ${t.done?'opacity-60':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':''}`}>
+                      {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>:
+                      <button onClick={()=>doneTodo(t.id)} className={`w-7 h-7 mt-0.5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
                       <div className="flex-1 min-w-0 space-y-2">
                         <div className={`text-base font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-600 dark:text-sand-100'}`}>{t.text}</div>
                         {(t.cat||t.deadline||t.subtasks?.length>0)&&(
@@ -1280,7 +1404,7 @@ function App(){
                       </div>
                     </div>
                   </Swipe>
-                ))}
+                );})}
                 {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
               </div>
             )}
@@ -1291,8 +1415,9 @@ function App(){
     return(
       <div className="space-y-4">
         <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
+          {selMode&&selSection==='todos'?<><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></>:<>
           <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 To-Do Tasks</h2>
-          <button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+          <button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></>}
         </div>
         <div className={desk?'md-grid':'space-y-3'}>{content}</div>
         <QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'ui',poms:0})}/>
@@ -1303,20 +1428,28 @@ function App(){
   const rRemind=()=>(
     <div className="space-y-2">
       <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
+        {selMode&&selSection==='reminders'?<><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></>:<>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">🔔 Reminders</h2>
-        <button onClick={()=>setEdit({type:'reminder',item:{}})} aria-label="Add new reminder" className="p-2 rounded-xl bg-terracotta-400 text-white shadow-sm hover:bg-terracotta-500 transition-colors"><I.Plus s={20}/></button>
+        <button onClick={()=>setEdit({type:'reminder',item:{}})} aria-label="Add new reminder" className="p-2 rounded-xl bg-terracotta-400 text-white shadow-sm hover:bg-terracotta-500 transition-colors"><I.Plus s={20}/></button></>}
       </div>
-      {reminders.length===0?<Empty.Remind/>:reminders.map(r=>(
+      {reminders.length===0?<Empty.Remind/>:reminders.map(r=>{
+        const inSel=selMode&&selSection==='reminders';
+        const isSel=inSel&&selIds.has(r.id);
+        let lpT=null;
+        const lpS=()=>{lpT=setTimeout(()=>{if(!selMode)enterSelMode('reminders',r.id);},500);};
+        const lpE=()=>{if(lpT)clearTimeout(lpT);};
+        return(
         <Swipe key={r.id} onDone={()=>deleteReminder(r.id)} onArc={()=>archiveItem('reminder',r)}>
-          <div className="p-4 md:p-5 space-y-3">
+          <div onMouseDown={lpS} onMouseUp={lpE} onMouseLeave={lpE} onTouchStart={lpS} onTouchEnd={lpE} onClick={()=>{if(inSel)toggleSelId(r.id);}} className={`p-4 md:p-5 space-y-3 ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':''}`}>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-terracotta-100 flex items-center justify-center" aria-hidden="true"><I.Bell s={24} c="text-terracotta-400"/></div>
+              {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(r.id)}/>:
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-terracotta-100 flex items-center justify-center" aria-hidden="true"><I.Bell s={24} c="text-terracotta-400"/></div>}
               <div className="flex-1">
                 <div className="font-semibold md:text-lg text-bark-600 dark:text-sand-100 sel">{r.text||'(No title)'}</div>
                 <div className="text-sm md:text-base text-bark-400/60 dark:text-sand-300/60">📅 {r.date} ⏰ {r.time}</div>
               </div>
-              <Acts showDone={false} onArc={()=>archiveItem('reminder',r)} onEdit={()=>setEdit({type:'reminder',item:r})} onShare={()=>{if(shareItem(r,'reminder'))showT('📋 Copied!');}} onDelete={()=>deleteReminder(r.id)}/>
-              <button onClick={()=>setReminders(reminders.map(x=>x.id===r.id?{...x,on:!x.on}:x))} aria-label={r.on?'Disable reminder':'Enable reminder'} className={`w-12 h-7 rounded-full transition-colors p-0.5 ${r.on?'bg-sage-400':'bg-sand-300'}`}><div className={`w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${r.on?'translate-x-5':'translate-x-0'}`}/></button>
+              {!inSel&&<><Acts showDone={false} onArc={()=>archiveItem('reminder',r)} onEdit={()=>setEdit({type:'reminder',item:r})} onShare={()=>{if(shareItem(r,'reminder'))showT('📋 Copied!');}} onDelete={()=>deleteReminder(r.id)}/>
+              <button onClick={()=>setReminders(reminders.map(x=>x.id===r.id?{...x,on:!x.on}:x))} aria-label={r.on?'Disable reminder':'Enable reminder'} className={`w-12 h-7 rounded-full transition-colors p-0.5 ${r.on?'bg-sage-400':'bg-sand-300'}`}><div className={`w-6 h-6 bg-white rounded-full transition-transform shadow-sm ${r.on?'translate-x-5':'translate-x-0'}`}/></button></>}
             </div>
             <div className="flex gap-2">
               <button onClick={()=>{dlFile(genICS(r),`${(r.text||'reminder').replace(/\s+/g,'-')}.ics`,'text/calendar');showT('📅 Downloaded!');}} className="flex-1 py-2.5 bg-ocean-100 text-ocean-400 rounded-xl text-sm font-semibold">📥 Download .ics</button>
@@ -1324,7 +1457,7 @@ function App(){
             </div>
           </div>
         </Swipe>
-      ))}
+      );})}
       <QuickAdd placeholder="Quick add reminder..." onAdd={text=>saveItem('reminder',{text,time:'09:00',date:new Date().toISOString().split('T')[0],on:true})}/>
     </div>
   );
@@ -1332,19 +1465,29 @@ function App(){
   const rNotes=()=>(
     <div className="space-y-4">
       <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
+        {selMode&&selSection==='notes'?<><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></>:<>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Notes</h2>
-        <button onClick={()=>setEdit({type:'note',item:{}})} aria-label="Add new note" className="p-2 rounded-xl bg-ocean-400 text-white shadow-sm hover:bg-ocean-500 transition-colors"><I.Plus s={20}/></button>
+        <button onClick={()=>setEdit({type:'note',item:{}})} aria-label="Add new note" className="p-2 rounded-xl bg-ocean-400 text-white shadow-sm hover:bg-ocean-500 transition-colors"><I.Plus s={20}/></button></>}
       </div>
-      {notes.length===0?<Empty.Notes/>:notes.map(n=>(
-        <div key={n.id} className="gcard rounded-2xl p-4 md:p-6">
+      {notes.length===0?<Empty.Notes/>:notes.map(n=>{
+        const inSel=selMode&&selSection==='notes';
+        const isSel=inSel&&selIds.has(n.id);
+        let lpT=null;
+        const lpS=()=>{lpT=setTimeout(()=>{if(!selMode)enterSelMode('notes',n.id);},500);};
+        const lpE=()=>{if(lpT)clearTimeout(lpT);};
+        return(
+        <div key={n.id} onMouseDown={lpS} onMouseUp={lpE} onMouseLeave={lpE} onTouchStart={lpS} onTouchEnd={lpE} onClick={()=>{if(inSel)toggleSelId(n.id);}} className={`gcard rounded-2xl p-4 md:p-6 ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':''}`}>
           <div className="flex items-start justify-between mb-2 md:mb-3">
-            <h3 className="font-bold md:text-lg text-bark-600 dark:text-sand-100 sel">{n.title}</h3>
-            <Acts showDone={false} onArc={()=>archiveItem('note',n)} onEdit={()=>setEdit({type:'note',item:n})} onShare={()=>{if(shareItem(n,'note'))showT('📋 Copied!');}}/>
+            <div className="flex items-start gap-3">
+              {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
+              <h3 className="font-bold md:text-lg text-bark-600 dark:text-sand-100 sel">{n.title}</h3>
+            </div>
+            {!inSel&&<Acts showDone={false} onArc={()=>archiveItem('note',n)} onEdit={()=>setEdit({type:'note',item:n})} onShare={()=>{if(shareItem(n,'note'))showT('📋 Copied!');}}/>}
           </div>
           <p className="text-sm md:text-base text-bark-500 dark:text-sand-200 whitespace-pre-wrap sel line-clamp-4 md:line-clamp-none">{n.content}</p>
           <p className="text-xs md:text-sm text-bark-400/50 mt-2 md:mt-3">{new Date(n.crAt).toLocaleDateString()}</p>
         </div>
-      ))}
+      );})}
       <QuickAdd placeholder="Quick add note..." onAdd={text=>saveItem('note',{title:text,content:'',crAt:new Date().toISOString()})}/>
     </div>
   );
@@ -1645,10 +1788,11 @@ function App(){
         {tab==='notes'&&rNotes()}
         {tab==='more'&&rMore()}
       </div>
+      {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
       <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
         <div className="flex justify-around max-w-lg md:max-w-2xl mx-auto py-2 tab-bar-inner">
           {tabs.map(({id,Ic,l})=>(
-            <button key={id} onClick={()=>setTab(id)} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
+            <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
               <Ic s={28}/>
               <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{l}</span>
             </button>
@@ -1660,6 +1804,7 @@ function App(){
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)}/>}
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>deleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
+      {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
     </div>
   );
 }

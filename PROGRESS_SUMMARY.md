@@ -1,15 +1,15 @@
 # Productivity Hub - Development Progress Summary
 
-**Last Updated:** January 31, 2026  
-**Current Version:** v10.1-alpha  
+**Last Updated:** February 1, 2026  
+**Current Version:** v11.0-alpha  
 **Current Model:** Opus 4.5  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v10.1-alpha (Opus 4.5)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v10.5-alpha (Opus 4.5)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v10.1-alpha.html**
+**productivity-hub-v11.0-alpha.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
@@ -22,9 +22,10 @@
 - ✅ Edit/Delete lists (long-press menu)
 - ✅ Empty state handling (prevents items vanishing when no lists)
 - ✅ Enhanced Help System (two-tier: Quick Tips modal + Full Guide)
-- ✅ **Test App Feature** — 30 automated tests with report generation
+- ✅ **Test App Feature** — 37 automated tests with report generation
 - ✅ **Desktop Mode** — Responsive layout optimized for 768px+ screens
 - ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
+- ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/archive/delete across all sections
 
 ---
 
@@ -55,161 +56,120 @@
 - **v9.7** — Empty state for no lists (bug fix)
 - **v9.8** — Enhanced Help System (Quick Tips modal + Full Guide in More tab)
 
-### Phase 3: Complex Features (v10.0-alpha → v10.1-alpha) — Opus 4.5
+### Phase 3: Complex Features (v10.0-alpha → v11.0-alpha) — Opus 4.5
 - **v10.0-alpha** — Test App Feature + Desktop Mode
 - **v10.1-alpha** — PWA Install System
+- **v10.2-alpha** — Batch Selection: Step 1 (Selection State Infrastructure)
+- **v10.3-alpha** — Batch Selection: Step 2 (Selection Checkboxes UI)
+- **v10.4-alpha** — Batch Selection: Steps 3–5 (Bulk Action Bar + All Section Actions)
+- **v10.5-alpha** — Batch Selection: Step 6 (Polish — Empty Auto-Exit, Delete Confirmation)
+- **v11.0-alpha** — Major version bump for completed Batch Selection feature
 
 ---
 
-## 🆕 v10.1-alpha — PWA Install System
+## 🆕 v11.0-alpha — Batch Selection & Bulk Actions
 
-### Root Cause Analysis
-The original PWA implementation (v9.2.1) used blob URLs for both the web app manifest and service worker. This approach has a fundamental limitation: blob URLs have a `null` origin, which means browsers cannot match them to the page's origin. Chrome's PWA installability criteria require same-origin manifest and service worker files served over HTTPS.
+Batch Selection is a major feature warranting a new major version. Alpha tag remains because test code (`TestRunner`, `__TEST__` prefix) is present in the codebase.
 
-### What Was Fixed
+### Implementation Approach
+Large single-file architecture (~150KB) causes output token limits when attempting full-file rewrites. Solution: **incremental `str_replace` edits** across 6 targeted steps, each producing a versioned release.
 
-**1. Improved Service Worker (best-effort)**
-- Added offline caching strategy (cache-first with network fallback)
-- Added cache versioning and cleanup of old caches
-- Added virtual manifest.json serving via fetch intercept
-- SW still uses blob URL (limitation of single-file architecture)
+### Step 1: Selection State Infrastructure (v10.2-alpha) ✅
+- Added `selMode` (boolean) — whether batch selection is active
+- Added `selSection` — which tab owns selection (`'todos'|'lists'|'reminders'|'notes'`)
+- Added `selIds` (Set) — tracks selected item IDs
+- Helper: `enterSelMode(section, firstId)` — activates selection with first item pre-selected
+- Helper: `toggleSelId(id)` — adds/removes item from selection
+- Helper: `exitSelMode()` — clears all selection state
+- Tab switching auto-exits selection mode
 
-**2. beforeinstallprompt Handler**
-- Global event capture for Chrome/Edge automatic install prompt
-- `appinstalled` event detection
-- PWA status tracking: `installed`, `ready` (prompt available), `unavailable`
-- "Install Now" button triggers native install prompt when available
+### Step 2: Selection Checkboxes UI (v10.3-alpha) ✅
+- **`SelCheck` component** — square checkbox with ✓, replaces round done-button during selection
+- **Long-press (500ms)** enters selection mode on To-Do, Lists, Reminders, and Notes items
+- **Tap to toggle** items in/out of selection once mode is active
+- **Visual highlight** — selected items get `ring-2 ring-sage-400` + sage background tint
+- **Section headers swap** to show "X selected" counter + "✕ Cancel" button during selection
+- **Action buttons hidden** during selection mode (replaced by checkboxes)
+- **3 new test cases** (33 total): Batch Select Enter, Toggle, Exit
 
-**3. New "📲 Install" Sub-Tab (More → Install)**
-- **Install Now** button — one-tap install when browser supports it
-- **Platform-specific instructions:**
-  - iOS: Safari → Share → Add to Home Screen (works now, no server needed)
-  - Android: Chrome → ⋮ Menu → Add to Home Screen / Install App
-  - Desktop: URL bar install icon or ⋮ Menu → Install App
-- **"Download PWA Files"** button — generates proper `sw.js` and `manifest.json` for HTTPS deployment
-- **Deployment guide** — step-by-step instructions for GitHub Pages / Netlify / Vercel
+### Step 3: Bulk Action Bar (v10.4-alpha) ✅
+- **`BulkActionBar` component** — fixed-position bar above tab bar during selection
+- Buttons: ✅ Done, 📦 Archive, 🗑 Delete (context-dependent per section)
+- "X selected" counter + Select All / Deselect All toggle
+- Glass styling consistent with app design
+- Lists section shows "Toggle Done" instead of "Done" (since list items toggle)
 
-**4. Improved Manifest**
-- Added `id` field for stable PWA identity
-- Added `prefer_related_applications: false`
-- Added `orientation` and `categories` fields
-- Added SVG 512x512 icon (scalable, satisfies Chrome's large icon requirement)
-- Manifest link defaults to `manifest.json` (works when properly deployed)
+### Step 4: Bulk Actions for Todos (v10.4-alpha) ✅
+- `bulkAction('done')` — marks selected todos as done, removes from focus queue, updates metrics
+- `bulkAction('archive')` — moves selected todos to archive with timestamps
+- `bulkAction('delete')` — removes selected todos from state + focus queue
+- Auto-exits selection mode after any action
+- Toast messages with counts ("✅ 3 tasks done", "📦 5 archived", "🗑 2 deleted")
+- 2 new test cases (35 total): Batch Select All, Batch Bulk Action
 
-### PWA Status by Platform
-| Platform | Status | Notes |
-|----------|--------|-------|
-| iOS Safari | ✅ Works now | Meta tags enable "Add to Home Screen" |
-| iOS 16.4+ (Chrome/Edge/Firefox) | ✅ Works now | Share menu → Add to Home Screen |
-| Android (file://) | ⚠️ Menu install | Chrome menu → Add to Home Screen |
-| Android (HTTPS) | ✅ Full PWA | Auto-prompt with companion files |
-| Desktop (file://) | ⚠️ Menu install | Chrome/Edge menu → Install |
-| Desktop (HTTPS) | ✅ Full PWA | URL bar icon + auto-prompt |
+### Step 5: Bulk Actions for Lists/Reminders/Notes (v10.4-alpha) ✅
+- **Lists:** Done toggle, archive, delete — scoped to currently selected list
+- **Reminders:** Archive, delete (no "done" action)
+- **Notes:** Archive, delete (no "done" action)
+- Section-aware dispatching via `selSection` in unified `bulkAction` handler
 
-### For Full PWA Experience
-1. Download `sw.js` + `manifest.json` from More → Install
-2. Place alongside the HTML file
-3. Deploy to any free HTTPS host (GitHub Pages, Netlify, Vercel)
-4. Automatic install prompts, splash screens, and offline support will work
+### Step 6: Polish & Edge Cases (v10.5-alpha) ✅
+- **Empty selection auto-exit** — unchecking the last selected item auto-exits selection mode
+- **Bulk delete confirmation** — deleting ≥3 items shows `BulkDeleteConfirm` modal with count and section-aware labels. Deleting 1–2 items executes immediately.
+- **Refactored `bulkAction`** — split into `executeBulk` + confirmation gating
+- **2 new test cases** (37 total): Batch Empty Auto-Exit, Batch Delete Confirm Gate
+
+---
+
+## 📊 Session Log
+
+### Batch Selection Development Sessions
+
+| Session | Task | Tool Calls | Notes |
+|---------|------|------------|-------|
+| 1 | Planning & strategy | 1 | Output limit analysis, incremental edit approach |
+| 2 | Step 1 attempt | 7 | Initial file creation, hit context limits |
+| 3 | Step 1 complete (v10.2) | 18 | State infrastructure: selMode, selIds, helpers |
+| 4 | Step 2 start | 14 | Began checkbox UI, context compacted |
+| 5 | Step 2 complete (v10.3) | 49 | SelCheck component, long-press, visual feedback, tests |
+| 6 | Progress summary update | — | Updated PROGRESS_SUMMARY.md |
+| 7 | Steps 3–5 complete (v10.4) | ~50 | BulkActionBar, all section actions, Select All, tests |
+| 8 | Step 6 + v11 bump | 14 | Empty auto-exit, delete confirmation, major version |
+
+### File Size Tracking
+| Version | Lines | Size | Delta | Description |
+|---------|-------|------|-------|-------------|
+| v10.1-alpha | 1,694 | 138,120 bytes | — | Baseline (PWA Install) |
+| v10.3-alpha | 1,722 | 143,978 bytes | +5,858 | Selection state + UI checkboxes |
+| v10.4-alpha | 1,783 | 149,803 bytes | +5,825 | Bulk Action Bar + all section actions |
+| v11.0-alpha | 1,815 | 152,666 bytes | +2,863 | Polish + major version bump |
 
 ---
 
 ## 🔴 Pending Features
 
-### 1. Batch Selection & Bulk Actions
-**Status:** Not started  
-**Complexity:** Complex  
-**Estimated Effort:** ~60-90 min
-
-**Requirements:**
-- Select multiple items (checkboxes)
-- Bulk actions: Delete, Archive, Mark as done
-- Selection mode with bulk action bar
-- Applies to: Tasks, Lists, Reminders, Notes
-
-**UI Considerations:**
-- Long-press to enter selection mode
-- Checkboxes on left side
-- Sticky action bar at bottom
-- "X selected" counter
-- Clear selection option
-
-
-### 2. 🔍 Global "Command Palette" Search (High Priority)
-**Goal:** Allow users to instantly find tasks, notes, or lists without navigating tabs.
-**UI Pattern:** `Ctrl+K` / `Cmd+K` modal.
-
-### Implementation Plan
-- [ ] **Create Component:** `<CommandPalette isOpen={...} onClose={...} />`
-- [ ] **State Management:**
-  - Track `query` string.
-  - Filter `todos`, `notes`, `lists`, and `reminders` arrays based on `query`.
-- [ ] **Keyboard Listener:** Add `window.addEventListener('keydown')` to toggle visibility on `Ctrl+K`.
-- [ ] **Action Logic:**
-  - Clicking a **Task** → Switches to "To-Do" tab, expands quadrant.
-  - Clicking a **Note** → Switches to "Notes" tab, opens Edit Modal.
-  - Clicking a **List** → Switches to "Lists" tab, selects that list.
-
-
-### 3. 🔁 Recurring Tasks (Critical Logic)
-**Goal:** Automate the creation of repetitive tasks (e.g., "Pay Rent", "Weekly Review").
-**Current Gap:** Tasks are one-off only.
-
-### Implementation Plan
-- [ ] **Data Model Update:** Add `recurrence` field to Todo items (`'daily' | 'weekly' | 'monthly'`).
-- [ ] **UI Update:** Add a dropdown in the `EditModal` (Task type) to select recurrence.
-- [ ] **Logic Hook:**
-  - Inside the main `useEffect` (on app load):
-  - Iterate through completed tasks with `recurrence`.
-  - Check `lastCompletedDate`.
-  - If due for renewal:
-    1. Clone the task.
-    2. Set new `id` (using `uid()`).
-    3. Update `deadline` based on interval.
-    4. Set `done: false`.
-    5. Save to `todos` state.
-
-
-### 4. 📝 Markdown Support for Notes
-**Goal:** Allow rich text formatting (bold, lists, headers) in Notes without adding heavy libraries.
-**Constraint:** Must be lightweight (Regex-based).
-
-### Implementation Plan
-- [ ] **Parser Function:** Create a `parseMarkdown(text)` function using Regex:
-  - `**bold**` → `<strong>`
-  - `# Header` → `<h1>`
-  - `- List item` → `<li>`
-- [ ] **UI Toggle:** Add a "Preview / Edit" toggle button in the Note card/modal.
-- [ ] **Sanitization:** Ensure basic HTML escaping to prevent XSS (since we are rendering raw HTML).
-
-
-
-### 5. 🖱️ Eisenhower Matrix Drag-and-Drop
-**Goal:** Allow moving tasks between quadrants (e.g., from "Schedule" to "Do First") via drag-and-drop.
-**Current State:** D&D only exists in Focus Queue.
-
-### Implementation Plan
-- [ ] **Draggable Items:** Add `draggable="true"` to Matrix task cards.
-- [ ] **Drop Zones:** Make the 4 Quadrant containers (`Do First`, `Schedule`, etc.) valid drop targets (`onDragOver`, `onDrop`).
-- [ ] **Update Logic:**
-  - On Drop: Identify `sourceId` and `targetQuad`.
-  - Update the task's `quad` property in the `todos` state.
-  - Persist change via `S.set()`.
-
-
-
-### 6. 🔥 Streak & Heatmap Visualization
-**Goal:** Increase user retention with a visual "Don't Break the Chain" graph.
-**Location:** "Stats" tab.
-
-### Implementation Plan
-- [ ] **Data Structure:** Utilize the existing `dHist` (Daily History) array.
-- [ ] **Grid Component:** Render a 7x5 grid of small squares (last 35 days).
-- [ ] **Color Logic:**
-  - 0 tasks/poms: `bg-sand-200` (Gray)
-  - 1-3 tasks: `bg-sage-200` (Light Green)
-  - 4-8 tasks: `bg-sage-300` (Medium Green)
-  - 9+ tasks: `bg-sage-500` (Dark Green)
+### Future Feature Ideas
+| Feature | Priority | Complexity | Description |
+|---------|----------|------------|-------------|
+| **🌐 Shared Lists Storage** | | |
+| ├─ Share List UI + Modal | High | Simple | Add "Share" button to lists, display share code/link in modal |
+| ├─ Shareable Link Generation | High | Simple | Generate unique codes (nanoid) for list sharing, copy to clipboard |
+| ├─ Backend Provider Setup | High | Medium | Choose Firebase/Supabase, set up auth + database schema |
+| ├─ Sync List to Backend | High | Medium | POST/PUT list changes to backend when user edits |
+| ├─ Load Shared Lists on Boot | High | Medium | Fetch shared lists from backend on app load |
+| └─ Real-time Sync + Conflict Resolution | High | Complex | Live updates + handle concurrent edits |
+| **🔁 Recurring Tasks** | | |
+| ├─ Recurrence Field in UI | Medium | Simple | Add dropdown (Daily/Weekly/Monthly) in EditModal |
+| ├─ Recurrence Logic on Load | Medium | Medium | Check completed tasks with recurrence, auto-generate next |
+| ├─ Handle Edge Cases | Medium | Medium | Timezone, DST, monthly 31st, etc. |
+| └─ Manage Recurring Instances | Medium | Medium | UI to edit/skip/delete specific occurrences |
+| **🖱️ Eisenhower Matrix Drag-and-Drop** | | |
+| ├─ Make Cards Draggable | Low | Simple | Add `draggable="true"` + `onDragStart` to task cards |
+| ├─ Drop Zone Logic | Low | Simple | Add `onDragOver` + `onDrop` handlers to quadrants |
+| └─ Persist Quad Change | Low | Simple | Update task's `quad` property + save to storage |
+| **🔍 Command Palette Search** | High | Medium | `Ctrl+K` / `Cmd+K` modal to find items across all sections |
+| **📝 Markdown Notes** | Medium | Simple | Regex-based bold/headers/lists with preview toggle |
+| **🔥 Streak Heatmap** | Low | Simple | 7×5 "Don't Break the Chain" grid in Stats tab using dHist |
 
 ---
 
@@ -219,26 +179,29 @@ The original PWA implementation (v9.2.1) used blob URLs for both the web app man
 - **Rule:** Features get version numbers at implementation time
 - **Sequence:** Versions increment based on implementation order
 - **Alpha tag:** Any version containing test functionality gets `-alpha` suffix
-- **Current:** v10.1-alpha
-- **Next:** v10.2 (Batch Selection) or v11.0 depending on scope
+- **Major versions:** Bumped for significant new features (e.g. v10 → v11 for Batch Selection)
+- **Current:** v11.0-alpha
 
 ### UI Patterns Established
-- **Long-press:** 500ms trigger for context menus
+- **Long-press:** 500ms trigger for context menus and selection mode
 - **Glass effect:** Backdrop blur for headers/modals
 - **Empty states:** Illustrated SVG + helpful message
-- **Confirmation dialogs:** Icon + title + message + buttons
+- **Confirmation dialogs:** Icon + title + message + buttons (single-item and bulk)
 - **Quick-add bars:** Bottom input with auto-focus
 - **Sticky headers:** Position below main header (top-14, md:top-16)
 - **Help system:** Two-tier (Quick modal + Full guide)
 - **Desktop responsive:** `useDesk()` hook + `md:` Tailwind + CSS media query
 - **Test isolation:** `__TEST__` prefix for all test data
 - **PWA install:** Platform detection + beforeinstallprompt + manual instructions
+- **Selection mode:** Long-press → checkboxes + header counter + cancel button
+- **Bulk actions:** Fixed bottom bar with done/archive/delete + select all toggle
+- **Bulk delete confirmation:** Modal gate for ≥3 items, immediate for 1–2 items
 
 ### Color Scheme
-- **Sage (green):** Primary actions, success, timer focus mode
-- **Terracotta (orange):** Reminders, delete actions, warnings, alpha badge
+- **Sage (green):** Primary actions, success, timer focus mode, selection highlight
+- **Terracotta (orange):** Reminders, delete actions, warnings
 - **Ocean (blue):** Notes, info, export actions
-- **Lavender (purple):** Secondary actions, test feature
+- **Lavender (purple):** Secondary actions, test feature, alpha badge
 - **Bark (brown):** Text, backgrounds
 - **Sand/Cream:** Light backgrounds
 
@@ -246,7 +209,6 @@ The original PWA implementation (v9.2.1) used blob URLs for both the web app man
 
 ## 🐛 Known Issues
 
-- **PWA auto-install:** Requires HTTPS hosting with companion files for Chrome/Android auto-prompt (blob URL limitation documented and mitigated with Install guide)
 - **Desktop truncation override:** Uses `!important` CSS which could interfere if truncation is desired in specific cases
 
 ---
@@ -265,6 +227,7 @@ The original PWA implementation (v9.2.1) used blob URLs for both the web app man
 - `useDesk()` hook for desktop breakpoint detection
 - `React.useReducer` in FocusTimer for isolated state
 - `React.memo` for FocusTimer performance
+- `selMode` / `selSection` / `selIds` / `bulkConfirm` for batch selection state
 
 ### PWA Architecture
 - Blob-based manifest + service worker (best-effort for local/file:// use)
@@ -288,15 +251,18 @@ Test keys: '__TEST__*' (auto-cleaned)
 |-----------|---------|
 | `App` | Main application with all tab rendering + PWA install |
 | `FocusTimer` | Isolated Pomodoro timer (memo + useReducer) |
+| `SelCheck` | Square selection checkbox for batch mode |
+| `BulkActionBar` | Fixed bottom action bar during selection mode |
+| `BulkDeleteConfirm` | Confirmation modal for bulk delete ≥3 items |
 | `EditModal` | Create/edit tasks, lists, reminders, notes |
 | `HelpModal` | Quick tips popup (? icon) |
-| `TestRunner` | Test suite execution and reporting |
+| `TestRunner` | Test suite execution and reporting (37 tests) |
 | `Swipe` | Swipe gesture handler (archive/delete) |
 | `Acts` | Action button row (edit/share/archive/delete) |
 | `QuickAdd` | Bottom quick-add input bar |
 | `Chart` | Mini bar chart for weekly stats |
 | `ListMenu` | Long-press context menu for lists |
-| `DeleteConfirmation` | Confirmation dialog with item count |
+| `DeleteConfirmation` | Confirmation dialog for list deletion |
 | `Subtasks` | Inline subtask editor for To-Do |
 | `Empty.*` | Empty state illustrations (List, Tasks, Focus, etc.) |
 | `ThemeProv` | Theme context provider |
@@ -305,22 +271,25 @@ Test keys: '__TEST__*' (auto-cleaned)
 
 ## 🎯 Recommended Next Steps
 
-### Option A: Implement Batch Selection (Recommended)
-The last major planned feature. Would complete the core feature set.
+### ✅ Option A: Shared Lists Storage (Recommended Path)
+Break down into phases:
+1. **Phase 1 (Simple):** Share List UI + Shareable Link Generation
+2. **Phase 2 (Medium):** Backend Setup + List Sync to Backend
+3. **Phase 3 (Medium):** Load Shared Lists on Boot
+4. **Phase 4 (Complex):** Real-time Sync + Conflict Resolution
 
-### Option B: Remove Alpha Tag → Stable Release
-If batch selection is deferred, promote to v10.1 stable or v11.0 with all current features as headline.
+### Option B: Recurring Tasks
+Another high-value feature with clear phases:
+1. **Phase 1 (Simple):** Recurrence Field in EditModal
+2. **Phase 2 (Medium):** Auto-generate next occurrence on app load
+3. **Phase 3 (Medium):** Edge case handling + UI for managing instances
 
-### Option C: New Feature Ideas
-With most planned features complete, explore new capabilities:
-- Search/filter across all sections
-- Recurring reminders
-- Custom categories/tags
-- Data sync (cloud backup)
-- Keyboard shortcuts (desktop)
-
-### Option D: Deploy to HTTPS
-Upload to GitHub Pages or Netlify for full PWA experience. Use the "Download PWA Files" button to generate companion files.
+### Option C: Quick Wins
+Implement simple features to build momentum:
+- **Command Palette Search** (Medium) — Add `Ctrl+K` search modal
+- **Markdown Notes** (Simple) — Regex-based formatting with preview toggle
+- **Streak Heatmap** (Simple) — Visual calendar grid using existing `dHist`
+- **Matrix Drag-and-Drop** (Simple) — Drag tasks between quadrants
 
 ---
 
@@ -328,11 +297,11 @@ Upload to GitHub Pages or Netlify for full PWA experience. Use the "Download PWA
 
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
-- **Development style:** Iterative, version-based
-- **Current phase:** Complex features with Opus 4.5
-- **Completed:** 3 of 4 complex features (Test App ✅, Desktop Mode ✅, PWA Fix ✅)
-- **Remaining:** Batch Selection
-- **Key files:** `productivity-hub-v10.1-alpha.html`, `PROGRESS_SUMMARY.md`
+- **Development style:** Iterative, version-based, incremental str_replace edits
+- **Current phase:** All originally planned features complete. Open for new features.
+- **Working file:** `productivity-hub-v11.0-alpha.html` (152,666 bytes, 1,815 lines)
+- **Key constraint:** Output token limits require incremental edits, not full-file rewrites
+- **Key files:** `productivity-hub-v11.0-alpha.html`, `PROGRESS_SUMMARY.md`
 
 **Full Feature Set:**
 - Pomodoro Focus Timer with Focus Queue
@@ -344,10 +313,11 @@ Upload to GitHub Pages or Netlify for full PWA experience. Use the "Download PWA
 - Stats tracking (daily/weekly)
 - Theme support (Light/Dark/System)
 - Desktop Mode (768px+ responsive)
-- Test Suite (30 automated tests with reporting)
+- Test Suite (37 automated tests with reporting)
 - PWA Install System (platform instructions + deployment files)
 - Export/Import data backup
 - Complete Help system
+- Batch Selection & Bulk Actions (all sections, confirmation dialog)
 
 ---
 
