@@ -274,6 +274,185 @@ This flow matches a natural daily workflow: check alerts → plan day → execut
 
 ---
 
+## 🔮 Optional Future Redesign: Cohesive Workflow System
+
+**Concept:** Reframe the entire app around a unified productivity cycle rather than treating each feature independently. This is a **structural redesign**, not just adding educational content.
+
+### The Core Insight:
+Currently, the app presents **6 separate tools:** Focus Timer, To-Do, Lists, Reminders, Notes, and Stats. They work together, but users might experience them as disconnected features.
+
+A cohesive redesign would make the app about **one continuous workflow**: **Capture → Clarify → Execute → Focus → Review → Repeat.**
+
+Review becomes the **linchpin** — it's not just a summary, it directly feeds back into next week's clarification.
+
+### The Workflow Loop:
+
+```
+CAPTURE (Bullet Journal Philosophy)
+  ↓ [raw material: ideas, tasks, notes]
+CLARIFY (Eisenhower Matrix)
+  ↓ [what actually matters?]
+EXECUTE (Checklist Manifesto)
+  ↓ [how do I do it reliably?]
+FOCUS (Pomodoro + Deep Work)
+  ↓ [actually get it done]
+REVIEW (GTD Weekly Review) ← THE LINCHPIN
+  ↓ [what worked? what didn't? why?]
+  └─→ DIRECTLY SHAPES next week's CLARIFY
+```
+
+---
+
+## Implementation (Fresh Take):
+
+The app becomes:
+
+### 1. **Capture (Notes)** — Bullet Journal Style
+- **Purpose:** Flexible, unjudged entry point
+- **Rules:** Write fast, no structure required
+- **What it does:** Collects raw ideas, observations, learnings, meeting notes
+- **Philosophy:** Get things out of your head before they're lost
+- **User behavior:** Daily brain dumps, capture thoughts as they happen
+
+### 2. **Clarify (To-Do)** — Eisenhower Matrix
+- **Purpose:** Force hard prioritization
+- **Rules:** What matters? Urgent? Important? Both? Neither?
+- **What it does:** Takes raw captures and sorts them by quadrant
+- **Philosophy:** Not everything is equal; separate signal from noise
+- **User behavior:** Weekly review time: look at all captures, decide what's worth doing
+
+### 3. **Execute (Lists)** — Checklist Manifesto
+- **Purpose:** Specific, reliable steps to prevent errors
+- **Rules:** Pre-made checklists for recurring workflows
+- **What it does:** Breaks down how to actually do things reliably
+- **Philosophy:** Checklists eliminate decision fatigue and stupid mistakes
+- **User behavior:** Follow steps, check off completion, trust the process
+
+### 4. **Focus (Timer)** — Pomodoro + Deep Work
+- **Purpose:** Intense, distraction-free work sessions
+- **Rules:** 25 min focus, 5 min break, no context switching
+- **What it does:** Actually executes the priorities from Clarify
+- **Philosophy:** Deep work requires sustained attention; batch your breaks
+- **User behavior:** Pick 3-5 tasks from To-Do, work through Focus Queue with timer
+
+### 5. **Review (New Central Feature in More Tab)** — GTD Weekly Review
+- **Purpose:** The glue that closes the loop
+- **Rules:** Dedicated weekly ritual (Sunday evening or Friday afternoon)
+- **What it does:** 
+  - Shows all completed items this week (grouped by quadrant)
+  - Identifies patterns (which projects moved fastest? which quadrants had wins?)
+  - Lists incomplete items with blockers (why are they stuck?)
+  - Prompts for next week's priorities (what's truly important?)
+  
+**Critical:** Review output directly shapes next week's To-Do/Clarify section. It's not just a report—it's the feedback loop that makes you smarter about prioritization each week.
+
+---
+
+## Why This Is a Restructuring (Not Generic):
+
+**Current Approach:** "Here are 5 features. Use them however you want."  
+**Redesigned Approach:** "This is your productivity system. Here's the workflow: capture → clarify → execute → focus → review → repeat."
+
+**Key Differences:**
+
+| Aspect | Current | Restructured |
+|--------|---------|-------------|
+| **User Experience** | Modular features | Integrated workflow |
+| **Help System** | "How to use Lists" | "Why checklists reduce errors" + "Here's the workflow" |
+| **Review Feature** | Optional reporting | Central feature that drives next week's planning |
+| **Design Philosophy** | "Do what works for you" | "Follow this proven cycle and get better each week" |
+| **Onboarding** | "Here are 5 tools" | "Here's your productivity system in 5 steps" |
+
+**This is not just adding help text.** It's:
+- Moving Review from "optional stats viewer" to "required weekly ritual"
+- Restructuring the More tab around Review as the centerpiece
+- Reframing each section with *its philosophy in mind*, not just features
+- Making Review outputs suggest next week's priorities (auto-populate To-Do based on patterns)
+
+---
+
+## Component Remapping:
+
+| Tab | New Philosophy | Purpose | Behavior |
+|---|---|---|---|
+| **Notes** | Bullet Journal | Flexible, unjudged capture | Quick jots, ideas, learnings |
+| **To-Do** | Eisenhower Matrix | Force prioritization | Quadrants, 3-5 for Focus Queue |
+| **Lists** | Checklist Manifesto | Reliable execution | Pre-made workflows, sections |
+| **Focus** | Pomodoro + Deep Work | Intense work sessions | 25/5 timer, queue management |
+| **Review** (New) | GTD Weekly Review | Closing the loop | Weekly ritual, pattern analysis, next week's seeds |
+
+---
+
+## Key Implementation Changes:
+
+### 1. Review Section (New)
+```
+Review Tab Structure:
+├─ Weekly Summary
+│  ├─ Tasks completed this week (by quadrant)
+│  ├─ Blockers on incomplete tasks
+│  └─ Time spent in Focus (pomodoros)
+├─ Pattern Analysis
+│  ├─ Which quadrant had most wins?
+│  ├─ Which project types finished fastest?
+│  └─ Which days/times were most productive?
+├─ Next Week's Planning
+│  ├─ "Based on patterns, what should you prioritize?"
+│  ├─ Suggested To-Do items from this week's incomplete
+│  └─ One-click populate next week's priorities
+└─ Weekly Reflection
+   ├─ "What worked?"
+   ├─ "What blocked you?"
+   └─ "What will you do differently?"
+```
+
+### 2. More Tab Reorganization
+**Old:** Settings | Stats | Archive | Help | Test  
+**New:** Settings | **Review (now prominent)** | Stats | Archive | Help | Test
+
+Review becomes the centerpiece, not buried.
+
+### 3. Help System Restructuring
+- **Not just:** "Here's how to use each tab"
+- **But:** "Here's your productivity system. Each stage builds on the last. Review completes the cycle."
+- Help explains the *why* behind each philosophy, not just the *how*
+
+### 4. Suggested Auto-Population
+When user completes Review:
+- Incomplete items from this week are suggested for next week's To-Do
+- High-impact quadrants get a "focus here next week" banner
+- User confirms/edits before they auto-add
+
+---
+
+## Benefits of This Approach:
+
+1. **Learning Loop:** Every week, you learn from what worked. You literally get smarter about prioritization.
+2. **Habit Building:** Review becomes a non-negotiable weekly ritual (like GTD), not optional
+3. **Cohesive Narrative:** App tells a story: "Capture everything → Clarify what matters → Do it reliably → Focus deeply → Learn & repeat"
+4. **Reduced User Confusion:** No longer "what tab should I use?"; instead "here's your workflow"
+5. **Power User Appeal:** People who know these methodologies will feel understood
+
+---
+
+## Status:
+
+- **Concept:** ✅ Designed with detailed implementation plan
+- **Decision:** Deferred (major restructuring—evaluate after v12)
+- **Complexity:** **High** (restructures app flow, not just adding features)
+- **Scope:**
+  - New Review section (medium)
+  - Help system overhaul (medium)
+  - More tab restructuring (simple)
+  - Auto-population logic (medium)
+  - **Total:** ~3-4 full development sessions
+- **Priority:** Optional (current app works great; this is a "next evolution" redesign)
+- **When to Revisit:** After next 3-4 feature releases, assess whether users naturally gravitate toward this workflow
+
+**Decision Point:** If implementing, this should be v13.0 or later—major version bump warranted by structural change.
+
+---
+
 ## 🔧 Technical Stack
 
 ### Core Technologies
