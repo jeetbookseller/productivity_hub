@@ -1,15 +1,15 @@
 # Productivity Hub - Development Progress Summary
 
 **Last Updated:** February 1, 2026  
-**Current Version:** v11.0-alpha  
+**Current Version:** v11.1-alpha  
 **Current Model:** Opus 4.5  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v10.5-alpha (Opus 4.5)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.1-alpha (Opus 4.5)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v11.0-alpha.html**
+**productivity-hub-v11.1-alpha.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
@@ -26,6 +26,8 @@
 - ✅ **Desktop Mode** — Responsive layout optimized for 768px+ screens
 - ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
 - ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/archive/delete across all sections
+- ✅ **Reorganized Navigation** — Tab reorder (Remind → To-Do → Focus → Notes → Lists → More)
+- ✅ **Consolidated Help** — Install section integrated into Help tab, compact App Navigation in modal
 
 ---
 
@@ -64,6 +66,7 @@
 - **v10.4-alpha** — Batch Selection: Steps 3–5 (Bulk Action Bar + All Section Actions)
 - **v10.5-alpha** — Batch Selection: Step 6 (Polish — Empty Auto-Exit, Delete Confirmation)
 - **v11.0-alpha** — Major version bump for completed Batch Selection feature
+- **v11.1-alpha** — UX Polish: Tab Reordering + Help Consolidation
 
 ---
 
@@ -121,6 +124,62 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 
 ---
 
+## 🆕 v11.1-alpha — UX Polish: Tab Reordering + Help Consolidation
+
+Simple but impactful UX improvements focusing on navigation flow and help system organization.
+
+### Tab Reordering
+**Old Order:** Focus → Lists → To-Do → Remind → Notes → More  
+**New Order:** **Remind → To-Do → Focus → Notes → Lists → More**
+
+**Rationale:**
+- **Reminders first** — Time-sensitive, quick check-ins
+- **To-Do second** — Daily planning and prioritization
+- **Focus third** — Execution with Pomodoro timer
+- **Notes fourth** — Capture ideas and meeting notes
+- **Lists fifth** — Shopping, checklists, routine items
+- **More last** — Settings and utilities
+
+This flow matches a natural daily workflow: check alerts → plan day → execute → capture → organize → adjust settings.
+
+### Help System Consolidation
+
+**Quick Help Modal (? icon):**
+- Changed from verbose "Quick Tips" to compact "App Navigation"
+- Shows all 6 tabs with 1-line descriptions
+- Icon badges for visual scanning
+- Points to More → Help for full guide
+
+**More Tab Reorganization:**
+- **Removed:** Separate "Install" tab
+- **Kept:** Settings | Stats | Archive | Help | Test
+- **Integrated:** Install section now part of Help tab
+
+**Help Tab Contents (More → Help):**
+1. ⚡ Quick Tips & Gestures
+2. ☑️ Batch Selection & Bulk Actions (new in v11.0)
+3. 💡 Pro Tip
+4. 🚀 Daily Workflow
+5. 🍅 Pomodoro Technique
+6. 🎯 Deep Work & Focus Queue
+7. 📊 Eisenhower Matrix
+8. 📲 Install as App ← Moved from separate tab
+9. Version footer
+
+### Benefits
+- ✅ Cleaner More tab (5 items instead of 6)
+- ✅ Logical navigation flow (time → plan → execute → capture → organize → settings)
+- ✅ All help content consolidated in one place
+- ✅ Install instructions where users expect them (in Help section)
+- ✅ Quick Help modal remains lightweight and scannable
+
+### Implementation
+- 6 targeted `str_replace` edits
+- ~94 lines removed (duplicate Install section)
+- No functional changes, pure UX improvement
+
+---
+
 ## 📊 Session Log
 
 ### Batch Selection Development Sessions
@@ -135,6 +194,7 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 | 6 | Progress summary update | — | Updated PROGRESS_SUMMARY.md |
 | 7 | Steps 3–5 complete (v10.4) | ~50 | BulkActionBar, all section actions, Select All, tests |
 | 8 | Step 6 + v11 bump | 14 | Empty auto-exit, delete confirmation, major version |
+| 9 | Help reorganization (v11.1) | 10 | Tab reorder, Install→Help integration, App Nav modal |
 
 ### File Size Tracking
 | Version | Lines | Size | Delta | Description |
@@ -143,13 +203,14 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 | v10.3-alpha | 1,722 | 143,978 bytes | +5,858 | Selection state + UI checkboxes |
 | v10.4-alpha | 1,783 | 149,803 bytes | +5,825 | Bulk Action Bar + all section actions |
 | v11.0-alpha | 1,815 | 152,666 bytes | +2,863 | Polish + major version bump |
+| v11.1-alpha | 1,721 | ~150,000 bytes | -2,666 | Tab reorder + Install→Help consolidation |
 
 ---
 
 ## 🔴 Pending Features
 
-### Future Feature Ideas
-| Feature | Priority | Complexity | Description |
+### High-Value Features (Recommended Priority)
+| Feature | Priority | Complexity | Breakdown |
 |---------|----------|------------|-------------|
 | **🌐 Shared Lists Storage** | | |
 | ├─ Share List UI + Modal | High | Simple | Add "Share" button to lists, display share code/link in modal |
@@ -180,7 +241,7 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 - **Sequence:** Versions increment based on implementation order
 - **Alpha tag:** Any version containing test functionality gets `-alpha` suffix
 - **Major versions:** Bumped for significant new features (e.g. v10 → v11 for Batch Selection)
-- **Current:** v11.0-alpha
+- **Current:** v11.1-alpha
 
 ### UI Patterns Established
 - **Long-press:** 500ms trigger for context menus and selection mode
@@ -255,7 +316,7 @@ Test keys: '__TEST__*' (auto-cleaned)
 | `BulkActionBar` | Fixed bottom action bar during selection mode |
 | `BulkDeleteConfirm` | Confirmation modal for bulk delete ≥3 items |
 | `EditModal` | Create/edit tasks, lists, reminders, notes |
-| `HelpModal` | Quick tips popup (? icon) |
+| `HelpModal` | Compact App Navigation popup (? icon) |
 | `TestRunner` | Test suite execution and reporting (37 tests) |
 | `Swipe` | Swipe gesture handler (archive/delete) |
 | `Acts` | Action button row (edit/share/archive/delete) |
@@ -298,10 +359,10 @@ Implement simple features to build momentum:
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** All originally planned features complete. Open for new features.
-- **Working file:** `productivity-hub-v11.0-alpha.html` (152,666 bytes, 1,815 lines)
+- **Current phase:** All originally planned features complete. UX polish done. Open for new features.
+- **Working file:** `productivity-hub-v11.1-alpha.html` (~150KB, 1,721 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
-- **Key files:** `productivity-hub-v11.0-alpha.html`, `PROGRESS_SUMMARY.md`
+- **Key files:** `productivity-hub-v11.1-alpha.html`, `PROGRESS_SUMMARY.md`
 
 **Full Feature Set:**
 - Pomodoro Focus Timer with Focus Queue
@@ -316,8 +377,9 @@ Implement simple features to build momentum:
 - Test Suite (37 automated tests with reporting)
 - PWA Install System (platform instructions + deployment files)
 - Export/Import data backup
-- Complete Help system
+- Complete Help system (App Navigation modal + comprehensive Help tab)
 - Batch Selection & Bulk Actions (all sections, confirmation dialog)
+- Optimized tab navigation (Remind → To-Do → Focus → Notes → Lists → More)
 
 ---
 
