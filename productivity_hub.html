@@ -261,7 +261,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '12.5-alpha';
+const APP_VERSION = '12.7-alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -602,6 +602,44 @@ const ListMenu=({list,onEdit,onDelete,onClose,position})=>(
   </div>
 );
 
+const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,hasFocus,hasLink})=>(
+  <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
+    <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
+      <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{task.text}</p></div>
+      {!task.done&&<button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
+      </button>}
+      {!task.done&&!hasFocus&&<button onClick={()=>{onFocus();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Focus s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Focus Queue</span>
+      </button>}
+      {!task.done&&!hasLink&&<button onClick={()=>{onLink();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.List s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">📋 Link Checklist</span>
+      </button>}
+      {hasLink&&<button onClick={()=>{onOpenList();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.List s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">📋 Open Checklist</span>
+      </button>}
+      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Trash s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Delete</span>
+      </button>
+    </div>
+  </div>
+);
+
+const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
+  const[newName,setNewName]=useState('');
+  return(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onClose}>
+    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-3"><h3 className="font-bold text-bark-600 dark:text-sand-100">📋 Link Checklist</h3><button onClick={onClose} className="text-bark-400"><I.X s={20}/></button></div>
+      <p className="text-xs text-bark-500 dark:text-sand-200 mb-3">Link <strong>"{task.text}"</strong> to a checklist:</p>
+      {task.linkedList&&<button onClick={()=>{onUnlink(task.id);onClose();}} className="w-full mb-3 py-2.5 px-4 rounded-xl bg-terracotta-100 dark:bg-terracotta-400/20 text-terracotta-500 text-sm font-semibold text-left">✕ Remove current link</button>}
+      <div className="space-y-1.5 max-h-48 overflow-y-auto hide-sb mb-3">{lists.map(l=><button key={l.id} onClick={()=>{onLink(task.id,l.id);onClose();}} className={`w-full py-2.5 px-4 rounded-xl text-sm font-medium text-left transition-colors ${task.linkedList===l.id?'bg-sage-400 text-white':'gcard text-bark-600 dark:text-sand-100 hover:bg-sage-50 dark:hover:bg-sage-400/10'}`}>{l.name}<span className="ml-2 text-xs opacity-60">({l.items.filter(i=>!i.done).length}/{l.items.length})</span></button>)}</div>
+      <div className="flex gap-2"><input type="text" value={newName} onChange={e=>setNewName(e.target.value)} placeholder="New checklist name..." onKeyDown={e=>{if(e.key==='Enter'&&newName.trim()){onCreate(task.id,newName.trim());onClose();}}} className="flex-1 bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500"/><button onClick={()=>{if(newName.trim()){onCreate(task.id,newName.trim());onClose();}}} className="px-4 py-2 bg-sage-400 rounded-lg text-white text-sm font-semibold">Create</button></div>
+    </div>
+  </div>
+  );
+};
+
 // Delete Confirmation Modal
 const DeleteConfirmation=({list,onConfirm,onCancel,isLastList})=>(
   <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={onCancel}>
@@ -692,64 +730,20 @@ const EditModal=({item,type,onSave,onClose})=>{
 };
 
 // Help Modal - Compact App Navigation
-const HelpModal=({onClose})=>(
-  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onClose}>
-    <div className="gcard w-full max-w-sm md:max-w-lg rounded-2xl p-5 md:p-7 max-h-[85vh] overflow-y-auto anim-in hide-sb" onClick={e=>e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4"><h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">🧭 App Navigation</h2><button onClick={onClose} className="text-bark-400 hover:text-bark-600"><I.X s={22}/></button></div>
-      <div className="space-y-2.5">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-lavender-100 dark:bg-lavender-400/20 flex items-center justify-center flex-shrink-0"><I.Notes s={20} c="text-lavender-400"/></div>
-          <div className="flex-1">
-            <div className="font-bold text-bark-600 dark:text-sand-100">Capture</div>
-            <div className="text-sm text-bark-500 dark:text-sand-200">Bullet journal notes • Tap to edit • Hover for strikethrough & → Clarify</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sage-100 dark:bg-sage-400/20 flex items-center justify-center flex-shrink-0"><I.Check s={20} c="text-sage-500"/></div>
-          <div className="flex-1">
-            <div className="font-bold text-bark-600 dark:text-sand-100">Clarify</div>
-            <div className="text-sm text-bark-500 dark:text-sand-200">Tasks with priorities, categories, subtasks, due dates</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-ocean-100 dark:bg-ocean-400/20 flex items-center justify-center flex-shrink-0"><I.Focus s={20} c="text-ocean-400"/></div>
-          <div className="flex-1">
-            <div className="font-bold text-bark-600 dark:text-sand-100">Focus</div>
-            <div className="text-sm text-bark-500 dark:text-sand-200">Pomodoro timer + Focus Queue (3-5 active tasks)</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-terracotta-100 dark:bg-terracotta-400/20 flex items-center justify-center flex-shrink-0"><I.List s={20} c="text-terracotta-400"/></div>
-          <div className="flex-1">
-            <div className="font-bold text-bark-600 dark:text-sand-100">Confirm</div>
-            <div className="text-sm text-bark-500 dark:text-sand-200">Checklists with sections (Work, Personal, Shopping, etc.)</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-ocean-100 dark:bg-ocean-400/20 flex items-center justify-center flex-shrink-0"><I.Review s={20} c="text-ocean-400"/></div>
-          <div className="flex-1">
-            <div className="font-bold text-bark-600 dark:text-sand-100">Review</div>
-            <div className="text-sm text-bark-500 dark:text-sand-200">Weekly stats, matrix overview, insights & next actions</div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sand-200 dark:bg-bark-500/20 flex items-center justify-center flex-shrink-0"><I.Settings s={20} c="text-bark-500"/></div>
-          <div className="flex-1">
-            <div className="font-bold text-bark-600 dark:text-sand-100">More</div>
-            <div className="text-sm text-bark-500 dark:text-sand-200">Settings, Help & Install, Test Suite</div>
-          </div>
-        </div>
+const AboutModal=({onClose,isWelcome})=>(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={onClose}>
+    <div className="gcard w-full max-w-sm md:max-w-lg rounded-2xl p-5 md:p-6 anim-in" onClick={e=>e.stopPropagation()}>
+      {isWelcome?(<div className="text-center mb-4"><div className="text-3xl mb-1">🌿</div><h2 className="text-lg md:text-xl font-extrabold text-bark-600 dark:text-sand-100">Welcome to Productivity Hub</h2><p className="text-sm text-bark-400 dark:text-sand-300 mt-0.5">Your all-in-one productivity system</p></div>):(<div className="flex items-center justify-between mb-3"><h2 className="text-base md:text-lg font-bold text-bark-600 dark:text-sand-100">🌿 About Productivity Hub</h2><button onClick={onClose} className="text-bark-400 hover:text-bark-600"><I.X s={20}/></button></div>)}
+      <div className="space-y-2">
+        <div><span className="font-bold text-bark-600 dark:text-sand-100">📝 Capture</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Brain dump everything. No organizing yet.</span></div>
+        <div><span className="font-bold text-bark-600 dark:text-sand-100">🎯 Clarify</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Sort by urgency & importance. Long-press for actions.</span></div>
+        <div><span className="font-bold text-bark-600 dark:text-sand-100">⏱ Focus</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Queue 3–5 tasks. Work in timed sessions.</span></div>
+        <div><span className="font-bold text-bark-600 dark:text-sand-100">✅ Confirm</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Checklists for tasks. Link from Clarify to break work into steps.</span></div>
+        <div><span className="font-bold text-bark-600 dark:text-sand-100">📊 Review</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Weekly stats, streaks & insights.</span></div>
       </div>
-      <div className="mt-5 p-4 bg-gradient-to-r from-sage-50 to-ocean-50 dark:from-bark-600/50 dark:to-bark-600/50 rounded-xl border border-sage-200 dark:border-bark-500">
-        <div className="flex items-start gap-2">
-          <span className="text-lg">📚</span>
-          <div>
-            <div className="font-bold text-bark-600 dark:text-sand-100 text-sm mb-1">Full Guide Available</div>
-            <p className="text-xs text-bark-500 dark:text-sand-200">Visit <strong>More → Explainer</strong> for the Workflow guide, Daily Routines, Bullet Journal, GTD Review, Pomodoro/Deep Work, and Eisenhower Matrix.</p>
-          </div>
-        </div>
-      </div>
-      <button onClick={onClose} className="w-full mt-4 py-3 bg-sage-400 rounded-xl font-bold text-white text-sm hover:bg-sage-500 transition-colors">Got it!</button>
+      <div className="mt-3 text-center"><p className="text-sm font-bold text-sage-500 dark:text-sage-400">Capture → Clarify → Focus → Confirm → Review → Repeat</p></div>
+      <p className="mt-3 text-xs text-center text-bark-400 dark:text-sand-300">📚 Visit <strong className="text-bark-600 dark:text-sand-100">More → Explainer</strong> for the full guide</p>
+      <button onClick={onClose} className="w-full mt-3 py-2.5 bg-sage-400 rounded-xl font-bold text-white text-sm hover:bg-sage-500 transition-colors">{isWelcome?'Get Started':'Got it!'}</button>
     </div>
   </div>
 );
@@ -1170,12 +1164,32 @@ function App(){
   const desk=useDesk();
   const[tab,setTab]=usePersistedState('tab','notes');
   const[showHelp,setShowHelp]=useState(false);
+  const[seenAbout,setSeenAbout]=usePersistedState('seenAbout',false);
+  const[showWelcome,setShowWelcome]=useState(false);
+  useEffect(()=>{if(seenAbout===false)setShowWelcome(true);},[seenAbout]);
+
+  const seedSampleData=()=>{
+    const now=new Date().toISOString();
+    const today=new Date().toDateString();
+    setTodos(t=>{if(t.length>0)return t;return[
+      {id:uid(),text:'Try adding a task here',quad:'ui',pri:'high',cat:'personal',done:false,poms:0},
+      {id:uid(),text:'Drag tasks between quadrants',quad:'ni',pri:'medium',cat:'learning',done:false,poms:0},
+      {id:uid(),text:'Long-press to select multiple',quad:'nn',pri:'low',cat:'personal',done:false,poms:0},
+    ];});
+    setNotes(n=>{if(n.length>0)return n;return[
+      {id:uid(),text:'Welcome! Jot quick thoughts here',date:today,crAt:now},
+      {id:uid(),text:'Tap any note to edit, hover for actions',date:today,crAt:now},
+    ];});
+    setLists(ls=>{if(ls.some(l=>l.items.length>0))return ls;return[
+      {id:uid(),name:'Getting Started',items:[{id:uid(),text:'Explore each tab',done:false},{id:uid(),text:'Start a Focus session',done:false},{id:uid(),text:'Check the Review tab',done:false}]},
+    ];});
+  };
   const[preset,setPreset]=usePersistedState('preset','classic');
   const[customT,setCustomT]=usePersistedState('customT',{work:25,shortBreak:5,longBreak:15});
   const tSet=useMemo(()=>preset==='custom'?customT:PRESETS[preset],[preset,customT]);
   
   // Data
-  const[lists,setLists]=usePersistedState('lists',[{id:'groceries',name:'Groceries',items:[]}]);
+  const[lists,setLists]=usePersistedState('lists',[]);
   const[todos,setTodos]=usePersistedState('todos',[]);
   const[reminders,setReminders]=usePersistedState('reminders',[]);
   const[notes,setNotes]=usePersistedState('notes',[]);
@@ -1245,10 +1259,12 @@ function App(){
   };
   const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
   const cancelBulkDelete=()=>setBulkConfirm(null);
-  const[selList,setSelList]=usePersistedState('selList','groceries');
+  const[selList,setSelList]=usePersistedState('selList','');
   const[newList,setNewList]=useState('');
   const[showNew,setShowNew]=useState(false);
   const[listMenu,setListMenu]=useState(null);
+  const[taskMenu,setTaskMenu]=useState(null);
+  const[linkPicker,setLinkPicker]=useState(null); // {taskId}
   const[editListId,setEditListId]=useState(null);
   const[editListName,setEditListName]=useState('');
   const[deleteConfirm,setDeleteConfirm]=useState(null);
@@ -1321,6 +1337,10 @@ function App(){
   const doneList=(lid,iid)=>{setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.map(i=>i.id===iid?{...i,done:!i.done}:i)}:l));};
   const doneTodo=id=>{setTodos(t=>t.map(x=>x.id===id?{...x,done:true}:x));setFocus(f=>f.filter(x=>x.id!==id));setMet(p=>({...p,d:{...p.d,t:p.d.t+1},w:{...p.w,t:p.w.t+1}}));showT('✅ Done!');};
   const deleteTodo=id=>{setTodos(t=>t.filter(x=>x.id!==id));showT('🗑 Deleted');};
+  const linkTask=(taskId,listId)=>{setTodos(t=>t.map(x=>x.id===taskId?{...x,linkedList:listId}:x));showT('📋 Linked!');};
+  const unlinkTask=(taskId)=>{setTodos(t=>t.map(x=>x.id===taskId?{...x,linkedList:undefined}:x));showT('Unlinked');};
+  const openLinkedList=(task)=>{if(task.linkedList){setSelList(task.linkedList);setTab('lists');}};
+  const createAndLink=(taskId,name)=>{const id=uid();setLists(ls=>[...ls,{id,name,items:[]}]);linkTask(taskId,id);setSelList(id);};
   const deleteListItem=(lid,iid)=>{setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.filter(i=>i.id!==iid)}:l));showT('🗑 Deleted');};
   const deleteReminder=id=>{setReminders(r=>r.filter(x=>x.id!==id));showT('🗑 Deleted');};
   
@@ -1391,6 +1411,7 @@ function App(){
   );
 
   const rLists=()=>{
+    if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
     const cl=lists.find(l=>l.id===selList);
     const secs=[...new Set(cl?.items.map(i=>i.section)||[])];
     
@@ -1431,6 +1452,7 @@ function App(){
         </div>
         {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
         {cl&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
+        {cl&&(()=>{const lt=todos.find(t=>t.linkedList===cl.id);if(!lt)return null;const allDone=cl.items.length>0&&cl.items.every(i=>i.done);return(<div className={`p-3 rounded-xl mb-3 flex items-center justify-between ${allDone?'bg-sage-100 dark:bg-sage-400/20 border border-sage-300 dark:border-sage-400/40':'gcard'}`}><div className="flex items-center gap-2 min-w-0"><span className="text-xs">🎯</span><span className="text-sm font-medium text-bark-600 dark:text-sand-100 truncate">{lt.text}</span></div>{allDone&&!lt.done?<button onClick={()=>{doneTodo(lt.id);showT('🎉 Task completed!');}} className="px-3 py-1.5 bg-sage-400 text-white rounded-lg text-xs font-bold flex-shrink-0 ml-2">✓ Mark Done</button>:<button onClick={()=>{setTab('todos');}} className="text-xs text-ocean-400 font-medium flex-shrink-0 ml-2">View →</button>}</div>);})()}
         {secs.length>0?secs.map(s=>(
           <div key={s} className="space-y-2">
             <h3 className="text-xs font-bold text-bark-400/50 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
@@ -1481,7 +1503,7 @@ function App(){
                   const inSel=selMode&&selSection==='todos';
                   const isSel=inSel&&selIds.has(t.id);
                   let lpTimer=null;
-                  const lpStart=()=>{lpTimer=setTimeout(()=>{if(!selMode)enterSelMode('todos',t.id);},500);};
+                  const lpStart=()=>{lpTimer=setTimeout(()=>{if(selMode){enterSelMode('todos',t.id);}else{setTaskMenu(t);}},500);};
                   const lpEnd=()=>{if(lpTimer)clearTimeout(lpTimer);};
                   return(
                   <Swipe key={t.id} onDone={()=>doneTodo(t.id)} onDelete={()=>deleteTodo(t.id)}>
@@ -1489,7 +1511,10 @@ function App(){
                       {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>:
                       <button onClick={e=>{e.stopPropagation();doneTodo(t.id);}} className={`w-7 h-7 mt-0.5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
                       <div className="flex-1 min-w-0 space-y-2">
-                        <div className={`text-base font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-600 dark:text-sand-100'}`}>{t.text}</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-base font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-600 dark:text-sand-100'}`}>{t.text}</span>
+                          {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
+                        </div>
                         {(t.cat||t.deadline||t.subtasks?.length>0)&&(
                           <div className="flex items-center gap-3 flex-wrap text-xs">
                             {t.cat&&<span className="px-2 py-1 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
@@ -1499,10 +1524,7 @@ function App(){
                         )}
                         {t.poms>0&&<div className="flex items-center gap-1.5"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span><span className="text-xs text-bark-400/50 dark:text-sand-300/40">pomodoro{t.poms>1?'s':''}</span></div>}
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {!t.done&&!focus.find(x=>x.id===t.id)&&<button onClick={e=>{e.stopPropagation();addFocus(t);}} className="p-2 rounded-lg hover:bg-sage-100 dark:hover:bg-sage-400/20 text-sage-500 font-bold transition-colors" aria-label="Add to focus">→</button>}
-                        {t.done&&<button onClick={e=>{e.stopPropagation();deleteTodo(t.id);}} className="p-2 rounded-lg hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 text-terracotta-400 transition-colors" aria-label="Delete task"><I.Trash s={18}/></button>}
-                      </div>
+                      {t.done&&<button onClick={e=>{e.stopPropagation();deleteTodo(t.id);}} className="p-2 rounded-lg hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 text-terracotta-400 transition-colors" aria-label="Delete task"><I.Trash s={18}/></button>}
                     </div>
                   </Swipe>
                 );})}
@@ -1731,7 +1753,7 @@ function App(){
                   <span className="text-2xl">📋</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">2. Clarify</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize. Long-press any task for actions: edit, add to Focus Queue, link a checklist, or delete.</div>
                   </div>
                 </div>
               </div>
@@ -1749,7 +1771,7 @@ function App(){
                   <span className="text-2xl">✅</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">4. Confirm</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to verify work is complete. Create checklists for recurring processes — deployment steps, morning routines, weekly reviews. Sections help organize items by context.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to break tasks into steps. Link a checklist to a Clarify task via long-press → Link Checklist. When all items are checked, you'll be prompted to mark the task done. Sections help organize items by context.</div>
                   </div>
                 </div>
               </div>
@@ -1979,9 +2001,12 @@ function App(){
         </div>
       </div>
       {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
-      {showHelp&&<HelpModal onClose={()=>setShowHelp(false)}/>}
+      {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
+      {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)}/>}
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
+      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
+      {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>deleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
     </div>

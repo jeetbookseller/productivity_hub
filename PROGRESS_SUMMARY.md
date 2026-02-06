@@ -1,15 +1,15 @@
 # Productivity Hub - Development Progress Summary
 
 **Last Updated:** February 6, 2026  
-**Current Version:** v12.5-alpha  
+**Current Version:** v12.7-alpha  
 **Current Model:** Opus 4.6  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.5-alpha (Opus 4.6)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v12.5-alpha.html**
+**productivity-hub-v12.7-alpha.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
@@ -21,13 +21,17 @@
 - ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
 - ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/delete
 - ✅ **Capture** — Bullet journal with day sections, tap-to-edit, strikethrough, → Clarify
-- ✅ **Clarify** — Eisenhower Matrix with drag-and-drop re-prioritization
+- ✅ **Clarify** — Eisenhower Matrix with drag-and-drop + long-press task menu
 - ✅ **Focus** — Pomodoro timer + Focus Queue (3–5 tasks, Deep Work)
-- ✅ **Confirm** — Checklists with sections
+- ✅ **Confirm** — Checklists with sections, linked to Clarify tasks
 - ✅ **Review** — Weekly stats, streak heatmap, matrix overview, pattern insights, next actions
 - ✅ **Streak Heatmap** — GitHub-style 13-week grid, 5-level color intensity, tap-for-details, streak counters
 - ✅ **Day Rotation** — Auto-archives daily stats to dHist, resets counters on date change
 - ✅ **Explainer** — Workflow guide, Bullet Journal, GTD Review, Pomodoro, Deep Work, Eisenhower
+- ✅ **Welcome & About** — First-launch welcome overlay + ? icon About modal
+- ✅ **Sample Data** — Onboarding seed data on first launch
+- ✅ **Task ↔ Checklist Linking** — Link Clarify tasks to Confirm checklists, bidirectional navigation, all-done suggestion
+- ✅ **Task Long-Press Menu** — Consolidated actions: Edit, → Focus, Link/Open Checklist, Delete
 - ✅ **Workflow Navigation** — Capture → Clarify → Focus → Confirm → Review → More
 - ✅ Default theme: System, default quadrant: Eliminate
 - ✅ **Dark mode polish** — Cohesive dark mode across all tabs
@@ -70,7 +74,28 @@
 
 ### Phase 5: Workflow Redesign (v12.0 - v12.5) — Opus 4.6
 
-### v12.5-alpha ← CURRENT
+### v12.7-alpha ← CURRENT
+- **Task ↔ Checklist Linking** — Bidirectional link between Clarify tasks and Confirm checklists
+  - Long-press task in Clarify → Link Checklist (pick existing or create new)
+  - 📋 badge on linked tasks in Clarify
+  - Linked task name shown at top of checklist in Confirm with "View →" navigation
+  - When all checklist items done → "✓ Mark Done" suggestion appears
+  - LinkPicker modal: select, create, or unlink checklists
+- **Task Long-Press Menu** — Replaces hover action icons in Clarify
+  - Centered modal with: Edit, → Focus Queue, 📋 Link/Open Checklist, Delete
+  - Long-press now opens task menu (selection mode enters via existing batch selection)
+- **Help updates** — Clarify and Confirm descriptions updated in AboutModal and Explainer
+
+### v12.6-alpha
+- **Welcome & About Modal** — First-launch overlay with app explainer + "Get Started" button
+  - `seenAbout` persisted in IndexedDB, shows only once
+  - Same content accessible via ? icon (as About modal)
+  - Footer links to More → Explainer for full guide
+- **Onboarding Sample Data** — Seeds on first launch when "Get Started" is clicked
+  - Capture: 2 sample notes, Clarify: 3 tasks across quadrants, Confirm: 2 checklists
+  - Guarded: only seeds if sections are empty
+
+### v12.5-alpha
 - **Streak Heatmap** — GitHub-style 13-week × 7-day grid in Review tab
   - 5-level sage color intensity based on pomodoro count
   - Current day ring highlight, tap any cell for day stats (🍅, ✓, ⏱)
@@ -137,6 +162,8 @@
 | 12 | Explainer rewrite + Settings cleanup + theme fix | v12.2 → v12.3-alpha |
 | 13 | Dark mode cohesion pass | v12.3 → v12.4-alpha |
 | 14 | Streak Heatmap + Day Rotation + tests + help | v12.4 → v12.5-alpha |
+| 15 | Welcome modal + About + Onboarding sample data | v12.5 → v12.6-alpha |
+| 16 | Task ↔ Checklist linking + Task long-press menu + help updates | v12.6 → v12.7-alpha |
 
 ---
 
@@ -256,7 +283,8 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 ### Storage Structure
 ```
 IndexedDB: 'ProductivityHub' / Store: 'data'
-Keys: todos, lists, notes, focus, theme, preset, customT, poms, met, dHist, fHist, tab
+Keys: todos, lists, notes, focus, theme, preset, customT, poms, met, dHist, fHist, tab, seenAbout
+Todo fields: id, text, quad, cat, deadline, subtasks, poms, done, linkedList (optional - Confirm list ID)
 Test keys: __TEST__* (auto-cleaned)
 Removed: arc, reminders
 ```
@@ -270,6 +298,9 @@ Removed: arc, reminders
 | `SelCheck` / `BulkActionBar` / `BulkDeleteConfirm` | Batch selection UI |
 | `EditModal` | Create/edit tasks, lists, notes |
 | `HelpModal` | Compact App Navigation popup (? icon) |
+| `AboutModal` | Welcome overlay (first launch) + About modal (? icon) |
+| `TaskMenu` | Long-press task menu in Clarify (Edit, Focus, Link, Delete) |
+| `LinkPicker` | Modal to link/unlink/create checklists for tasks |
 | `TestRunner` | Test suite (39 tests) |
 | `Swipe` / `QuickAdd` / `Chart` | Gesture, input, visualization |
 | `ListMenu` / `DeleteConfirmation` / `Subtasks` | List management |
