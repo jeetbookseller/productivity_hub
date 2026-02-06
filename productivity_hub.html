@@ -261,7 +261,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '12.2-alpha';
+const APP_VERSION = '12.3-alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -447,7 +447,8 @@ const reqNotifyPerm=()=>{if('Notification'in window&&Notification.permission==='
 // Theme
 const ThemeCtx=createContext();
 const ThemeProv=({children})=>{
-  const[theme,setTheme]=useState(S.get('theme','light'));
+  const[theme,setTheme]=useState(()=>S.getSync('theme','system'));
+  useEffect(()=>{S.get('theme','system').then(v=>{if(v!==theme)setTheme(v);});},[]);
   useEffect(()=>{S.set('theme',theme);const r=document.documentElement,m=document.getElementById('theme-color-meta');if(theme==='system'){const p=window.matchMedia('(prefers-color-scheme:dark)').matches;r.classList.toggle('dark',p);m.content=p?'#2D2720':'#F7F5F0';}else{r.classList.toggle('dark',theme==='dark');m.content=theme==='dark'?'#2D2720':'#F7F5F0';}},[theme]);
   return<ThemeCtx.Provider value={{theme,setTheme}}>{children}</ThemeCtx.Provider>;
 };
@@ -744,7 +745,7 @@ const HelpModal=({onClose})=>(
           <span className="text-lg">📚</span>
           <div>
             <div className="font-bold text-bark-600 dark:text-sand-100 text-sm mb-1">Full Guide Available</div>
-            <p className="text-xs text-bark-500 dark:text-sand-200">Visit <strong>More → Help</strong> for Quick Tips, Daily Workflows, Pomodoro/Deep Work guides, Batch Selection help, and PWA Install instructions.</p>
+            <p className="text-xs text-bark-500 dark:text-sand-200">Visit <strong>More → Explainer</strong> for the Workflow guide, Daily Routines, Bullet Journal, GTD Review, Pomodoro/Deep Work, and Eisenhower Matrix.</p>
           </div>
         </div>
       </div>
@@ -1566,159 +1567,162 @@ function App(){
 
   const rMore=()=>(
     <div className="space-y-4">
-      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📚 Help'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
+      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
       {moreSub==='settings'&&(
         <div className="space-y-4">
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>
+          <div className="text-center text-sm text-bark-400/60 dark:text-sand-300/50 pt-2"><p>Productivity Hub v{APP_VERSION}</p></div>
         </div>
       )}
       {moreSub==='help'&&(
         <div className="space-y-6 pb-8">
           <div className="gcard rounded-2xl p-6">
-            <h2 className="text-2xl font-extrabold text-bark-600 dark:text-sand-100 mb-4">📚 Complete Guide to Productivity Hub</h2>
-            <p className="text-bark-500 dark:text-sand-200">Master the art of productivity with our comprehensive system combining Pomodoro, Deep Work, and the Eisenhower Matrix.</p>
+            <h2 className="text-2xl font-extrabold text-bark-600 dark:text-sand-100 mb-4">📚 Complete Guide</h2>
+            <p className="text-bark-500 dark:text-sand-200">Productivity Hub combines the Bullet Journal method, GTD (Getting Things Done), Deep Work, and the Eisenhower Matrix into one seamless workflow.</p>
           </div>
 
           <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">⚡ Quick Tips & Gestures</h3>
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">🔄 The Workflow</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">Every productivity system follows one cycle. Ours has five steps, each mapped to a tab:</p>
             <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">👆</span>
-                  <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Long-press for menus</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Long-press list names to edit/delete • Long-press items to enter batch selection mode</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">✏️</span>
-                  <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Tap to edit</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Tap any task or checklist item to edit • Tap notes to edit inline • Hover notes for strikethrough & → Clarify</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">👉</span>
-                  <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Swipe gestures</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Swipe right = done • Swipe left = delete</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">☑️</span>
-                  <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Batch selection</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Long-press to select multiple items • Bulk done/delete with one tap</div>
-                  </div>
-                </div>
-              </div>
               <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl">📌</span>
+                  <span className="text-2xl">📝</span>
                   <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Sticky headers</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Section titles stay visible while scrolling</div>
+                    <div className="font-bold text-bark-600 dark:text-sand-100">1. Capture</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Get everything out of your head. Jot quick bullet notes — ideas, tasks, thoughts, anything. Don't organize yet, just capture. Tap to edit, hover to strikethrough or promote to Clarify.</div>
                   </div>
                 </div>
               </div>
               <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl">➕</span>
+                  <span className="text-2xl">📋</span>
                   <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Quick add bars</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Use bottom input bars in each section for fast entry</div>
+                    <div className="font-bold text-bark-600 dark:text-sand-100">2. Clarify</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize.</div>
                   </div>
                 </div>
               </div>
               <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚙️</span>
+                  <span className="text-2xl">🎯</span>
                   <div>
-                    <div className="font-semibold text-bark-600 dark:text-sand-100">Customize timer</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Adjust work/break durations in More → Settings</div>
+                    <div className="font-bold text-bark-600 dark:text-sand-100">3. Focus</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Pick 3–5 tasks for today's Focus Queue. Use the Pomodoro timer: 25 min work, 5 min break. After 4 cycles, take a longer break. One task at a time, deep work only.</div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">☑️ Batch Selection & Bulk Actions</h3>
-            <p className="text-bark-500 dark:text-sand-200 mb-4">Select multiple items at once and perform bulk actions — perfect for weekly reviews and cleanup.</p>
-            <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">How to Use</h4>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Long-press any item (task, list item, reminder, note)</li>
-                  <li>2. First item is auto-selected, checkboxes appear on all items</li>
-                  <li>3. Tap more items to add them to selection</li>
-                  <li>4. Use bottom action bar: Done / Delete</li>
-                  <li>5. Tap "Select All" to select everything in current section</li>
-                  <li>6. Tap ✕ to exit selection mode</li>
-                </ol>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Available Actions</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• <strong>Clarify:</strong> Done, Delete</li>
-                  <li>• <strong>Confirm:</strong> Toggle Done, Delete</li>
-                  <li>• <strong>Notes:</strong> Delete</li>
-                </ul>
               </div>
               <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Safety Features</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• Deleting ≥3 items shows confirmation dialog</li>
-                  <li>• Deleting 1-2 items executes immediately</li>
-                  <li>• Unchecking last item auto-exits selection mode</li>
-                  <li>• Changing tabs auto-exits selection mode</li>
-                </ul>
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">✅</span>
+                  <div>
+                    <div className="font-bold text-bark-600 dark:text-sand-100">4. Confirm</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to verify work is complete. Create checklists for recurring processes — deployment steps, morning routines, weekly reviews. Sections help organize items by context.</div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-sand-100 dark:bg-bark-600/50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">📊</span>
+                  <div>
+                    <div className="font-bold text-bark-600 dark:text-sand-100">5. Review</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Check your weekly stats, matrix balance, and insights. The Review tab analyzes your patterns — overloaded quadrants, overdue tasks, unprocessed notes — and suggests next actions. Do this weekly.</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="gcard rounded-2xl p-5 bg-gradient-to-br from-sage-100 to-ocean-100 dark:from-bark-600/50 dark:to-bark-600/50">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-2">💡 Pro Tip</h3>
-            <p className="text-bark-600 dark:text-sand-100 font-semibold">The best productivity system is one you'll use consistently. Start simple with just Pomodoro and Clarify, then add complexity as you build the habit.</p>
           </div>
 
           <div className="gcard rounded-2xl p-5">
             <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">🚀 Daily Workflow</h3>
             <div className="space-y-3">
               <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Morning Setup (5 min)</h4>
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Morning (5 min)</h4>
                 <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Review Clarify list, update priorities</li>
-                  <li>2. Check Reminders for today</li>
-                  <li>3. Add 3-5 tasks to Focus Queue</li>
-                  <li>4. Drag to reorder queue by importance</li>
+                  <li>1. Open <strong>Capture</strong> — jot anything on your mind</li>
+                  <li>2. Go to <strong>Clarify</strong> — review matrix, drag tasks to correct quadrants</li>
+                  <li>3. Tap → on 3–5 tasks to add them to <strong>Focus</strong> queue</li>
+                  <li>4. Optionally check <strong>Confirm</strong> for any process checklists</li>
                 </ol>
               </div>
               <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Deep Work Session (2-3 hours)</h4>
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Work Sessions (2–4 hours)</h4>
                 <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Start Pomodoro with top task</li>
-                  <li>2. Work 25 min, break 5 min</li>
-                  <li>3. Complete 4 cycles (long break after 4th)</li>
-                  <li>4. Check off completed task</li>
+                  <li>1. Open <strong>Focus</strong>, tap a task to activate it</li>
+                  <li>2. Start Pomodoro — 25 min of deep work</li>
+                  <li>3. Take 5 min break, then repeat</li>
+                  <li>4. After 4 pomodoros, take a 15 min long break</li>
+                  <li>5. Quick-capture stray thoughts in <strong>Capture</strong> to stay focused</li>
                 </ol>
               </div>
               <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">End of Day (10 min)</h4>
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">End of Day (5 min)</h4>
                 <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Review completed items</li>
-                  <li>2. Batch select finished tasks → Delete</li>
-                  <li>3. Check Pomodoro count in Stats</li>
-                  <li>4. Set priorities for tomorrow</li>
+                  <li>1. Clear completed tasks (🧹 button in Clarify)</li>
+                  <li>2. Process any unread <strong>Capture</strong> notes → strikethrough or → Clarify</li>
+                  <li>3. Glance at <strong>Review</strong> for today's pomodoro count</li>
+                  <li>4. Set priorities for tomorrow in <strong>Clarify</strong></li>
                 </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">📓 Bullet Journal Method</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">The Capture tab is inspired by Ryder Carroll's Bullet Journal — a rapid logging system that clears your mind so you can focus.</p>
+            <div className="space-y-3">
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Rapid Logging</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• <strong>Capture everything</strong> — tasks, ideas, thoughts, questions</li>
+                  <li>• <strong>One bullet per thought</strong> — keep it short and atomic</li>
+                  <li>• <strong>Press Enter</strong> to add instantly, no friction</li>
+                  <li>• <strong>Don't organize yet</strong> — that's what Clarify is for</li>
+                </ul>
+              </div>
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Migration (Processing Notes)</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• <strong>→ Clarify:</strong> Hover a note and tap ✓ to convert it to a task</li>
+                  <li>• <strong>Strikethrough:</strong> Hover and tap <span className="line-through">S</span> for items that are done or irrelevant</li>
+                  <li>• <strong>Edit:</strong> Tap a note to refine its text inline</li>
+                  <li>• <strong>Delete:</strong> Use long-press batch selection to clear old notes</li>
+                </ul>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Day Sections</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Notes are automatically grouped by day — Today, Yesterday, and past dates. This creates a natural timeline of your thinking, just like a physical journal.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">📊 GTD Weekly Review</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">David Allen's Getting Things Done weekly review is the "critical success factor" of the system. The Review tab makes this easy.</p>
+            <div className="space-y-3">
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Weekly Review Checklist</h4>
+                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>1. <strong>Get Clear</strong> — Process all Capture notes (migrate or strike)</li>
+                  <li>2. <strong>Get Current</strong> — Review Clarify matrix, update or delete stale tasks</li>
+                  <li>3. <strong>Get Creative</strong> — Check Review insights, act on suggestions</li>
+                </ol>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">What the Review Tab Shows</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• <strong>Weekly stats:</strong> Pomodoros, tasks completed, focus time</li>
+                  <li>• <strong>Matrix overview:</strong> How many active tasks in each quadrant</li>
+                  <li>• <strong>Insights:</strong> Overloaded quadrants, overdue tasks, unprocessed notes</li>
+                  <li>• <strong>Next actions:</strong> Specific suggestions based on your patterns</li>
+                </ul>
+              </div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">The Review Loop</h4>
+                <p className="text-sm text-bark-500 dark:text-sand-200">Review closes the loop. Insights from Review feed back into Capture and Clarify — tasks you need to add, priorities to shift, habits to change. This is what makes the system self-improving.</p>
               </div>
             </div>
           </div>
@@ -1801,77 +1805,17 @@ function App(){
                 <li>• <strong>Q1:</strong> High Priority, Due Today</li>
                 <li>• <strong>Q2:</strong> Medium Priority, add to Focus Queue</li>
                 <li>• <strong>Q3:</strong> Low Priority or Delegate</li>
-                <li>• <strong>Q4:</strong> Don't add to app</li>
+                <li>• <strong>Q4:</strong> New tasks default here — drag upward as priorities become clear</li>
               </ul>
             </div>
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">📲 Install as App</h3>
-            <p className="text-bark-500 dark:text-sand-200 mb-4">Productivity Hub is a Progressive Web App (PWA) hosted on GitHub Pages. Install it on your device for quick access, fullscreen mode, and an app-like experience.</p>
-            
-            <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="font-bold text-bark-600 dark:text-sand-100 mb-1 flex items-center gap-2">🍎 iOS (iPhone/iPad)</div>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Open in <strong>Safari</strong></li>
-                  <li>2. Tap <strong>Share</strong> button (square with arrow)</li>
-                  <li>3. Scroll down, tap <strong>"Add to Home Screen"</strong></li>
-                  <li>4. Tap <strong>Add</strong> — done!</li>
-                </ol>
-                <p className="text-xs text-sage-600 dark:text-sage-300 mt-2 font-medium">✅ Works perfectly</p>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="font-bold text-bark-600 dark:text-sand-100 mb-1 flex items-center gap-2">🤖 Android (Chrome)</div>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Open in <strong>Chrome</strong></li>
-                  <li>2. Tap <strong>⋮ menu</strong> (top right)</li>
-                  <li>3. Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></li>
-                  <li>4. Confirm — done!</li>
-                </ol>
-                <p className="text-xs text-ocean-500 dark:text-ocean-300 mt-2 font-medium">✅ Auto-prompt enabled</p>
-              </div>
-              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="font-bold text-bark-600 dark:text-sand-100 mb-1 flex items-center gap-2">💻 Desktop (Chrome/Edge)</div>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Look for <strong>install icon</strong> in URL bar (⊕)</li>
-                  <li>2. Or use <strong>⋮ menu → Install App</strong></li>
-                  <li>3. Confirm installation</li>
-                </ol>
-                <p className="text-xs text-lavender-500 dark:text-lavender-300 mt-2 font-medium">✅ Auto-prompt enabled</p>
-              </div>
-            </div>
-
-            <div className="mt-4 p-4 bg-gradient-to-r from-sage-50 to-ocean-50 dark:from-bark-600/50 dark:to-bark-600/50 rounded-xl border border-sage-200 dark:border-bark-500">
-              <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2 text-sm">✨ Benefits of Installing</h4>
-              <div className="space-y-1.5 text-xs text-bark-500 dark:text-sand-200">
-                <div className="flex items-start gap-2">
-                  <span className="text-sage-500">✓</span>
-                  <span><strong>Quick Access:</strong> Launch from home screen like native apps</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-sage-500">✓</span>
-                  <span><strong>Fullscreen Mode:</strong> No browser UI, more screen space</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-sage-500">✓</span>
-                  <span><strong>Offline Support:</strong> Works without internet connection</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-sage-500">✓</span>
-                  <span><strong>Native Feel:</strong> Smooth animations and transitions</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="text-center text-sm text-bark-400 dark:text-sand-300">
-            <p>Version {APP_VERSION} • Updated February 2026</p>
-            <p className="mt-1">Tap <strong>? icon</strong> (top-right) for quick App Navigation reference</p>
+            <p>Tap <strong>? icon</strong> (top-right) for quick App Navigation reference</p>
           </div>
         </div>
       )}
-      {moreSub==='test'&&<TestRunner onShowToast={showT}/>}
+      {moreSub==='test'&&<><TestRunner onShowToast={showT}/><div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div></>}
     </div>
   );
 
