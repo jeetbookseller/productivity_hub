@@ -1,15 +1,15 @@
 # Productivity Hub - Development Progress Summary
 
-**Last Updated:** February 4, 2026  
-**Current Version:** v11.2-alpha  
-**Current Model:** Opus 4.5  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5)
+**Last Updated:** February 5, 2026  
+**Current Version:** v12.2-alpha  
+**Current Model:** Opus 4.6  
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.2-alpha (Opus 4.6)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v11.2-alpha.html**
+**productivity-hub-v12.2-alpha.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
@@ -22,12 +22,19 @@
 - ✅ Edit/Delete lists (long-press menu)
 - ✅ Empty state handling (prevents items vanishing when no lists)
 - ✅ Enhanced Help System (two-tier: Quick Tips modal + Full Guide)
-- ✅ **Test App Feature** — 37 automated tests with report generation
+- ✅ **Test App Feature** — 35 automated tests with report generation
 - ✅ **Desktop Mode** — Responsive layout optimized for 768px+ screens
 - ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
-- ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/archive/delete across all sections
-- ✅ **Quick Notes** — Bullet journal style with day sections (renamed from Notes)
-- ✅ **Streamlined Navigation** — Tab order: To-Do → Focus → Quick → Lists → More (Reminders removed)
+- ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/delete across all sections
+- ✅ **Capture (Quick Notes)** — Bullet journal style with day sections, tap-to-edit, strikethrough
+- ✅ **Workflow Navigation** — Capture → Clarify → Focus → Confirm → Review → More
+- ✅ **Archive Removed** — To-Do absorbs completed tasks, Clear Completed button
+- ✅ **Rename Lists → Confirm (Checklist)** — All UI labels updated
+- ✅ **Quick Actions Refinement** — Tap-to-edit everywhere, one quick action per section
+- ✅ **Cross-Section Integration** — Move Notes → Clarify (To-Do) directly
+- ✅ **Default Quadrant** — New tasks default to Not Urgent/Not Important (Eliminate)
+- ✅ **Matrix Drag-and-Drop** — Drag tasks between Eisenhower quadrants to re-prioritize
+- ✅ **Review Tab** — Weekly stats, matrix overview, pattern insights, next actions
 
 ---
 
@@ -69,104 +76,124 @@
 - **v11.1-alpha** — UX Polish: Tab Reordering + Help Consolidation
 - **v11.2-alpha** — Quick Notes (bullet journal) + Remove Reminders tab
 
----
-
-## 🆕 v11.2-alpha — Quick Notes + Navigation Streamlining
-
-Major UX simplification: Replaced traditional Notes with bullet journal-style Quick Notes, removed Reminders tab entirely.
-
-### Tab Navigation Change
-**Old Order:** Remind → To-Do → Focus → Notes → Lists → More  
-**New Order:** **To-Do → Focus → Quick → Lists → More**
-
-### Quick Notes (Bullet Journal Style)
-
-Replaced traditional title/content notes with fast, bullet-point capture:
-
-**Features:**
-- **Day-based sections** — Notes grouped by Today, Yesterday, or date headers
-- **Bullet points** — Each note displays with `•` marker
-- **Enter to add** — Press Enter in input to instantly add new bullet
-- **Date grouping** — Automatic organization by creation date
-- **Delete on hover** — X button appears on hover for quick removal
-- **Long-press selection** — Batch selection still works for bulk operations
-
-**UI Changes:**
-- Single input area at top with "Quick note... (Enter to add)" placeholder
-- Notes grouped under date dividers with horizontal rule
-- Cleaner, faster capture than title + content modal
-- New empty state icon (bullet list style)
-
-### Reminders Tab Removed
-- **Deleted:** Entire Reminders tab and `rRemind()` function
-- **Removed from:** Archive display, bulk selection handlers, totArc calculation
-- **Rationale:** Due dates on To-Do tasks serve same purpose; simplifies app
-
-### Updates Throughout
-- ✅ App descriptions updated ("Focus timer, tasks, lists & quick notes")
-- ✅ Help modal navigation guide updated
-- ✅ Archive section no longer shows reminders
-- ✅ Empty.Notes redesigned with bullet-style icon
-- ✅ Manifests updated (meta, PWA)
-
-### Implementation
-- 12 targeted `str_replace` edits
-- Removed ~35 lines (rRemind function)
-- Added ~60 lines (Quick Notes logic)
-- Net: Simpler, more focused app
+### Phase 4: Workflow Redesign (v12.0-alpha → v12.2-alpha) — Opus 4.6
+- **v12.0-alpha** — Archive removal, Lists → Checklist rename, Clear Completed, default quad fix
+- **v12.1-alpha** — Quick Actions (tap-to-edit, strikethrough, Note→To-Do), workflow tab rename & reorder
+- **v12.2-alpha** — Matrix Drag-and-Drop + Review Tab
 
 ---
 
-## 🆕 v11.0-alpha — Batch Selection & Bulk Actions
+## 🆕 v12.2-alpha — Matrix Drag-and-Drop + Review Tab
 
-Batch Selection is a major feature warranting a new major version. Alpha tag remains because test code (`TestRunner`, `__TEST__` prefix) is present in the codebase.
+### Matrix Drag-and-Drop
+Tasks in the Clarify tab can now be dragged between Eisenhower Matrix quadrants to re-prioritize:
 
-### Implementation Approach
-Large single-file architecture (~150KB) causes output token limits when attempting full-file rewrites. Solution: **incremental `str_replace` edits** across 6 targeted steps, each producing a versioned release.
+- **Draggable tasks** — Non-done, non-selected tasks get `draggable` attribute
+- **Drop targets** — Each quadrant card accepts drops via `onDragOver`/`onDrop`
+- **Visual feedback** — Other quadrants highlight with `ring-2 ring-sage-300` while dragging
+- **State**: `dragQ` tracks source quadrant to exclude from highlighting
+- **Toast confirmation** — Shows "→ Schedule" etc. on successful drop
+- **Desktop-first** — HTML5 Drag API works on desktop; mobile uses Edit modal quadrant picker
 
-### Step 1: Selection State Infrastructure (v10.2-alpha) ✅
-- Added `selMode` (boolean) — whether batch selection is active
-- Added `selSection` — which tab owns selection (`'todos'|'lists'|'notes'`)
-- Added `selIds` (Set) — tracks selected item IDs
-- Helper: `enterSelMode(section, firstId)` — activates selection with first item pre-selected
-- Helper: `toggleSelId(id)` — adds/removes item from selection
-- Helper: `exitSelMode()` — clears all selection state
-- Tab switching auto-exits selection mode
+### Review Tab
+New top-level tab providing weekly review and pattern analysis:
 
-### Step 2: Selection Checkboxes UI (v10.3-alpha) ✅
-- **`SelCheck` component** — square checkbox with ✓, replaces round done-button during selection
-- **Long-press (500ms)** enters selection mode on To-Do, Lists, and Notes items
-- **Tap to toggle** items in/out of selection once mode is active
-- **Visual highlight** — selected items get `ring-2 ring-sage-400` + sage background tint
-- **Section headers swap** to show "X selected" counter + "✕ Cancel" button during selection
-- **Action buttons hidden** during selection mode (replaced by checkboxes)
-- **3 new test cases** (33 total): Batch Select Enter, Toggle, Exit
+**Weekly Stats:**
+- Pomodoros, tasks completed, focus time (moved from More → Stats)
+- Weekly pomodoro bar chart
 
-### Step 3: Bulk Action Bar (v10.4-alpha) ✅
-- **`BulkActionBar` component** — fixed-position bar above tab bar during selection
-- Buttons: ✅ Done, 📦 Archive, 🗑 Delete (context-dependent per section)
-- "X selected" counter + Select All / Deselect All toggle
-- Glass styling consistent with app design
-- Lists section shows "Toggle Done" instead of "Done" (since list items toggle)
+**Matrix Overview:**
+- 2×2 grid showing active task count per quadrant with color-coded cards
+- Category distribution badges
 
-### Step 4: Bulk Actions for Todos (v10.4-alpha) ✅
-- `bulkAction('done')` — marks selected todos as done, removes from focus queue, updates metrics
-- `bulkAction('archive')` — moves selected todos to archive with timestamps
-- `bulkAction('delete')` — removes selected todos from state + focus queue
-- Auto-exits selection mode after any action
-- Toast messages with counts ("✅ 3 tasks done", "📦 5 archived", "🗑 2 deleted")
-- 2 new test cases (35 total): Batch Select All, Batch Bulk Action
+**Insights (dynamic pattern analysis):**
+- 🔥 Overloaded — Too many urgent+important tasks
+- 🗑 Clean up — Tasks lingering in Eliminate quadrant
+- ⏰ Overdue — Tasks past their deadline
+- 🎯 Empty focus — No tasks in Focus queue
+- 🌿 Focus full — Queue at capacity
+- 📝 Struck notes — Unprocessed struck notes in Capture
+- 💡 Active capture — High note volume needing review
+- 📊 Completion rate — Done vs. active ratio
+- 🍅 Pomodoro count — Weekly deep focus summary
 
-### Step 5: Bulk Actions for Lists/Notes (v10.4-alpha) ✅
-- **Lists:** Done toggle, archive, delete — scoped to currently selected list
-- **Notes:** Archive, delete (no "done" action)
-- Section-aware dispatching via `selSection` in unified `bulkAction` handler
+**Next Actions (contextual suggestions):**
+- Schedule important tasks
+- Handle overdue items
+- Eliminate low-value tasks
+- Fill Focus queue
+- Process struck notes
 
-### Step 6: Polish & Edge Cases (v10.5-alpha) ✅
-- **Empty selection auto-exit** — unchecking the last selected item auto-exits selection mode
-- **Bulk delete confirmation** — deleting ≥3 items shows `BulkDeleteConfirm` modal with count and section-aware labels. Deleting 1–2 items executes immediately.
-- **Refactored `bulkAction`** — split into `executeBulk` + confirmation gating
-- **2 new test cases** (37 total): Batch Empty Auto-Exit, Batch Delete Confirm Gate
+**Stats removed from More tab** — Review now owns all analytics.
+
+---
+
+## 🆕 v12.1-alpha — Quick Actions + Workflow Rename
+
+### Quick Actions Refinement (Batch 2)
+
+**Tap-to-edit everywhere:**
+- **Clarify (To-Do):** Tap any task → opens EditModal. Removed inline edit/share buttons.
+- **Confirm (Checklist):** Tap any item → opens EditModal. Removed Acts component entirely.
+- **Capture (Notes):** Tap any note → inline text input with Enter/Escape/blur save.
+
+**One quick action per section:**
+- **Clarify:** Only → focus arrow shown (done items show 🗑 delete)
+- **Confirm:** Only 🗑 delete on hover. Done toggle via circle button.
+- **Capture:** Strikethrough (~~S~~) and → Clarify buttons on hover only.
+
+**Notes strikethrough:**
+- Hover reveals ~~S~~ button to toggle `struck` field
+- Struck notes get `line-through` + dimmed bullet marker
+- Replaces old X delete button as quick action
+
+**Notes inline editing:**
+- `editingNote` state tracks `{id, text}` for active edit
+- `updateBullet()` saves or deletes (empty text)
+
+### Cross-Section Integration (Batch 3)
+
+**Move Notes → Clarify:**
+- Hover reveals ✓ button on notes → converts to todo in Eliminate quadrant
+- `noteToTodo()` creates task, deletes note, shows toast "📋 Moved to Clarify"
+
+### Workflow Tab Rename & Reorder
+**Old:** To-Do → Focus → Quick → Lists → More  
+**New:** **Capture → Clarify → Focus → Confirm → More**
+
+| Old Name | New Name | Purpose |
+|----------|----------|---------|
+| Quick Notes | Capture | Fast bullet journal capture |
+| To-Do | Clarify | Prioritize with Eisenhower Matrix |
+| Focus | Focus | Pomodoro timer + Focus Queue |
+| Checklist | Confirm | Checklists with sections |
+| More | More | Settings, Help, Test |
+
+- Default tab changed from Focus to Capture (notes → first tab)
+- All section headers, help modals, help guide, empty states, toasts updated
+- Default new task quadrant: `'nn'` (Eliminate / Not Urgent + Not Important)
+
+### Removed Components
+- `Acts` component — no longer used (tap-to-edit replaces action buttons)
+
+---
+
+## 🆕 v12.0-alpha — Archive Removal + Checklist Rename
+
+### To-Do Absorbs Archive
+- **Removed entire Archive infrastructure:** `arc` state, `archiveItem()`, `restore()`, `delArc()`, `totArc`, Archive sub-tab, `Empty.Archive`
+- **Swipe behavior:** Left swipe now deletes (was archive). Right swipe = done.
+- **Clear Completed button (🧹):** Shows in Clarify header with count badge, one-tap cleanup
+- **Bulk actions:** Only Done + Delete remain (archive removed)
+- **Tests:** Reduced from 37 to 35 (3 archive tests removed, 1 Clear Completed added)
+
+### Lists → Checklist (now Confirm)
+- Tab label, section headers, empty states, placeholders, delete confirmations all updated
+- Help modal and guide updated
+
+### Default To-Do Quadrant
+- Quick-add and EditModal default changed from `'ui'` (Do First) to `'nn'` (Eliminate)
+- Reduces initial pressure; easier to re-prioritize upward
 
 ---
 
@@ -190,28 +217,37 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 | 7 | Tab reorder + Help consolidation | 6 | v11.0 → v11.1-alpha |
 | 8 | Quick Notes + Remove Reminders | 12 | v11.1 → v11.2-alpha |
 
+### Workflow Redesign Sessions (Opus 4.6)
+
+| Session | Task | Notes |
+|---------|------|-------|
+| 9 | Archive removal + Checklist rename + Clear Completed | v11.2 → v12.0-alpha |
+| 10 | Quick Actions + Workflow rename + Cross-section | v12.0 → v12.1-alpha |
+| 11 | Matrix Drag-and-Drop + Review Tab | v12.1 → v12.2-alpha |
+
 ---
 
 ## 🔮 Future Features
 
 | Feature | Priority | Complexity |
 |---------|----------|------------|
-| **📋 To-Do Absorbs Archive** | High | Medium |
-| ├─ Completed items at bottom | | Simple |
-| ├─ Batch delete completed | | Simple |
-| └─ Remove Archive section | | Simple |
-| **📝 Rename Lists → Checklist** | Medium | Simple |
-| **📊 Review Tab** | Medium | Complex |
-| ├─ Weekly summary | | Medium |
-| ├─ Pattern analysis | | Complex |
-| └─ Next week suggestions | | Medium |
 | **🔁 Recurring Tasks** | Medium | Medium |
 | ├─ Recurrence field in EditModal | | Simple |
 | ├─ Auto-generate next on completion | | Medium |
 | └─ Edge case handling | | Medium |
 | **🔍 Command Palette Search** | Medium | Medium |
-| **🖱️ Matrix Drag-and-Drop** | Low | Simple |
 | **🔥 Streak Heatmap** | Low | Simple |
+| **💾 Batch 1: Storage Enhancement** | Medium | Complex |
+| ├─ Local device storage (outside browser) | | Complex |
+| └─ Backup options (cookies/cache fallback) | | Medium |
+
+### Completed (moved from Future)
+- ~~📋 To-Do Absorbs Archive~~ → v12.0-alpha
+- ~~📝 Rename Lists → Checklist~~ → v12.0-alpha
+- ~~⚡ Batch 2: Quick Actions Refinement~~ → v12.1-alpha
+- ~~🔗 Batch 3: Cross-Section Integration~~ → v12.1-alpha
+- ~~🖱️ Matrix Drag-and-Drop~~ → v12.2-alpha
+- ~~📊 Review Tab~~ → v12.2-alpha
 
 ---
 
@@ -221,11 +257,12 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 - **Rule:** Features get version numbers at implementation time
 - **Sequence:** Versions increment based on implementation order
 - **Alpha tag:** Any version containing test functionality gets `-alpha` suffix
-- **Major versions:** Bumped for significant new features (e.g. v10 → v11 for Batch Selection)
-- **Current:** v11.2-alpha
+- **Major versions:** Bumped for significant new features (e.g. v10 → v11 for Batch Selection, v12 for Workflow Redesign)
+- **Current:** v12.2-alpha
 
 ### UI Patterns Established
 - **Long-press:** 500ms trigger for context menus and selection mode
+- **Tap-to-edit:** Single tap opens edit modal (Clarify, Confirm) or inline edit (Capture)
 - **Glass effect:** Backdrop blur for headers/modals
 - **Empty states:** Illustrated SVG + helpful message
 - **Confirmation dialogs:** Icon + title + message + buttons (single-item and bulk)
@@ -236,14 +273,27 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 - **Test isolation:** `__TEST__` prefix for all test data
 - **PWA install:** Platform detection + beforeinstallprompt + manual instructions
 - **Selection mode:** Long-press → checkboxes + header counter + cancel button
-- **Bulk actions:** Fixed bottom bar with done/archive/delete + select all toggle
+- **Bulk actions:** Fixed bottom bar with done/delete + select all toggle
 - **Bulk delete confirmation:** Modal gate for ≥3 items, immediate for 1–2 items
-- **Bullet journal notes:** Day sections + Enter-to-add + minimal UI
+- **Bullet journal notes:** Day sections + Enter-to-add + tap-to-edit + strikethrough
+- **Matrix drag-and-drop:** HTML5 Drag API for quadrant re-prioritization
+- **Inline note editing:** Click → input field, Enter/Escape/blur to save
+
+### Workflow Model
+```
+Capture → Clarify → Focus → Confirm → Review → Repeat
+   │          │        │        │          │
+   │          │        │        │          └─ Weekly stats, insights, suggestions
+   │          │        │        └─ Checklists with sections
+   │          │        └─ Pomodoro timer + Focus Queue (3-5 tasks)
+   │          └─ Eisenhower Matrix prioritization + drag-and-drop
+   └─ Bullet journal quick notes + strikethrough + → Clarify
+```
 
 ### Color Scheme
 - **Sage (green):** Primary actions, success, timer focus mode, selection highlight
 - **Terracotta (orange):** Delete actions, warnings
-- **Ocean (blue):** Notes/Quick Notes, info, export actions
+- **Ocean (blue):** Capture/Notes, info, export actions, Review tab
 - **Lavender (purple):** Secondary actions, test feature, alpha badge
 - **Bark (brown):** Text, backgrounds
 - **Sand/Cream:** Light backgrounds
@@ -253,6 +303,7 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 ## 🐛 Known Issues
 
 - **Desktop truncation override:** Uses `!important` CSS which could interfere if truncation is desired in specific cases
+- **Drag-and-drop mobile:** HTML5 Drag API doesn't work on touch devices; use EditModal quadrant picker instead
 
 ---
 
@@ -272,6 +323,8 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 - `React.memo` for FocusTimer performance
 - `selMode` / `selSection` / `selIds` / `bulkConfirm` for batch selection state
 - `notesByDate` useMemo for Quick Notes day grouping
+- `editingNote` state for inline note editing
+- `dragQ` state for matrix drag-and-drop source tracking
 
 ### PWA Architecture
 - Blob-based manifest + service worker (best-effort for local/file:// use)
@@ -286,8 +339,9 @@ Large single-file architecture (~150KB) causes output token limits when attempti
 IndexedDB: 'ProductivityHub' database
 Store: 'data'
 Keys: 'todos', 'lists', 'notes', 'focus',
-      'theme', 'preset', 'customT', 'poms', 'met', 'dHist', 'arc'
+      'theme', 'preset', 'customT', 'poms', 'met', 'dHist', 'fHist', 'tab'
 Test keys: '__TEST__*' (auto-cleaned)
+Removed: 'arc' (archive), 'reminders'
 ```
 
 ### Components
@@ -300,16 +354,22 @@ Test keys: '__TEST__*' (auto-cleaned)
 | `BulkDeleteConfirm` | Confirmation modal for bulk delete ≥3 items |
 | `EditModal` | Create/edit tasks, lists, notes |
 | `HelpModal` | Compact App Navigation popup (? icon) |
-| `TestRunner` | Test suite execution and reporting (37 tests) |
-| `Swipe` | Swipe gesture handler (archive/delete) |
-| `Acts` | Action button row (edit/share/archive/delete) |
+| `TestRunner` | Test suite execution and reporting (35 tests) |
+| `Swipe` | Swipe gesture handler (done/delete) |
 | `QuickAdd` | Bottom quick-add input bar |
 | `Chart` | Mini bar chart for weekly stats |
 | `ListMenu` | Long-press context menu for lists |
 | `DeleteConfirmation` | Confirmation dialog for list deletion |
 | `Subtasks` | Inline subtask editor for To-Do |
-| `Empty.*` | Empty state illustrations (List, Tasks, Focus, Notes) |
+| `Empty.*` | Empty state illustrations (NoLists, Tasks, Focus, Notes) |
 | `ThemeProv` | Theme context provider |
+| `I.*` | SVG icon components (Focus, List, Check, Notes, Review, etc.) |
+
+### Removed Components
+| Component | Removed In | Reason |
+|-----------|-----------|--------|
+| `Acts` | v12.1-alpha | Replaced by tap-to-edit |
+| `Empty.Archive` | v12.0-alpha | Archive system removed |
 
 ---
 
@@ -318,26 +378,27 @@ Test keys: '__TEST__*' (auto-cleaned)
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Quick Notes implemented. Reminders removed. Open for new features.
-- **Working file:** `productivity-hub-v11.2-alpha.html` (~145KB)
+- **Current phase:** Workflow redesign complete. Review tab live. Open for new features.
+- **Working file:** `productivity-hub-v12.2-alpha.html` (~155KB)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
-- **Key files:** `productivity-hub-v11.2-alpha.html`, `PROGRESS_SUMMARY.md`
+- **Key files:** `productivity-hub-v12.2-alpha.html`, `PROGRESS_SUMMARY-12-2.md`
 
 **Full Feature Set:**
 - Pomodoro Focus Timer with Focus Queue
-- To-Do with Eisenhower Matrix, priorities, categories, subtasks
-- Lists with sections, long-press editing
-- Quick Notes (bullet journal style with day sections)
-- Archive system with restore
-- Stats tracking (daily/weekly)
+- Clarify (To-Do) with Eisenhower Matrix, drag-and-drop, priorities, categories, subtasks
+- Capture (Quick Notes) with bullet journal, strikethrough, inline edit, → Clarify conversion
+- Confirm (Checklist) with sections, long-press editing
+- Review Tab with weekly stats, matrix overview, insights, next actions
+- Tap-to-edit across all sections
+- Clear Completed button for batch cleanup
 - Theme support (Light/Dark/System)
 - Desktop Mode (768px+ responsive)
-- Test Suite (37 automated tests with reporting)
+- Test Suite (35 automated tests with reporting)
 - PWA Install System (platform instructions + deployment files)
 - Export/Import data backup
 - Complete Help system (App Navigation modal + comprehensive Help tab)
 - Batch Selection & Bulk Actions (all sections, confirmation dialog)
-- Streamlined navigation (To-Do → Focus → Quick → Lists → More)
+- Workflow navigation: Capture → Clarify → Focus → Confirm → Review → More
 
 ---
 
