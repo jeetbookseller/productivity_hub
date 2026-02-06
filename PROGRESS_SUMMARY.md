@@ -1,26 +1,26 @@
 # Productivity Hub - Development Progress Summary
 
 **Last Updated:** February 6, 2026  
-**Current Version:** v12.7-alpha  
+**Current Version:** v14-Beta  
 **Current Model:** Opus 4.6  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v12.7-alpha.html**
+**productivity-hub-v14-beta.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
 - ✅ Isolated FocusTimer (no app re-renders)
 - ✅ Quick-add bars, sticky headers, completed items persistence
 - ✅ Edit/Delete lists (long-press menu), empty state handling
-- ✅ **Test App Feature** — 39 automated tests with report generation
+- ✅ **Test App Feature** — 46 automated tests with report generation
 - ✅ **Desktop Mode** — Responsive layout optimized for 768px+ screens
 - ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
 - ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/delete
-- ✅ **Capture** — Bullet journal with day sections, tap-to-edit, strikethrough, → Clarify
+- ✅ **Capture** — Bullet journal with day sections, tap-to-edit, long-press NoteMenu, checkbox bulk select, auto-clear struck notes (30 days)
 - ✅ **Clarify** — Eisenhower Matrix with drag-and-drop + long-press task menu
 - ✅ **Focus** — Pomodoro timer + Focus Queue (3–5 tasks, Deep Work)
 - ✅ **Confirm** — Checklists with sections, linked to Clarify tasks
@@ -72,9 +72,9 @@
 - **v11.1-alpha** — Tab reorder (Capture first) + Help consolidation
 - **v11.2-alpha** — Bullet journal Quick Notes + Remove Reminders tab
 
-### Phase 5: Workflow Redesign (v12.0 - v12.5) — Opus 4.6
+### Phase 5: Workflow Redesign (v12.0 - v12.7) — Opus 4.6
 
-### v12.7-alpha ← CURRENT
+### v12.7-alpha
 - **Task ↔ Checklist Linking** — Bidirectional link between Clarify tasks and Confirm checklists
   - Long-press task in Clarify → Link Checklist (pick existing or create new)
   - 📋 badge on linked tasks in Clarify
@@ -135,6 +135,23 @@
 - **Default quadrant** → `'nn'` (Eliminate) in QuickAdd, EditModal, noteToTodo
 - Tests: 37 → 35 (archive tests removed, Clear Completed added)
 
+### Phase 6: Beta Release (v14) — Opus 4.6
+
+### v14-Beta ← CURRENT
+- **Version bump:** v12.7-alpha → v14-Beta (major version jump reflects maturity)
+- **Branding update:** α badge → β badge (ocean blue), all Alpha references → Beta
+- **Capture UX Overhaul:**
+  - **Single tap** → inline edit (tap any note to edit in-place)
+  - **Long-press** → NoteMenu popup (Edit, → Move to Clarify, Strikethrough, Delete)
+  - **Checkbox (top-right)** → enters selection mode, reveals individual checkboxes per item
+  - **Bulk actions for notes:** Move to Clarify, Strikethrough, Delete (new in BulkActionBar)
+  - **Strikethrough timestamp:** `struckAt` field tracks when note was struck
+  - **Auto-clear:** Struck notes automatically removed after 30 days
+  - Selection mode no longer auto-exits on empty (supports checkbox-initiated empty start)
+- **Tests:** 39 → 46 (added Note Strikethrough Toggle, Note Strikethrough Timestamp, Note Move to Clarify, Note Auto-Clear 30 Days, Note Bulk Move to Clarify, Note Bulk Strikethrough, Note Bulk Delete)
+- **Help updates:** Migration section updated (long-press, checkbox, auto-clear), workflow step description updated
+- **NoteMenu component:** New modal matching TaskMenu pattern for Capture items
+
 ---
 
 ## 📊 Session Log
@@ -164,6 +181,7 @@
 | 14 | Streak Heatmap + Day Rotation + tests + help | v12.4 → v12.5-alpha |
 | 15 | Welcome modal + About + Onboarding sample data | v12.5 → v12.6-alpha |
 | 16 | Task ↔ Checklist linking + Task long-press menu + help updates | v12.6 → v12.7-alpha |
+| 17 | Capture UX overhaul + Beta version bump + tests + help | v12.7-alpha → v14-Beta |
 
 ---
 
@@ -217,20 +235,21 @@ Make data more resilient beyond IndexedDB browser storage.
 ## 📝 Feature Specifications
 
 ### Versioning System
-- **Rule:** Features get version numbers at implementation time
-- **Alpha tag:** Any version containing test functionality gets `-alpha` suffix
-- **Major versions:** Bumped for significant new features
-- **Current:** v12.5-alpha
+- **Rule:** Small features increment minor (12_7 → 12_8 → 12_9), big features increment major (12 → 13 → 14)
+- **Format:** `v14-Beta`, `v14_1-Beta`, etc.
+- **Beta tag:** Current release stage (upgraded from Alpha)
+- **Current:** v14-Beta
 
 ### UI Patterns Established
-- **Long-press:** 500ms trigger for context menus and selection mode
+- **Long-press:** 500ms trigger for context menus (TaskMenu in Clarify, NoteMenu in Capture) and selection mode (Confirm, Clarify)
 - **Tap-to-edit:** Single tap opens edit modal (Clarify, Confirm) or inline edit (Capture)
+- **Checkbox select:** Top-right checkbox in Capture header enters selection mode with per-item checkboxes
 - **Glass effect:** Backdrop blur for headers/modals
 - **Empty states:** Illustrated SVG + helpful message (simplified text-only in quadrants)
 - **Quick-add bars:** Bottom input with auto-focus
 - **Sticky headers:** Position below main header (top-14, md:top-16) — all tabs including Focus
-- **Selection mode:** Long-press → checkboxes + bulk action bar
-- **Bullet journal notes:** Day sections + Enter-to-add + tap-to-edit + strikethrough
+- **Selection mode:** Long-press or checkbox → checkboxes + bulk action bar
+- **Bullet journal notes:** Day sections + Enter-to-add + tap-to-edit + long-press NoteMenu + strikethrough with auto-clear
 - **Matrix drag-and-drop:** HTML5 Drag API for quadrant re-prioritization
 - **Heatmap grid:** 13-week × 7-day grid, tap-to-inspect, streak counters
 - **Desktop responsive:** `useDesk()` hook + `md:` Tailwind + CSS media query
@@ -244,14 +263,14 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
    │          │        │        └─ Checklists with sections
    │          │        └─ Pomodoro timer + Focus Queue (3-5 tasks)
    │          └─ Eisenhower Matrix prioritization + drag-and-drop
-   └─ Bullet journal quick notes + strikethrough + → Clarify
+   └─ Bullet journal quick notes + long-press menu + bulk select + auto-clear
 ```
 
 ### Color Scheme
 - **Sage (green):** Primary actions, success, timer, selection, heatmap intensity
 - **Terracotta (orange):** Delete, warnings, streak counter, today ring
-- **Ocean (blue):** Capture/Notes, info, Review, selected heatmap cell
-- **Lavender (purple):** Secondary, test, alpha badge
+- **Ocean (blue):** Beta badge, Capture/Notes, info, Review, selected heatmap cell
+- **Lavender (purple):** Secondary, test
 - **Bark (brown):** Text, backgrounds
 - **Sand/Cream:** Light backgrounds
 - **Dark mode:** Muted/translucent variants of all above (e.g. `terracotta-500/20`, `ocean-400/20`)
@@ -263,6 +282,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 - **Desktop truncation override:** Uses `!important` CSS
 - **Drag-and-drop mobile:** HTML5 Drag API doesn't work on touch; use EditModal quadrant picker
 - **dHist backfill:** Existing users who upgrade from pre-v12.5 will have empty heatmap history (no retroactive data)
+- **struckAt backfill:** Notes struck before v14-Beta lack `struckAt` timestamp; auto-clear only applies to newly struck notes
 
 ---
 
@@ -278,6 +298,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 - `React.useReducer` in FocusTimer, `React.memo` for performance
 - `selMode`/`selSection`/`selIds`/`bulkConfirm` — batch selection
 - `editingNote` — inline note editing
+- `noteMenu` — NoteMenu long-press context menu state
 - `dragQ` — matrix drag-and-drop source tracking
 
 ### Storage Structure
@@ -285,6 +306,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 IndexedDB: 'ProductivityHub' / Store: 'data'
 Keys: todos, lists, notes, focus, theme, preset, customT, poms, met, dHist, fHist, tab, seenAbout
 Todo fields: id, text, quad, cat, deadline, subtasks, poms, done, linkedList (optional - Confirm list ID)
+Note fields: id, text, crAt, struck, struckAt (timestamp for auto-clear)
 Test keys: __TEST__* (auto-cleaned)
 Removed: arc, reminders
 ```
@@ -300,8 +322,9 @@ Removed: arc, reminders
 | `HelpModal` | Compact App Navigation popup (? icon) |
 | `AboutModal` | Welcome overlay (first launch) + About modal (? icon) |
 | `TaskMenu` | Long-press task menu in Clarify (Edit, Focus, Link, Delete) |
+| `NoteMenu` | Long-press note menu in Capture (Edit, Move to Clarify, Strikethrough, Delete) |
 | `LinkPicker` | Modal to link/unlink/create checklists for tasks |
-| `TestRunner` | Test suite (39 tests) |
+| `TestRunner` | Test suite (46 tests) |
 | `Swipe` / `QuickAdd` / `Chart` | Gesture, input, visualization |
 | `ListMenu` / `DeleteConfirmation` / `Subtasks` | List management |
 | `Empty.*` / `ThemeProv` / `I.*` | Empty states, theme, icons |
@@ -313,15 +336,16 @@ Removed: arc, reminders
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Streak heatmap implemented. Open for new features.
-- **Working file:** `productivity-hub-v12.5-alpha.html` (~160KB, ~1995 lines)
+- **Current phase:** Beta release. Capture UX overhaul complete. Open for new features.
+- **Working file:** `productivity-hub-v14-beta.html` (~165KB, ~2070 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
+- **Versioning:** Small features → minor bump (14_1, 14_2), big features → major bump (14, 15, 16)
 
 **Full Feature Set:**
-- Capture (Bullet Journal) → Clarify (Eisenhower + drag-and-drop) → Focus (Pomodoro + Queue) → Confirm (Checklists) → Review (Stats + Streak Heatmap + Insights)
+- Capture (Bullet Journal + long-press NoteMenu + checkbox bulk select + auto-clear) → Clarify (Eisenhower + drag-and-drop) → Focus (Pomodoro + Queue) → Confirm (Checklists) → Review (Stats + Streak Heatmap + Insights)
 - Tap-to-edit, batch selection, swipe gestures, Clear Completed
 - Explainer guide (Workflow, Bullet Journal, GTD Review, Pomodoro, Deep Work, Eisenhower)
-- Desktop Mode, PWA Install, Test Suite (39 tests), Export/Import, Theme (default: System)
+- Desktop Mode, PWA Install, Test Suite (46 tests), Export/Import, Theme (default: System)
 - Cohesive dark mode with muted gradients across all tabs
 
 ---
