@@ -1,22 +1,22 @@
 # Productivity Hub - Development Progress Summary
 
-**Last Updated:** February 5, 2026  
-**Current Version:** v12.3-alpha  
+**Last Updated:** February 6, 2026  
+**Current Version:** v12.5-alpha  
 **Current Model:** Opus 4.6  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.3-alpha (Opus 4.6)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.5-alpha (Opus 4.6)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v12.3-alpha.html**
+**productivity-hub-v12.5-alpha.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
 - ✅ Isolated FocusTimer (no app re-renders)
 - ✅ Quick-add bars, sticky headers, completed items persistence
 - ✅ Edit/Delete lists (long-press menu), empty state handling
-- ✅ **Test App Feature** — 35 automated tests with report generation
+- ✅ **Test App Feature** — 39 automated tests with report generation
 - ✅ **Desktop Mode** — Responsive layout optimized for 768px+ screens
 - ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
 - ✅ **Batch Selection & Bulk Actions** — Long-press to select, bulk done/delete
@@ -24,10 +24,13 @@
 - ✅ **Clarify** — Eisenhower Matrix with drag-and-drop re-prioritization
 - ✅ **Focus** — Pomodoro timer + Focus Queue (3–5 tasks, Deep Work)
 - ✅ **Confirm** — Checklists with sections
-- ✅ **Review** — Weekly stats, matrix overview, pattern insights, next actions
+- ✅ **Review** — Weekly stats, streak heatmap, matrix overview, pattern insights, next actions
+- ✅ **Streak Heatmap** — GitHub-style 13-week grid, 5-level color intensity, tap-for-details, streak counters
+- ✅ **Day Rotation** — Auto-archives daily stats to dHist, resets counters on date change
 - ✅ **Explainer** — Workflow guide, Bullet Journal, GTD Review, Pomodoro, Deep Work, Eisenhower
 - ✅ **Workflow Navigation** — Capture → Clarify → Focus → Confirm → Review → More
 - ✅ Default theme: System, default quadrant: Eliminate
+- ✅ **Dark mode polish** — Cohesive dark mode across all tabs
 
 ---
 
@@ -47,41 +50,47 @@
 
 ### Phase 2: Polish & UX (v9.0 - v9.8) — Sonnet 4.5
 - **v9.0** — IndexedDB migration + Isolated FocusTimer
-- **v9.1** — Subtasks scoped to To-Do only
-- **v9.2** — Quick-add bars in all sections
-- **v9.3** — Clean To-Do layout (full text, colored pills, vertical buttons)
-- **v9.4** — Sticky section headers with glass blur
-- **v9.5** — Completed items persistence + sort to bottom
-- **v9.6** — Edit/Delete lists (long-press/right-click menu)
-- **v9.7** — Empty state for no lists (bug fix)
-- **v9.8** — Enhanced Help System (Quick Tips modal + Full Guide in More tab)
+- **v9.2** — Quick-add bars + Sticky headers
+- **v9.3** — 35 automated tests
+- **v9.4** — Desktop responsive mode (768px+ breakpoint)
+- **v9.5** — Completed items persistence (stay visible with strikethrough)
+- **v9.6** — Focus Queue max 5 + drag-to-reorder
+- **v9.7** — Edit/Delete lists via long-press menu
+- **v9.8** — Empty states + PWA install system
 
-### Phase 3: Complex Features (v10.0-alpha → v11.2-alpha) — Opus 4.5
-- **v10.0-alpha** — Test App Feature + Desktop Mode
-- **v10.1-alpha** — PWA Install System
-- **v10.2–10.5-alpha** — Batch Selection (6 steps: state → UI → bulk actions → polish)
-- **v11.0-alpha** — Major version bump for completed Batch Selection
-- **v11.1-alpha** — Tab Reordering + Help Consolidation
-- **v11.2-alpha** — Quick Notes (bullet journal) + Remove Reminders tab
+### Phase 3: Batch Selection (v10.0 - v11.0) — Opus 4.5
+- **v10.0** — Selection mode architecture (plan + state)
+- **v10.1** — Selection UI (checkboxes + header count)
+- **v10.2** — Selection actions (bulk done + bulk delete)
+- **v11.0-alpha** — Polish, exit on empty, confirm gate (≥3 items), tests 35→35
 
-### Phase 4: Workflow Redesign (v12.0-alpha → v12.3-alpha) — Opus 4.6
-- **v12.0-alpha** — Archive removed, Lists → Checklist, Clear Completed, default quad → Eliminate
-- **v12.1-alpha** — Tap-to-edit everywhere, strikethrough, Note → Clarify, workflow tab rename/reorder
-- **v12.2-alpha** — Matrix Drag-and-Drop, Review Tab (stats moved from More)
-- **v12.3-alpha** — Help → Explainer rewrite (Workflow, Bullet Journal, GTD Review sections), Install moved to Settings, version in Settings/Test, default theme → System, ThemeProv async fix
+### Phase 4: UX Polish (v11.1 - v11.2) — Opus 4.5
+- **v11.1-alpha** — Tab reorder (Capture first) + Help consolidation
+- **v11.2-alpha** — Bullet journal Quick Notes + Remove Reminders tab
 
----
+### Phase 5: Workflow Redesign (v12.0 - v12.5) — Opus 4.6
 
-## 🆕 v12.x Changelog
+### v12.5-alpha ← CURRENT
+- **Streak Heatmap** — GitHub-style 13-week × 7-day grid in Review tab
+  - 5-level sage color intensity based on pomodoro count
+  - Current day ring highlight, tap any cell for day stats (🍅, ✓, ⏱)
+  - Current streak + longest streak counters in header
+  - Less→More legend, month labels, M/W/F day labels
+- **Day Rotation Logic** — `useEffect` detects date change on mount
+  - Archives previous day's `met.d` to `dHist` (keeps 180 days)
+  - Resets daily counters; resets weekly counters on Sunday crossover
+  - Fixes: `dHist` was declared but never populated in prior versions
+- **Tests:** 35 → 39 (added Day Rotation Archive, Day Rotation Reset, Streak Calculation, Heatmap Color Levels)
+- **Help docs:** Updated Review Tab description, daily workflow mention
+
+### v12.4-alpha
+- **Dark mode cohesion pass** — Unified dark mode across all tabs, muted gradients, translucent backgrounds
+- QUADS config extended with `dclr`/`dbdr`/`dtxt` dark mode properties
 
 ### v12.3-alpha
-- **Help → Explainer** — Renamed sub-tab, rewrote guide: Workflow overview, Daily Workflow, Bullet Journal Method, GTD Weekly Review, Pomodoro, Deep Work & Focus Queue, Eisenhower Matrix
-- **Removed from Explainer:** Quick Tips, Batch Selection sections, Install as App
-- **Install as App** moved to bottom of Settings
-- **Version number** shown at bottom of Settings + alpha badge in Test section
-- **Default theme** changed to System (was Light)
-- **Bug fix:** ThemeProv used async `S.get()` in `useState` → replaced with `S.getSync()` + async load on mount
-- **HelpModal** updated to reference "More → Explainer"
+- **Explainer rewrite** — Full workflow guide, daily routines, methodology deep-dives
+- **Settings cleanup** — Consolidated settings, removed redundant options
+- **Theme fix** — Corrected system theme detection
 
 ### v12.2-alpha
 - **Matrix Drag-and-Drop** — `draggable` on tasks, quadrant drop targets with highlight, `dragQ` state
@@ -126,6 +135,8 @@
 | 10 | Quick Actions + Workflow rename | v12.0 → v12.1-alpha |
 | 11 | Matrix Drag-and-Drop + Review Tab | v12.1 → v12.2-alpha |
 | 12 | Explainer rewrite + Settings cleanup + theme fix | v12.2 → v12.3-alpha |
+| 13 | Dark mode cohesion pass | v12.3 → v12.4-alpha |
+| 14 | Streak Heatmap + Day Rotation + tests + help | v12.4 → v12.5-alpha |
 
 ---
 
@@ -135,7 +146,6 @@
 |---------|----------|------------|
 | **🔁 Recurring Tasks** | Medium | Medium |
 | **🔍 Command Palette Search** | Medium | Medium |
-| **🔥 Streak Heatmap** | Low | Simple |
 | **💾 Storage Enhancement** | Medium | Complex |
 
 ### 🔁 Recurring Tasks
@@ -157,15 +167,6 @@ Global search across all sections with keyboard shortcut activation.
 - **Fuzzy matching** — Partial text matching, case-insensitive
 - **Recent searches** — Optional history of recent queries
 
-### 🔥 Streak Heatmap
-Visual calendar showing daily productivity patterns, inspired by GitHub contribution graphs.
-
-- **Grid layout** — 7×N grid (weeks × days) showing past 3–6 months
-- **Color intensity** — Darker = more pomodoros completed that day (using `dHist` data)
-- **Placement** — In Review tab below weekly chart, or as expandable section
-- **Stats on tap** — Tap a day cell to see pomodoro count, tasks done, focus minutes
-- **Streak counter** — Show current and longest consecutive active-day streaks
-
 ### 💾 Storage Enhancement
 Make data more resilient beyond IndexedDB browser storage.
 
@@ -182,6 +183,7 @@ Make data more resilient beyond IndexedDB browser storage.
 - ~~🔗 Cross-Section Integration~~ → v12.1
 - ~~🖱️ Matrix Drag-and-Drop~~ → v12.2
 - ~~📊 Review Tab~~ → v12.2
+- ~~🔥 Streak Heatmap~~ → v12.5
 
 ---
 
@@ -191,25 +193,27 @@ Make data more resilient beyond IndexedDB browser storage.
 - **Rule:** Features get version numbers at implementation time
 - **Alpha tag:** Any version containing test functionality gets `-alpha` suffix
 - **Major versions:** Bumped for significant new features
-- **Current:** v12.3-alpha
+- **Current:** v12.5-alpha
 
 ### UI Patterns Established
 - **Long-press:** 500ms trigger for context menus and selection mode
 - **Tap-to-edit:** Single tap opens edit modal (Clarify, Confirm) or inline edit (Capture)
 - **Glass effect:** Backdrop blur for headers/modals
-- **Empty states:** Illustrated SVG + helpful message
+- **Empty states:** Illustrated SVG + helpful message (simplified text-only in quadrants)
 - **Quick-add bars:** Bottom input with auto-focus
-- **Sticky headers:** Position below main header (top-14, md:top-16)
+- **Sticky headers:** Position below main header (top-14, md:top-16) — all tabs including Focus
 - **Selection mode:** Long-press → checkboxes + bulk action bar
 - **Bullet journal notes:** Day sections + Enter-to-add + tap-to-edit + strikethrough
 - **Matrix drag-and-drop:** HTML5 Drag API for quadrant re-prioritization
+- **Heatmap grid:** 13-week × 7-day grid, tap-to-inspect, streak counters
 - **Desktop responsive:** `useDesk()` hook + `md:` Tailwind + CSS media query
+- **Dark mode:** QUADS config has `dclr`/`dbdr`/`dtxt` properties; all visible text uses `dark:` variants
 
 ### Workflow Model
 ```
 Capture → Clarify → Focus → Confirm → Review → Repeat
    │          │        │        │          │
-   │          │        │        │          └─ Weekly stats, insights, suggestions
+   │          │        │        │          └─ Weekly stats, streak heatmap, insights, suggestions
    │          │        │        └─ Checklists with sections
    │          │        └─ Pomodoro timer + Focus Queue (3-5 tasks)
    │          └─ Eisenhower Matrix prioritization + drag-and-drop
@@ -217,12 +221,13 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 ```
 
 ### Color Scheme
-- **Sage (green):** Primary actions, success, timer, selection
-- **Terracotta (orange):** Delete, warnings
-- **Ocean (blue):** Capture/Notes, info, Review
+- **Sage (green):** Primary actions, success, timer, selection, heatmap intensity
+- **Terracotta (orange):** Delete, warnings, streak counter, today ring
+- **Ocean (blue):** Capture/Notes, info, Review, selected heatmap cell
 - **Lavender (purple):** Secondary, test, alpha badge
 - **Bark (brown):** Text, backgrounds
 - **Sand/Cream:** Light backgrounds
+- **Dark mode:** Muted/translucent variants of all above (e.g. `terracotta-500/20`, `ocean-400/20`)
 
 ---
 
@@ -230,6 +235,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 
 - **Desktop truncation override:** Uses `!important` CSS
 - **Drag-and-drop mobile:** HTML5 Drag API doesn't work on touch; use EditModal quadrant picker
+- **dHist backfill:** Existing users who upgrade from pre-v12.5 will have empty heatmap history (no retroactive data)
 
 ---
 
@@ -260,10 +266,11 @@ Removed: arc, reminders
 |-----------|---------|
 | `App` | Main application with all tab rendering |
 | `FocusTimer` | Isolated Pomodoro timer (memo + useReducer) |
+| `Heatmap` | GitHub-style streak heatmap (13-week grid, tap-to-inspect) |
 | `SelCheck` / `BulkActionBar` / `BulkDeleteConfirm` | Batch selection UI |
 | `EditModal` | Create/edit tasks, lists, notes |
 | `HelpModal` | Compact App Navigation popup (? icon) |
-| `TestRunner` | Test suite (35 tests) |
+| `TestRunner` | Test suite (39 tests) |
 | `Swipe` / `QuickAdd` / `Chart` | Gesture, input, visualization |
 | `ListMenu` / `DeleteConfirmation` / `Subtasks` | List management |
 | `Empty.*` / `ThemeProv` / `I.*` | Empty states, theme, icons |
@@ -275,15 +282,16 @@ Removed: arc, reminders
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Workflow redesign complete. Explainer rewritten. Open for new features.
-- **Working file:** `productivity-hub-v12.3-alpha.html` (~155KB, ~1865 lines)
+- **Current phase:** Streak heatmap implemented. Open for new features.
+- **Working file:** `productivity-hub-v12.5-alpha.html` (~160KB, ~1995 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 
 **Full Feature Set:**
-- Capture (Bullet Journal) → Clarify (Eisenhower + drag-and-drop) → Focus (Pomodoro + Queue) → Confirm (Checklists) → Review (Stats + Insights)
+- Capture (Bullet Journal) → Clarify (Eisenhower + drag-and-drop) → Focus (Pomodoro + Queue) → Confirm (Checklists) → Review (Stats + Streak Heatmap + Insights)
 - Tap-to-edit, batch selection, swipe gestures, Clear Completed
 - Explainer guide (Workflow, Bullet Journal, GTD Review, Pomodoro, Deep Work, Eisenhower)
-- Desktop Mode, PWA Install, Test Suite, Export/Import, Theme (default: System)
+- Desktop Mode, PWA Install, Test Suite (39 tests), Export/Import, Theme (default: System)
+- Cohesive dark mode with muted gradients across all tabs
 
 ---
 

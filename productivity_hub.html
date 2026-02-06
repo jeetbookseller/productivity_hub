@@ -261,7 +261,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '12.3-alpha';
+const APP_VERSION = '12.5-alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -301,7 +301,7 @@ const I={
 const Empty={
   List:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><rect x="20" y="15" width="60" height="60" rx="8" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="3"/><rect x="30" y="30" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="45" y="30" width="25" height="3" rx="1.5" fill="#9DC4A8"/><rect x="30" y="42" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="45" y="42" width="20" height="3" rx="1.5" fill="#9DC4A8"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">Empty list</p></div>,
   NoLists:({onCreate})=><div className="flex flex-col items-center justify-center py-12 anim-in"><svg width="64" height="64" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70 mb-4"><rect x="15" y="10" width="60" height="70" rx="8" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="2.5"/><rect x="25" y="25" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="40" y="25" width="30" height="3" rx="1.5" fill="#9DC4A8"/><rect x="25" y="37" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="40" y="37" width="25" height="3" rx="1.5" fill="#9DC4A8"/><rect x="25" y="49" width="10" height="3" rx="1.5" fill="#7CB69D"/><rect x="40" y="49" width="35" height="3" rx="1.5" fill="#9DC4A8"/><path d="M70 65L80 75M80 65L70 75" stroke="#7CB69D" strokeWidth="3" strokeLinecap="round"/></svg><h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">📋 No Checklists Yet</h3><p className="text-sm text-bark-500 dark:text-sand-300 text-center mb-6 max-w-xs">Create your first checklist to start organizing!</p><button onClick={onCreate} className="px-6 py-3 bg-sage-400 text-white rounded-xl font-semibold shadow-sm hover:bg-sage-500 transition-colors flex items-center gap-2"><I.Plus s={20}/>Create Checklist</button></div>,
-  Tasks:()=><div className="flex items-center justify-center py-2"><svg width="28" height="28" viewBox="0 0 100 100" fill="none" className="opacity-50"><rect x="25" y="20" width="50" height="50" rx="8" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="2"/><path d="M38 42L46 50L62 34" stroke="#7CB69D" strokeWidth="3" strokeLinecap="round"/></svg><span className="text-bark-400/50 text-xs ml-2">No tasks</span></div>,
+  Tasks:()=><div className="flex items-center justify-center py-1.5"><span className="text-bark-400/40 dark:text-sand-300/30 text-xs">No tasks</span></div>,
   Focus:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="56" height="56" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><circle cx="50" cy="50" r="35" fill="#E8F0EA" stroke="#7CB69D" strokeWidth="3"/><circle cx="50" cy="50" r="20" fill="#C5D9CA" opacity="0.5"/><circle cx="50" cy="50" r="8" fill="#7CB69D"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">Add tasks from Clarify • Max 5</p></div>,
   Remind:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><path d="M50 20C38 20 30 30 30 42V55L24 65H76L70 55V42C70 30 62 20 50 20Z" fill="#FCEEE9" stroke="#E07A5F" strokeWidth="2.5"/><circle cx="50" cy="20" r="4" fill="#E07A5F"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">No reminders</p></div>,
   Notes:()=><div className="flex flex-col items-center py-6 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><rect x="20" y="15" width="60" height="70" rx="6" fill="#E6F2F7" stroke="#5A9BBF" strokeWidth="2.5"/><circle cx="32" cy="35" r="3" fill="#5A9BBF"/><rect x="42" y="33" width="28" height="4" rx="2" fill="#5A9BBF" opacity="0.5"/><circle cx="32" cy="50" r="3" fill="#5A9BBF"/><rect x="42" y="48" width="22" height="4" rx="2" fill="#5A9BBF" opacity="0.5"/><circle cx="32" cy="65" r="3" fill="#5A9BBF"/><rect x="42" y="63" width="30" height="4" rx="2" fill="#5A9BBF" opacity="0.5"/></svg><p className="text-bark-400 dark:text-sand-300 text-sm font-medium mt-3">Start your quick notes</p><p className="text-bark-400/50 dark:text-sand-300/50 text-xs">Press Enter to add bullets</p></div>,
@@ -481,7 +481,7 @@ const usePersistedState=(key,defaultValue)=>{
 
 // Constants
 const PRESETS={classic:{work:25,shortBreak:5,longBreak:15,l:'Classic'},long:{work:50,shortBreak:10,longBreak:30,l:'Long'},short:{work:15,shortBreak:3,longBreak:10,l:'Short'},custom:{work:25,shortBreak:5,longBreak:15,l:'Custom'}};
-const QUADS=[{id:'ui',l:'Do First',sub:'Urgent + Important',clr:'from-terracotta-200 to-terracotta-100',bdr:'border-terracotta-400',txt:'text-terracotta-500'},{id:'ni',l:'Schedule',sub:'Not Urgent + Important',clr:'from-ocean-200 to-ocean-100',bdr:'border-ocean-400',txt:'text-ocean-400'},{id:'un',l:'Delegate',sub:'Urgent + Not Important',clr:'from-sand-200 to-sand-100',bdr:'border-sand-300',txt:'text-bark-500'},{id:'nn',l:'Eliminate',sub:'Not Urgent + Not Important',clr:'from-lavender-200 to-lavender-100',bdr:'border-lavender-300',txt:'text-lavender-400'}];
+const QUADS=[{id:'ui',l:'Do First',sub:'Urgent + Important',clr:'from-terracotta-200 to-terracotta-100',dclr:'dark:from-terracotta-500/20 dark:to-terracotta-400/10',bdr:'border-terracotta-400',dbdr:'dark:border-terracotta-500/50',txt:'text-terracotta-500',dtxt:'dark:text-terracotta-300'},{id:'ni',l:'Schedule',sub:'Not Urgent + Important',clr:'from-ocean-200 to-ocean-100',dclr:'dark:from-ocean-400/20 dark:to-ocean-300/10',bdr:'border-ocean-400',dbdr:'dark:border-ocean-400/50',txt:'text-ocean-400',dtxt:'dark:text-ocean-300'},{id:'un',l:'Delegate',sub:'Urgent + Not Important',clr:'from-sand-200 to-sand-100',dclr:'dark:from-sand-300/20 dark:to-sand-200/10',bdr:'border-sand-300',dbdr:'dark:border-sand-300/40',txt:'text-bark-500',dtxt:'dark:text-sand-200'},{id:'nn',l:'Eliminate',sub:'Not Urgent + Not Important',clr:'from-lavender-200 to-lavender-100',dclr:'dark:from-lavender-400/20 dark:to-lavender-300/10',bdr:'border-lavender-300',dbdr:'dark:border-lavender-400/40',txt:'text-lavender-400',dtxt:'dark:text-lavender-300'}];
 const CATS=[{id:'work',l:'Work',clr:'bg-ocean-300',e:'💼'},{id:'personal',l:'Personal',clr:'bg-lavender-300',e:'🏠'},{id:'health',l:'Health',clr:'bg-sage-400',e:'💪'},{id:'learning',l:'Learning',clr:'bg-terracotta-300',e:'📚'}];
 
 // Share helper
@@ -754,6 +754,109 @@ const HelpModal=({onClose})=>(
   </div>
 );
 
+// Streak Heatmap (GitHub-style)
+const Heatmap=({dHist,met})=>{
+  const[sel,setSel]=useState(null);
+  const weeks=13,days=7;
+  const today=new Date();
+  const todayStr=today.toDateString();
+
+  // Build grid data: 13 weeks × 7 days
+  const cells=useMemo(()=>{
+    const arr=[];
+    const startOff=(weeks*days)-1;
+    for(let i=startOff;i>=0;i--){
+      const d=new Date(today);d.setDate(d.getDate()-i);
+      const ds=d.toDateString();
+      const isFuture=d>today&&ds!==todayStr;
+      const hist=dHist.find(x=>x.date===ds);
+      const isToday=ds===todayStr;
+      const p=isToday?met.d.p:(hist?.p||0);
+      const t=isToday?met.d.t:(hist?.t||0);
+      const m=isToday?met.d.m:(hist?.m||0);
+      arr.push({date:d,ds,p,t,m,isFuture,isToday,day:d.getDay()});
+    }
+    return arr;
+  },[dHist,met.d]);
+
+  // Compute streaks
+  const{cur,longest}=useMemo(()=>{
+    let c=0,l=0,streak=0;
+    for(let i=0;i<=((weeks*days)-1);i++){
+      const d=new Date(today);d.setDate(d.getDate()-i);
+      const ds=d.toDateString();
+      const hist=dHist.find(x=>x.date===ds);
+      const isToday=ds===todayStr;
+      const p=isToday?met.d.p:(hist?.p||0);
+      const t=isToday?met.d.t:(hist?.t||0);
+      if(p>0||t>0){streak++;if(streak>l)l=streak;}
+      else{if(i===0){streak=0;}else{if(c===0)c=streak;break;}}
+    }
+    if(c===0)c=streak;
+    return{cur:c,longest:l};
+  },[dHist,met.d]);
+
+  // Color by pomodoro count
+  const clr=(p,isFuture)=>{
+    if(isFuture)return'bg-transparent';
+    if(p===0)return'bg-sand-200/60 dark:bg-bark-600/40';
+    if(p<=1)return'bg-sage-200 dark:bg-sage-400/30';
+    if(p<=3)return'bg-sage-300 dark:bg-sage-400/50';
+    if(p<=5)return'bg-sage-400 dark:bg-sage-400/70';
+    return'bg-sage-600 dark:bg-sage-500';
+  };
+
+  // Arrange into columns (weeks). Each column = 7 days (Sun-Sat)
+  const cols=[];
+  for(let w=0;w<weeks;w++){cols.push(cells.slice(w*days,(w+1)*days));}
+
+  const mLabels=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dLabels=['','M','','W','','F',''];
+
+  return(
+    <div className="gcard rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-bark-600 dark:text-sand-100">🔥 Streak</h3>
+        <div className="flex gap-3 text-xs">
+          <span className="text-bark-500 dark:text-sand-200"><span className="font-bold text-terracotta-400">{cur}</span> day{cur!==1?'s':''} current</span>
+          <span className="text-bark-500 dark:text-sand-200"><span className="font-bold text-sage-500">{longest}</span> longest</span>
+        </div>
+      </div>
+      <div className="flex gap-0.5 overflow-x-auto hide-sb">
+        <div className="flex flex-col gap-0.5 mr-1 pt-4">
+          {dLabels.map((l,i)=><div key={i} className="h-3 text-[9px] leading-3 text-bark-400/50 dark:text-sand-300/50 text-right pr-0.5">{l}</div>)}
+        </div>
+        {cols.map((wk,wi)=>{
+          const firstDay=wk[0]?.date;
+          const showMonth=wi===0||(firstDay&&firstDay.getDate()<=7);
+          return(
+            <div key={wi} className="flex flex-col gap-0.5">
+              <div className="h-3 text-[9px] leading-3 text-bark-400/50 dark:text-sand-300/50 text-center">{showMonth&&firstDay?mLabels[firstDay.getMonth()]:''}</div>
+              {wk.map((c,di)=>(
+                <div key={di} onClick={()=>!c.isFuture&&setSel(sel?.ds===c.ds?null:c)} title={c.isFuture?'':`${c.date.toLocaleDateString()}: ${c.p}🍅 ${c.t}✓ ${c.m}m`}
+                  className={`w-3 h-3 rounded-[2px] cursor-pointer transition-all ${clr(c.p,c.isFuture)} ${c.isToday?'ring-1 ring-terracotta-300 dark:ring-terracotta-400':''} ${sel?.ds===c.ds?'ring-1 ring-ocean-400':''}`}/>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-1 mt-2 justify-end">
+        <span className="text-[9px] text-bark-400/50 dark:text-sand-300/50">Less</span>
+        {[0,1,2,4,6].map(v=><div key={v} className={`w-2.5 h-2.5 rounded-[2px] ${clr(v,false)}`}/>)}
+        <span className="text-[9px] text-bark-400/50 dark:text-sand-300/50">More</span>
+      </div>
+      {sel&&!sel.isFuture&&(
+        <div className="mt-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50 flex items-center gap-4">
+          <div className="text-sm font-medium text-bark-600 dark:text-sand-100">{sel.date.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>
+          <div className="flex gap-3 text-xs text-bark-500 dark:text-sand-200">
+            <span>🍅 {sel.p}</span><span>✓ {sel.t}</span><span>⏱ {sel.m}m</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Mini Chart
 const Chart=({data,label,clr='bg-sage-400'})=>{
   const max=Math.max(...data.map(d=>d.v),1);
@@ -817,6 +920,10 @@ const TestRunner=({onShowToast})=>{
       {name:'Batch Bulk Action',category:'Batch Selection'},
       {name:'Batch Empty Auto-Exit',category:'Batch Selection'},
       {name:'Batch Delete Confirm Gate',category:'Batch Selection'},
+      {name:'Day Rotation Archive',category:'Streak Heatmap'},
+      {name:'Day Rotation Reset',category:'Streak Heatmap'},
+      {name:'Streak Calculation',category:'Streak Heatmap'},
+      {name:'Heatmap Color Levels',category:'Streak Heatmap'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -869,6 +976,10 @@ const TestRunner=({onShowToast})=>{
           case 'Batch Bulk Action':{const todos=[{id:'a',done:false},{id:'b',done:false},{id:'c',done:true}];const selIds=new Set(['a','b']);const afterDone=todos.map(t=>selIds.has(t.id)?{...t,done:true}:t);if(!afterDone[0].done||!afterDone[1].done)throw new Error('Bulk done failed');if(afterDone[2].done!==true)throw new Error('Non-selected item changed');const afterDel=todos.filter(t=>!selIds.has(t.id));if(afterDel.length!==1||afterDel[0].id!=='c')throw new Error('Bulk delete failed');break;}
           case 'Batch Empty Auto-Exit':{const sel=new Set(['a']);sel.delete('a');const shouldExit=sel.size===0;if(!shouldExit)throw new Error('Empty set did not trigger exit condition');if(sel.size!==0)throw new Error('Set not empty after removal');break;}
           case 'Batch Delete Confirm Gate':{const threshold=3;const small=new Set(['a','b']);const large=new Set(['a','b','c']);const needsConfirmSmall=small.size>=threshold;const needsConfirmLarge=large.size>=threshold;if(needsConfirmSmall)throw new Error('2 items should not need confirmation');if(!needsConfirmLarge)throw new Error('3 items should need confirmation');break;}
+          case 'Day Rotation Archive':{const oldHist=[];const oldMet={d:{p:3,t:2,m:75,date:'Mon Jan 01 2026'},w:{p:5,t:4,m:120}};const filtered=oldHist.filter(x=>x.date!==oldMet.d.date);const newHist=[...filtered,{date:oldMet.d.date,p:oldMet.d.p,t:oldMet.d.t,m:oldMet.d.m}];if(newHist.length!==1)throw new Error('Archive count wrong');if(newHist[0].p!==3||newHist[0].t!==2||newHist[0].m!==75)throw new Error('Archived data mismatch');break;}
+          case 'Day Rotation Reset':{const oldDate='Mon Jan 05 2026';const today='Tue Jan 06 2026';const isNewDay=oldDate!==today;if(!isNewDay)throw new Error('Day change not detected');const newMet={d:{p:0,t:0,m:0,date:today}};if(newMet.d.p!==0||newMet.d.t!==0)throw new Error('Daily metrics not reset');break;}
+          case 'Streak Calculation':{const hist=[{date:new Date(Date.now()-864e5).toDateString(),p:2,t:1,m:50},{date:new Date(Date.now()-2*864e5).toDateString(),p:1,t:0,m:25},{date:new Date(Date.now()-4*864e5).toDateString(),p:3,t:2,m:75}];let streak=0;for(let i=1;i<=5;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();const h=hist.find(x=>x.date===ds);if(h&&(h.p>0||h.t>0))streak++;else break;}if(streak!==2)throw new Error(`Expected streak 2, got ${streak}`);break;}
+          case 'Heatmap Color Levels':{const clr=(p)=>{if(p===0)return'empty';if(p<=1)return'L1';if(p<=3)return'L2';if(p<=5)return'L3';return'L4';};if(clr(0)!=='empty')throw new Error('Level 0 wrong');if(clr(1)!=='L1')throw new Error('Level 1 wrong');if(clr(3)!=='L2')throw new Error('Level 2 wrong');if(clr(5)!=='L3')throw new Error('Level 3 wrong');if(clr(8)!=='L4')throw new Error('Level 4 wrong');break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -977,7 +1088,7 @@ const TestRunner=({onShowToast})=>{
       <div className="gcard rounded-2xl p-4">
         <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">📋 Tests Included:</h4>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-bark-500 dark:text-sand-200">
-          <div>• IndexedDB Storage</div><div>• CRUD Operations</div><div>• Export/Import</div><div>• Theme Switching</div><div>• Focus Timer Settings</div><div>• Utility Functions</div><div>• Data Validation</div>
+          <div>• IndexedDB Storage</div><div>• CRUD Operations</div><div>• Export/Import</div><div>• Theme Switching</div><div>• Focus Timer Settings</div><div>• Utility Functions</div><div>• Data Validation</div><div>• Streak Heatmap</div>
         </div>
       </div>
     </div>
@@ -1078,6 +1189,20 @@ function App(){
   const[met,setMet]=usePersistedState('met',{d:{p:0,t:0,m:0,date:new Date().toDateString()},w:{p:0,t:0,m:0}});
   const[fHist,setFHist]=usePersistedState('fHist',[]);
   const[dHist,setDHist]=usePersistedState('dHist',[]);
+
+  // Day rotation: archive yesterday's stats to dHist
+  useEffect(()=>{
+    const today=new Date().toDateString();
+    if(met.d.date&&met.d.date!==today){
+      if(met.d.p>0||met.d.t>0||met.d.m>0){
+        setDHist(h=>{const filtered=h.filter(x=>x.date!==met.d.date);return[...filtered,{date:met.d.date,p:met.d.p,t:met.d.t,m:met.d.m}].slice(-180);});
+      }
+      const oldDate=new Date(met.d.date);
+      const nowDate=new Date(today);
+      const isNewWeek=nowDate.getDay()===0||oldDate.getDay()>nowDate.getDay()||(nowDate-oldDate)>=7*864e5;
+      setMet(p=>({d:{p:0,t:0,m:0,date:today},w:isNewWeek?{p:0,t:0,m:0}:p.w}));
+    }
+  },[]);
   
   // UI
   const[edit,setEdit]=useState(null);
@@ -1236,6 +1361,9 @@ function App(){
   // RENDERS
   const rFocus=()=>(
     <div className="space-y-5">
+      <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">🎯 Focus</h2>
+      </div>
       <FocusTimer 
         tSet={tSet}
         onComplete={handleTimerComplete}
@@ -1319,7 +1447,7 @@ function App(){
                   <button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-sage-300'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>}
                   <div className="flex-1 min-w-0">
                     <span className={`block font-medium sel ${item.done?'line-through text-bark-400/40':'text-bark-600 dark:text-sand-100'}`}>{item.text}</span>
-                    {item.notes&&<p className="text-xs text-bark-400/50 mt-1 truncate sel">📝 {item.notes}</p>}
+                    {item.notes&&<p className="text-xs text-bark-400/50 dark:text-sand-300/40 mt-1 truncate sel">📝 {item.notes}</p>}
                   </div>
                   {!inSel&&<button onClick={e=>{e.stopPropagation();deleteListItem(cl.id,item.id);}} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-bark-400/40 hover:text-terracotta-400" aria-label="Delete item"><I.Trash s={16}/></button>}
                 </div>
@@ -1342,11 +1470,11 @@ function App(){
       const isExp=expQ[q.id];
       const vis=isExp?tasks:tasks.slice(0,2);
       return(
-        <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} overflow-hidden transition-all ${dragQ&&dragQ!==q.id?'ring-2 ring-sage-300 ring-offset-1':''}`}
+        <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} ${q.dbdr} overflow-hidden transition-all ${dragQ&&dragQ!==q.id?'ring-2 ring-sage-300 ring-offset-1':''}`}
           onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='move';}}
           onDrop={e=>{e.preventDefault();const tid=e.dataTransfer.getData('text/plain');if(tid&&q.id!==todos.find(x=>x.id===tid)?.quad)moveTodoQuad(tid,q.id);}}>
-          <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2.5 md:p-3.5 bg-gradient-to-r ${q.clr} flex items-center justify-between`}><div><h3 className={`font-bold md:text-lg ${q.txt}`}>{q.l}</h3><p className="text-xs md:text-sm text-bark-500/60">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt}`}>{tasks.length}</span>{isExp?<I.Up s={18} c={q.txt}/>:<I.Down s={18} c={q.txt}/>}</div></button>
-          <div className={`bg-white/60 dark:bg-bark-600/60 ${tasks.length>0?'p-2 md:p-3':'p-0'}`}>
+          <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2 md:p-3 bg-gradient-to-r ${q.clr} ${q.dclr} flex items-center justify-between`}><div><h3 className={`font-bold text-sm md:text-base ${q.txt} ${q.dtxt}`}>{q.l}</h3><p className="text-[11px] md:text-xs text-bark-500/60 dark:text-sand-300/50">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt} ${q.dtxt}`}>{tasks.length}</span>{isExp?<I.Up s={16} c={`${q.txt} ${q.dtxt}`}/>:<I.Down s={16} c={`${q.txt} ${q.dtxt}`}/>}</div></button>
+          <div className={`bg-white/40 dark:bg-white/5 ${tasks.length>0?'p-2 md:p-3':'p-1'}`}>
             {tasks.length===0?<Empty.Tasks/>:(
               <div className="space-y-1.5">
                 {vis.map(t=>{
@@ -1369,7 +1497,7 @@ function App(){
                             {t.subtasks?.length>0&&<span className="px-2 py-1 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
                           </div>
                         )}
-                        {t.poms>0&&<div className="flex items-center gap-1.5"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span><span className="text-xs text-bark-400/50">pomodoro{t.poms>1?'s':''}</span></div>}
+                        {t.poms>0&&<div className="flex items-center gap-1.5"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span><span className="text-xs text-bark-400/50 dark:text-sand-300/40">pomodoro{t.poms>1?'s':''}</span></div>}
                       </div>
                       <div className="flex flex-col gap-2">
                         {!t.done&&!focus.find(x=>x.id===t.id)&&<button onClick={e=>{e.stopPropagation();addFocus(t);}} className="p-2 rounded-lg hover:bg-sage-100 dark:hover:bg-sage-400/20 text-sage-500 font-bold transition-colors" aria-label="Add to focus">→</button>}
@@ -1540,16 +1668,17 @@ function App(){
         <div className="gcard rounded-2xl p-4">
           <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
           <div className="grid grid-cols-3 gap-3 text-center">
-            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50">🍅 Pomodoros</div></div>
-            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50">✓ Tasks</div></div>
-            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50">⏱ Focus</div></div>
+            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div>
+            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div>
+            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div>
           </div>
         </div>
         <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
+        <Heatmap dHist={dHist} met={met}/>
         <div className="gcard rounded-2xl p-4">
           <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3>
           <div className="grid grid-cols-2 gap-2">
-            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} border ${q.bdr}`}><div className={`text-lg font-bold ${q.txt}`}>{q.n}</div><div className="text-xs text-bark-500/70">{q.l}</div></div>)}
+            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}
           </div>
           {cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}
         </div>
@@ -1663,7 +1792,7 @@ function App(){
                 <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
                   <li>1. Clear completed tasks (🧹 button in Clarify)</li>
                   <li>2. Process any unread <strong>Capture</strong> notes → strikethrough or → Clarify</li>
-                  <li>3. Glance at <strong>Review</strong> for today's pomodoro count</li>
+                  <li>3. Glance at <strong>Review</strong> for today's pomodoro count and streak</li>
                   <li>4. Set priorities for tomorrow in <strong>Clarify</strong></li>
                 </ol>
               </div>
@@ -1715,6 +1844,8 @@ function App(){
                 <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">What the Review Tab Shows</h4>
                 <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
                   <li>• <strong>Weekly stats:</strong> Pomodoros, tasks completed, focus time</li>
+                  <li>• <strong>Streak heatmap:</strong> GitHub-style 13-week grid — darker = more pomodoros. Tap any day for details</li>
+                  <li>• <strong>Streak counter:</strong> Current consecutive active days and your longest streak</li>
                   <li>• <strong>Matrix overview:</strong> How many active tasks in each quadrant</li>
                   <li>• <strong>Insights:</strong> Overloaded quadrants, overdue tasks, unprocessed notes</li>
                   <li>• <strong>Next actions:</strong> Specific suggestions based on your patterns</li>
