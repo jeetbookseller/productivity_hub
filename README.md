@@ -4,7 +4,7 @@ Copyright © 2026 Jeet Bookseller. All Rights Reserved. This code is for demonst
 
 Web app at: https://jeetbookseller.github.io/productivity_hub/productivity_hub.html
 
-Progress Summary on: https://jeetbookseller.github.io/productivity_hub/progress_summary.md
+Technical details of the App on: https://jeetbookseller.github.io/productivity_hub/technical_details.md
 
 **Full Feature Set:**
 - Capture (Bullet Journal + ⋮ NoteMenu + ☐ bulk select + copy+strike to Clarify + auto-clear) → Clarify (Eisenhower + ⋮ TaskMenu + done/undone + drag desktop) → Focus (Pomodoro + Queue) → Confirm (Checklists + ⋮ edit+delete + tap-done) → Review (Stats + Streak Heatmap + Insights)
