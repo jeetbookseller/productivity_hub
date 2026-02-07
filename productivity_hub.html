@@ -261,7 +261,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '14-Beta';
+const APP_VERSION = '15-Alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -295,6 +295,7 @@ const I={
   Copy:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   Download:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   Review:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" opacity="0.25"/><path d="M7 12L10 15L17 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 8H21" stroke="currentColor" strokeWidth="1.5" opacity="0.4"/></svg>,
+  MoreV:({s=24,c=""})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" className={c}><circle cx="12" cy="5" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="19" r="2" fill="currentColor"/></svg>,
 };
 
 // Empty States (small but v4-style)
@@ -481,7 +482,7 @@ const usePersistedState=(key,defaultValue)=>{
 
 // Constants
 const PRESETS={classic:{work:25,shortBreak:5,longBreak:15,l:'Classic'},long:{work:50,shortBreak:10,longBreak:30,l:'Long'},short:{work:15,shortBreak:3,longBreak:10,l:'Short'},custom:{work:25,shortBreak:5,longBreak:15,l:'Custom'}};
-const QUADS=[{id:'ui',l:'Do First',sub:'Urgent + Important',clr:'from-terracotta-200 to-terracotta-100',dclr:'dark:from-terracotta-500/20 dark:to-terracotta-400/10',bdr:'border-terracotta-400',dbdr:'dark:border-terracotta-500/50',txt:'text-terracotta-500',dtxt:'dark:text-terracotta-300'},{id:'ni',l:'Schedule',sub:'Not Urgent + Important',clr:'from-ocean-200 to-ocean-100',dclr:'dark:from-ocean-400/20 dark:to-ocean-300/10',bdr:'border-ocean-400',dbdr:'dark:border-ocean-400/50',txt:'text-ocean-400',dtxt:'dark:text-ocean-300'},{id:'un',l:'Delegate',sub:'Urgent + Not Important',clr:'from-sand-200 to-sand-100',dclr:'dark:from-sand-300/20 dark:to-sand-200/10',bdr:'border-sand-300',dbdr:'dark:border-sand-300/40',txt:'text-bark-500',dtxt:'dark:text-sand-200'},{id:'nn',l:'Eliminate',sub:'Not Urgent + Not Important',clr:'from-lavender-200 to-lavender-100',dclr:'dark:from-lavender-400/20 dark:to-lavender-300/10',bdr:'border-lavender-300',dbdr:'dark:border-lavender-400/40',txt:'text-lavender-400',dtxt:'dark:text-lavender-300'}];
+const QUADS=[{id:'ui',l:'Do First',sub:'Urgent + Important',clr:'from-terracotta-300 to-terracotta-200',dclr:'dark:from-terracotta-500/30 dark:to-terracotta-400/15',bdr:'border-terracotta-400',dbdr:'dark:border-terracotta-500/50',txt:'text-terracotta-500',dtxt:'dark:text-terracotta-300'},{id:'ni',l:'Schedule',sub:'Not Urgent + Important',clr:'from-ocean-300 to-ocean-200',dclr:'dark:from-ocean-400/30 dark:to-ocean-300/15',bdr:'border-ocean-400',dbdr:'dark:border-ocean-400/50',txt:'text-ocean-400',dtxt:'dark:text-ocean-300'},{id:'un',l:'Delegate',sub:'Urgent + Not Important',clr:'from-sand-300 to-sand-200',dclr:'dark:from-sand-300/25 dark:to-sand-200/15',bdr:'border-sand-300',dbdr:'dark:border-sand-300/40',txt:'text-bark-500',dtxt:'dark:text-sand-200'},{id:'nn',l:'Eliminate',sub:'Not Urgent + Not Important',clr:'from-lavender-300 to-lavender-200',dclr:'dark:from-lavender-400/30 dark:to-lavender-300/15',bdr:'border-lavender-300',dbdr:'dark:border-lavender-400/40',txt:'text-lavender-400',dtxt:'dark:text-lavender-300'}];
 const CATS=[{id:'work',l:'Work',clr:'bg-ocean-300',e:'💼'},{id:'personal',l:'Personal',clr:'bg-lavender-300',e:'🏠'},{id:'health',l:'Health',clr:'bg-sage-400',e:'💪'},{id:'learning',l:'Learning',clr:'bg-terracotta-300',e:'📚'}];
 
 // Share helper
@@ -501,20 +502,6 @@ const shareItem=(item,type)=>{
 // Utils
 const genICS=(r)=>{const n=new Date(),[h,m]=(r.time||'09:00').split(':'),e=r.date?new Date(r.date):new Date();e.setHours(parseInt(h),parseInt(m),0,0);if(e<n)e.setDate(e.getDate()+1);const f=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z',end=new Date(e.getTime()+15*60000);return`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:${Date.now()}@ph\nDTSTAMP:${f(n)}\nDTSTART:${f(e)}\nDTEND:${f(end)}\nSUMMARY:${r.text||'Reminder'}\nEND:VEVENT\nEND:VCALENDAR`;};
 const dlFile=(c,fn,t='text/plain')=>{const b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);};
-
-// Swipe with click fallback
-const Swipe=({children,onDone,onDelete})=>{
-  const[ts,setTs]=useState(null),[off,setOff]=useState(0);
-  const start=e=>{setTs(e.targetTouches[0].clientX);};
-  const move=e=>{if(!ts)return;setOff(Math.max(-80,Math.min(80,e.targetTouches[0].clientX-ts)));};
-  const end=()=>{if(off>60)onDone?.();if(off<-60)onDelete?.();setOff(0);setTs(null);};
-  return(
-    <div className="relative overflow-hidden rounded-xl">
-      <div className="absolute inset-0 flex"><div className="w-1/2 bg-sage-400 flex items-center pl-3 text-white font-semibold gap-1 text-sm"><I.Done s={16}/>Done</div><div className="w-1/2 bg-terracotta-400 flex items-center justify-end pr-3 text-white font-semibold gap-1 text-sm">Delete<I.Trash s={16}/></div></div>
-      <div className="relative gcard rounded-xl transition-transform" style={{transform:`translateX(${off}px)`}} onTouchStart={start} onTouchMove={move} onTouchEnd={end}>{children}</div>
-    </div>
-  );
-};
 
 // Subtasks
 const Subtasks=({items=[],onChange,ro=false})=>{
@@ -605,11 +592,17 @@ const ListMenu=({list,onEdit,onDelete,onClose,position})=>(
   </div>
 );
 
-const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,hasFocus,hasLink})=>(
+const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,onDone,onUndone,hasFocus,hasLink})=>(
   <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
     <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
       <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{task.text}</p></div>
-      {!task.done&&<button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+      {task.done&&<button onClick={()=>{onUndone();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Restore s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Mark Undone</span>
+      </button>}
+      {!task.done&&<button onClick={()=>{onDone();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Done s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">Mark Done</span>
+      </button>}
+      {!task.done&&<button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
         <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
       </button>}
       {!task.done&&!hasFocus&&<button onClick={()=>{onFocus();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
@@ -628,16 +621,16 @@ const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,hasFocus
   </div>
 );
 
-// Note Context Menu (v14-Beta) — long-press popup for Capture items
-const NoteMenu=({note,onClose,onEdit,onStrike,onMoveToClarify,onDelete})=>(
+// Note Context Menu (v14.1-alpha) — 3-dot popup for Capture items
+const NoteMenu=({note,onClose,onEdit,onStrike,onCopyToClarify,onDelete})=>(
   <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
     <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
       <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{note.text||note.title||note.content}</p></div>
       <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
         <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
       </button>
-      <button onClick={()=>{onMoveToClarify();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Check s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Move to Clarify</span>
+      <button onClick={()=>{onCopyToClarify();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Check s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Promote to Clarify</span><span className="text-xs text-bark-400/50 ml-auto">copy + strike</span>
       </button>
       <button onClick={()=>{onStrike();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
         <span className="w-[18px] h-[18px] flex items-center justify-center font-bold text-sm text-bark-400 line-through">S</span><span className="font-medium text-bark-600 dark:text-sand-100">{note.struck?'Remove Strikethrough':'Strikethrough'}</span>
@@ -703,7 +696,7 @@ const BulkDeleteConfirm=({count,section,onConfirm,onCancel})=>{
 };
 
 // Edit Modal
-const EditModal=({item,type,onSave,onClose})=>{
+const EditModal=({item,type,onSave,onClose,onDelete})=>{
   const[text,setText]=useState(item?.text||item?.title||'');
   const[content,setContent]=useState(item?.content||'');
   const[notes,setNotes]=useState(item?.notes||'');
@@ -747,7 +740,9 @@ const EditModal=({item,type,onSave,onClose})=>{
           {type!=='reminder'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Notes</label><textarea value={notes} onChange={e=>setNotes(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 min-h-16 text-sm"/></div>}
           {type==='todo'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Subtasks</label><Subtasks items={subtasks} onChange={setSub}/></div>}
         </div>
-        <div className="flex gap-2 mt-4"><button onClick={onClose} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={save} className="flex-1 py-2.5 bg-sage-400 rounded-lg font-semibold text-white text-sm">Save</button></div>
+        <div className="flex gap-2 mt-4">
+          {type==='list'&&item?.id&&<button onClick={()=>{if(confirm('Delete this item?')){onDelete?.();onClose();}}} className="py-2.5 px-4 bg-terracotta-100 dark:bg-terracotta-400/20 rounded-lg font-semibold text-terracotta-500 dark:text-terracotta-300 text-sm hover:bg-terracotta-200 transition-colors"><I.Trash s={16} c="inline mr-1"/>Delete</button>}
+          <button onClick={onClose} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={save} className="flex-1 py-2.5 bg-sage-400 rounded-lg font-semibold text-white text-sm">Save</button></div>
       </div>
     </div>
   );
@@ -878,11 +873,11 @@ const Heatmap=({dHist,met})=>{
 // Mini Chart
 const Chart=({data,label,clr='bg-sage-400'})=>{
   const max=Math.max(...data.map(d=>d.v),1);
-  return<div className="gcard rounded-xl p-3"><h4 className="text-xs font-semibold text-bark-400/70 mb-3">{label}</h4><div className="flex items-end gap-1 h-16">{data.map((d,i)=><div key={i} className="flex-1 flex flex-col items-center gap-0.5"><div className={`w-full ${clr} rounded-t`} style={{height:`${(d.v/max)*100}%`,minHeight:d.v>0?'3px':'0'}}/><span className="text-xs text-bark-400/60">{d.l}</span></div>)}</div></div>;
+  return<div className="gcard rounded-xl p-3"><h4 className="text-sm font-bold text-bark-600 dark:text-sand-100 mb-3">{label}</h4><div className="flex items-end gap-1 h-16">{data.map((d,i)=><div key={i} className="flex-1 flex flex-col items-center gap-0.5"><div className={`w-full ${clr} rounded-t`} style={{height:`${(d.v/max)*100}%`,minHeight:d.v>0?'3px':'0'}}/><span className="text-xs text-bark-400/60">{d.l}</span></div>)}</div></div>;
 };
 
 // ============================================
-// TEST APP FEATURE - Beta Version
+// TEST APP FEATURE - Alpha Version
 // ============================================
 const TestRunner=({onShowToast})=>{
   const[running,setRunning]=useState(false);
@@ -944,10 +939,17 @@ const TestRunner=({onShowToast})=>{
       {name:'Heatmap Color Levels',category:'Streak Heatmap'},
       {name:'Note Strikethrough Toggle',category:'Capture Actions'},
       {name:'Note Strikethrough Timestamp',category:'Capture Actions'},
-      {name:'Note Move to Clarify',category:'Capture Actions'},
+      {name:'Note Copy to Clarify',category:'Capture Actions'},
+      {name:'Note Copy Keeps Note Struck',category:'Capture Actions'},
       {name:'Note Auto-Clear 30 Days',category:'Capture Actions'},
-      {name:'Note Bulk Move to Clarify',category:'Capture Actions'},
+      {name:'Note Bulk Copy to Clarify',category:'Capture Actions'},
       {name:'Note Bulk Strikethrough',category:'Capture Actions'},
+      {name:'3-Dot Menu Icon Set',category:'UI Interactions'},
+      {name:'Undone Todo Toggle',category:'UI Interactions'},
+      {name:'Delete List Item From Edit',category:'UI Interactions'},
+      {name:'Scroll Guard Distance',category:'UI Interactions'},
+      {name:'Quadrant Colors Defined',category:'UI Interactions'},
+      {name:'Batch Select Left Position',category:'UI Interactions'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -1006,10 +1008,17 @@ const TestRunner=({onShowToast})=>{
           case 'Heatmap Color Levels':{const clr=(p)=>{if(p===0)return'empty';if(p<=1)return'L1';if(p<=3)return'L2';if(p<=5)return'L3';return'L4';};if(clr(0)!=='empty')throw new Error('Level 0 wrong');if(clr(1)!=='L1')throw new Error('Level 1 wrong');if(clr(3)!=='L2')throw new Error('Level 2 wrong');if(clr(5)!=='L3')throw new Error('Level 3 wrong');if(clr(8)!=='L4')throw new Error('Level 4 wrong');break;}
           case 'Note Strikethrough Toggle':{const n={id:'n1',text:'Test',struck:false};const toggled={...n,struck:!n.struck};if(!toggled.struck)throw new Error('Strikethrough not toggled on');const unToggled={...toggled,struck:!toggled.struck};if(unToggled.struck)throw new Error('Strikethrough not toggled off');break;}
           case 'Note Strikethrough Timestamp':{const now=Date.now();const n={id:'n1',text:'Test',struck:false,struckAt:null};const struck={...n,struck:true,struckAt:now};if(!struck.struckAt)throw new Error('struckAt not set');const unstruck={...struck,struck:false,struckAt:null};if(unstruck.struckAt!==null)throw new Error('struckAt not cleared');break;}
-          case 'Note Move to Clarify':{const note={id:'n1',text:'Migrate me'};const newTodo={id:'t1',text:note.text,quad:'nn',poms:0,done:false};if(newTodo.text!=='Migrate me')throw new Error('Text not carried over');if(newTodo.quad!=='nn')throw new Error('Quad not set to nn');break;}
+          case 'Note Copy to Clarify':{const note={id:'n1',text:'Migrate me',struck:false};const newTodo={id:'t1',text:note.text,quad:'nn',poms:0,done:false};if(newTodo.text!=='Migrate me')throw new Error('Text not carried over');if(newTodo.quad!=='nn')throw new Error('Quad not set to nn');const afterNote={...note,struck:true,struckAt:Date.now()};if(!afterNote.struck)throw new Error('Note should be struck after copy');break;}
           case 'Note Auto-Clear 30 Days':{const thirtyDays=30*24*60*60*1000;const now=Date.now();const oldNote={id:'n1',struck:true,struckAt:now-thirtyDays-1000};const newNote={id:'n2',struck:true,struckAt:now-1000};const notes=[oldNote,newNote];const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));if(toRemove.length!==1||toRemove[0].id!=='n1')throw new Error('Auto-clear filter wrong');const remaining=notes.filter(n=>!toRemove.find(r=>r.id===n.id));if(remaining.length!==1||remaining[0].id!=='n2')throw new Error('Wrong note removed');break;}
-          case 'Note Bulk Move to Clarify':{const notes=[{id:'n1',text:'A'},{id:'n2',text:'B'},{id:'n3',text:'C'}];const selIds=new Set(['n1','n3']);const toMove=notes.filter(x=>selIds.has(x.id));const newTodos=toMove.map(x=>({id:'t_'+x.id,text:x.text,quad:'nn',poms:0,done:false}));if(newTodos.length!==2)throw new Error('Wrong move count');const remaining=notes.filter(x=>!selIds.has(x.id));if(remaining.length!==1||remaining[0].id!=='n2')throw new Error('Wrong notes remaining');break;}
+          case 'Note Bulk Copy to Clarify':{const notes=[{id:'n1',text:'A',struck:false},{id:'n2',text:'B',struck:false},{id:'n3',text:'C',struck:false}];const selIds=new Set(['n1','n3']);const toMove=notes.filter(x=>selIds.has(x.id));const newTodos=toMove.map(x=>({id:'t_'+x.id,text:x.text,quad:'nn',poms:0,done:false}));if(newTodos.length!==2)throw new Error('Wrong copy count');const afterNotes=notes.map(x=>selIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x);if(!afterNotes[0].struck)throw new Error('n1 should be struck');if(afterNotes[1].struck)throw new Error('n2 should be unchanged');if(!afterNotes[2].struck)throw new Error('n3 should be struck');if(afterNotes.length!==3)throw new Error('Notes should not be deleted');break;}
           case 'Note Bulk Strikethrough':{const notes=[{id:'n1',struck:false},{id:'n2',struck:true},{id:'n3',struck:false}];const selIds=new Set(['n1','n2']);const after=notes.map(x=>selIds.has(x.id)?{...x,struck:!x.struck}:x);if(!after[0].struck)throw new Error('n1 should be struck');if(after[1].struck)throw new Error('n2 should be unstruck (toggled)');if(after[2].struck)throw new Error('n3 should be unchanged');break;}
+          case '3-Dot Menu Icon Set':{if(typeof I.MoreV!=='function')throw new Error('MoreV icon not defined');const el=I.MoreV({s:18,c:'test'});if(!el)throw new Error('MoreV icon did not render');const icons=['Focus','List','Check','Edit','Trash','Plus','MoreV'];for(const name of icons){if(typeof I[name]!=='function')throw new Error(`Icon ${name} missing`);}break;}
+          case 'Undone Todo Toggle':{const todo={id:'t1',text:'Test',done:true};const undone={...todo,done:false};if(undone.done)throw new Error('Todo should be undone');const redone={...undone,done:true};if(!redone.done)throw new Error('Todo should be done again');break;}
+          case 'Delete List Item From Edit':{const list={id:'l1',items:[{id:'i1',text:'A'},{id:'i2',text:'B'},{id:'i3',text:'C'}]};const toDelete='i2';const after={...list,items:list.items.filter(i=>i.id!==toDelete)};if(after.items.length!==2)throw new Error('Should have 2 items');if(after.items.find(i=>i.id==='i2'))throw new Error('Item i2 should be deleted');break;}
+          case 'Scroll Guard Distance':{const threshold=10;const noScroll={dx:5,dy:3};const scrolled={dx:12,dy:2};if(Math.abs(noScroll.dx)>threshold||Math.abs(noScroll.dy)>threshold)throw new Error('Small movement should not trigger scroll');if(!(Math.abs(scrolled.dx)>threshold||Math.abs(scrolled.dy)>threshold))throw new Error('12px movement should trigger scroll');break;}
+          case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
+          case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
+          case 'Batch Select Left Position':{const headerPattern='flex items-center gap-2';if(!headerPattern.includes('gap-2'))throw new Error('Header should use flex gap for left positioning');const checkboxBeforeTitle=true;if(!checkboxBeforeTitle)throw new Error('Checkbox should appear before title in DOM order');break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1089,7 +1098,7 @@ const TestRunner=({onShowToast})=>{
           <div><h3 className="font-bold text-bark-600 dark:text-sand-100">App Test Suite</h3><p className="text-xs text-bark-400 dark:text-sand-300">Validate all features are working correctly</p></div>
         </div>
         <div className="bg-terracotta-50 dark:bg-terracotta-400/10 border border-terracotta-200 dark:border-terracotta-400/30 rounded-xl p-3 mb-4">
-          <div className="flex items-start gap-2"><span className="text-lg">⚠️</span><div><p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Beta Feature</p><p className="text-xs text-bark-500 dark:text-sand-200">Tests use isolated data and clean up automatically. Your data is safe.</p></div></div>
+          <div className="flex items-start gap-2"><span className="text-lg">⚠️</span><div><p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Alpha Feature</p><p className="text-xs text-bark-500 dark:text-sand-200">Tests use isolated data and clean up automatically. Your data is safe.</p></div></div>
         </div>
         {running?(
           <div className="space-y-3">
@@ -1209,12 +1218,12 @@ function App(){
     const today=new Date().toDateString();
     setTodos(t=>{if(t.length>0)return t;return[
       {id:uid(),text:'Try adding a task here',quad:'ui',pri:'high',cat:'personal',done:false,poms:0},
-      {id:uid(),text:'Drag tasks between quadrants',quad:'ni',pri:'medium',cat:'learning',done:false,poms:0},
-      {id:uid(),text:'Long-press to select multiple',quad:'nn',pri:'low',cat:'personal',done:false,poms:0},
+      {id:uid(),text:'Schedule tasks with deadlines',quad:'ni',pri:'medium',cat:'learning',done:false,poms:0},
+      {id:uid(),text:'Use ☐ header checkbox for bulk select',quad:'nn',pri:'low',cat:'personal',done:false,poms:0},
     ];});
     setNotes(n=>{if(n.length>0)return n;return[
       {id:uid(),text:'Welcome! Jot quick thoughts here',date:today,crAt:now},
-      {id:uid(),text:'Tap any note to edit, hover for actions',date:today,crAt:now},
+      {id:uid(),text:'Tap any note to edit, use ⋮ for actions',date:today,crAt:now},
     ];});
     setLists(ls=>{if(ls.some(l=>l.items.length>0))return ls;return[
       {id:uid(),name:'Getting Started',items:[{id:uid(),text:'Explore each tab',done:false},{id:uid(),text:'Start a Focus session',done:false},{id:uid(),text:'Check the Review tab',done:false}]},
@@ -1285,7 +1294,7 @@ function App(){
     }else if(sec==='notes'){
       if(action==='delete'){setNotes(n=>n.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
       if(action==='strike'){setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:!x.struck}:x));showT(`${cnt} toggled`);}
-      if(action==='clarify'){const toMove=notes.filter(x=>sIds.has(x.id));setTodos(t=>[...toMove.map(x=>({id:uid(),text:x.text||x.title||x.content,quad:'nn',poms:0,done:false})),...t]);setNotes(n=>n.filter(x=>!sIds.has(x.id)));showT(`📋 ${cnt} moved to Clarify`);}
+      if(action==='clarify'){const toMove=notes.filter(x=>sIds.has(x.id));setTodos(t=>[...toMove.map(x=>({id:uid(),text:x.text||x.title||x.content,quad:'nn',poms:0,done:false})),...t]);setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x));showT(`📋 ${cnt} copied to Clarify`);}
     }
     exitSelMode();
   };
@@ -1302,7 +1311,7 @@ function App(){
   const[showNew,setShowNew]=useState(false);
   const[listMenu,setListMenu]=useState(null);
   const[taskMenu,setTaskMenu]=useState(null);
-  const[noteMenu,setNoteMenu]=useState(null); // Note for long-press context menu
+  const[noteMenu,setNoteMenu]=useState(null); // Note for 3-dot context menu
   const[linkPicker,setLinkPicker]=useState(null); // {taskId}
   const[editListId,setEditListId]=useState(null);
   const[editListName,setEditListName]=useState('');
@@ -1375,6 +1384,7 @@ function App(){
   const doneFocus=id=>{setTodos(t=>t.map(x=>x.id===id?{...x,done:true}:x));setFocus(f=>f.filter(x=>x.id!==id));setMet(p=>({...p,d:{...p.d,t:p.d.t+1},w:{...p.w,t:p.w.t+1}}));if(activeF===id)setActiveF(null);showT('🎉 Done!');};
   const doneList=(lid,iid)=>{setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.map(i=>i.id===iid?{...i,done:!i.done}:i)}:l));};
   const doneTodo=id=>{setTodos(t=>t.map(x=>x.id===id?{...x,done:true}:x));setFocus(f=>f.filter(x=>x.id!==id));setMet(p=>({...p,d:{...p.d,t:p.d.t+1},w:{...p.w,t:p.w.t+1}}));showT('✅ Done!');};
+  const undoneTodo=id=>{setTodos(t=>t.map(x=>x.id===id?{...x,done:false}:x));showT('↩️ Restored');};
   const deleteTodo=id=>{setTodos(t=>t.filter(x=>x.id!==id));showT('🗑 Deleted');};
   const linkTask=(taskId,listId)=>{setTodos(t=>t.map(x=>x.id===taskId?{...x,linkedList:listId}:x));showT('📋 Linked!');};
   const unlinkTask=(taskId)=>{setTodos(t=>t.map(x=>x.id===taskId?{...x,linkedList:undefined}:x));showT('Unlinked');};
@@ -1421,7 +1431,7 @@ function App(){
   const rFocus=()=>(
     <div className="space-y-5">
       <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
-        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">🎯 Focus</h2>
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
       </div>
       <FocusTimer 
         tSet={tSet}
@@ -1472,21 +1482,16 @@ function App(){
       <div className="space-y-4">
         <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
           <div className="flex items-center justify-between mb-3">
-            {selMode&&selSection==='lists'?<><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></>:<>
-            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
-            <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></>}
+            {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
+            <div className="flex items-center justify-center relative w-full">
+              {cl&&cl.items.length>0&&<button onClick={()=>enterSelMode('lists',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+              <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
+              <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="absolute right-0 p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+            </div></>}
           </div>
           {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')updateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="Checklist name..."/><button onClick={()=>updateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
           <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
-            let pressTimer=null;
-            const handlePress=e=>{
-              pressTimer=setTimeout(()=>{
-                const rect=e.currentTarget.getBoundingClientRect();
-                setListMenu({list:l,x:rect.left,y:rect.bottom+5});
-              },500);
-            };
-            const handleRelease=()=>{if(pressTimer)clearTimeout(pressTimer);};
-            return <button key={l.id} onClick={()=>setSelList(l.id)} onMouseDown={handlePress} onMouseUp={handleRelease} onMouseLeave={handleRelease} onTouchStart={handlePress} onTouchEnd={handleRelease} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
+            return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
           })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
         </div>
         {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
@@ -1494,25 +1499,22 @@ function App(){
         {cl&&(()=>{const lt=todos.find(t=>t.linkedList===cl.id);if(!lt)return null;const allDone=cl.items.length>0&&cl.items.every(i=>i.done);return(<div className={`p-3 rounded-xl mb-3 flex items-center justify-between ${allDone?'bg-sage-100 dark:bg-sage-400/20 border border-sage-300 dark:border-sage-400/40':'gcard'}`}><div className="flex items-center gap-2 min-w-0"><span className="text-xs">🎯</span><span className="text-sm font-medium text-bark-600 dark:text-sand-100 truncate">{lt.text}</span></div>{allDone&&!lt.done?<button onClick={()=>{doneTodo(lt.id);showT('🎉 Task completed!');}} className="px-3 py-1.5 bg-sage-400 text-white rounded-lg text-xs font-bold flex-shrink-0 ml-2">✓ Mark Done</button>:<button onClick={()=>{setTab('todos');}} className="text-xs text-ocean-400 font-medium flex-shrink-0 ml-2">View →</button>}</div>);})()}
         {secs.length>0?secs.map(s=>(
           <div key={s} className="space-y-2">
-            <h3 className="text-xs font-bold text-bark-400/50 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
+            <h3 className="text-xs font-bold text-bark-400/60 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
             {cl?.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
               const inSel=selMode&&selSection==='lists';
               const isSel=inSel&&selIds.has(item.id);
-              let lpT=null;
-              const lpS=()=>{lpT=setTimeout(()=>{if(!selMode)enterSelMode('lists',item.id);},500);};
-              const lpE=()=>{if(lpT)clearTimeout(lpT);};
               return(
-              <Swipe key={item.id} onDone={()=>doneList(cl.id,item.id)} onDelete={()=>deleteListItem(cl.id,item.id)}>
-                <div onMouseDown={lpS} onMouseUp={lpE} onMouseLeave={lpE} onTouchStart={lpS} onTouchEnd={lpE} onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)setEdit({type:'list',item,listId:cl.id});}} className={`p-4 md:p-5 flex items-start gap-3 md:gap-4 cursor-pointer group ${item.done?'opacity-50':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':''}`}>
-                  {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>:
-                  <button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-sage-300'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>}
+                <div key={item.id} className="gcard rounded-xl overflow-hidden">
+                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} className={`p-3 md:p-4 flex items-center gap-3 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
+                  {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>}
                   <div className="flex-1 min-w-0">
-                    <span className={`block font-medium sel ${item.done?'line-through text-bark-400/40':'text-bark-600 dark:text-sand-100'}`}>{item.text}</span>
-                    {item.notes&&<p className="text-xs text-bark-400/50 dark:text-sand-300/40 mt-1 truncate sel">📝 {item.notes}</p>}
+                    <span className={`block font-medium sel ${item.done?'line-through text-bark-400/60':'text-bark-700 dark:text-cream-100'}`}>{item.text}</span>
+                    {item.notes&&<p className="text-xs text-bark-500 dark:text-sand-300 mt-1 truncate sel">📝 {item.notes}</p>}
                   </div>
-                  {!inSel&&<button onClick={e=>{e.stopPropagation();deleteListItem(cl.id,item.id);}} className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-bark-400/40 hover:text-terracotta-400" aria-label="Delete item"><I.Trash s={16}/></button>}
+                  {!inSel&&<button onClick={e=>{e.stopPropagation();setEdit({type:'list',item,listId:cl.id});}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
                 </div>
-              </Swipe>
+              </div>
             );})}
           </div>
         )):<Empty.List/>}
@@ -1541,31 +1543,28 @@ function App(){
                 {vis.map(t=>{
                   const inSel=selMode&&selSection==='todos';
                   const isSel=inSel&&selIds.has(t.id);
-                  let lpTimer=null;
-                  const lpStart=()=>{lpTimer=setTimeout(()=>{if(selMode){enterSelMode('todos',t.id);}else{setTaskMenu(t);}},500);};
-                  const lpEnd=()=>{if(lpTimer)clearTimeout(lpTimer);};
                   return(
-                  <Swipe key={t.id} onDone={()=>doneTodo(t.id)} onDelete={()=>deleteTodo(t.id)}>
-                    <div draggable={!t.done&&!selMode} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onMouseDown={lpStart} onMouseUp={lpEnd} onMouseLeave={lpEnd} onTouchStart={lpStart} onTouchEnd={lpEnd} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)setEdit({type:'todo',item:t});}} className={`p-4 md:p-5 flex items-start gap-4 transition-opacity cursor-pointer ${t.done?'opacity-60':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':''}`}>
-                      {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>:
-                      <button onClick={e=>{e.stopPropagation();doneTodo(t.id);}} className={`w-7 h-7 mt-0.5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
-                      <div className="flex-1 min-w-0 space-y-2">
+                    <div key={t.id} className="gcard rounded-xl overflow-hidden">
+                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)setEdit({type:'todo',item:t});else if(!selMode&&t.done)setTaskMenu(t);}} className={`p-3 md:p-4 flex items-center gap-3 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                      {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
+                      {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={`text-base font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-600 dark:text-sand-100'}`}>{t.text}</span>
+                          <span className={`font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
                           {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
                         </div>
                         {(t.cat||t.deadline||t.subtasks?.length>0)&&(
-                          <div className="flex items-center gap-3 flex-wrap text-xs">
-                            {t.cat&&<span className="px-2 py-1 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
-                            {t.deadline&&<span className="px-2 py-1 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
-                            {t.subtasks?.length>0&&<span className="px-2 py-1 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
+                          <div className="flex items-center gap-2 flex-wrap text-xs mt-1">
+                            {t.cat&&<span className="px-2 py-0.5 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
+                            {t.deadline&&<span className="px-2 py-0.5 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
+                            {t.subtasks?.length>0&&<span className="px-2 py-0.5 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
                           </div>
                         )}
-                        {t.poms>0&&<div className="flex items-center gap-1.5"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span><span className="text-xs text-bark-400/50 dark:text-sand-300/40">pomodoro{t.poms>1?'s':''}</span></div>}
+                        {t.poms>0&&<div className="flex items-center gap-1.5 mt-1"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span></div>}
                       </div>
-                      {t.done&&<button onClick={e=>{e.stopPropagation();deleteTodo(t.id);}} className="p-2 rounded-lg hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 text-terracotta-400 transition-colors" aria-label="Delete task"><I.Trash s={18}/></button>}
+                      {!inSel&&<button onClick={e=>{e.stopPropagation();setTaskMenu(t);}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
                     </div>
-                  </Swipe>
+                  </div>
                 );})}
                 {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
               </div>
@@ -1576,10 +1575,13 @@ function App(){
     });
     return(
       <div className="space-y-4">
-        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4 flex items-center justify-between">
-          {selMode&&selSection==='todos'?<><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></>:<>
-          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Clarify</h2>
-          <div className="flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div></>}
+        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+          {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
+          <div className="flex items-center justify-center relative">
+            {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Clarify</h2>
+            <div className="absolute right-0 flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div>
+          </div>}
         </div>
         <div className={desk?'md-grid':'space-y-3'}>{content}</div>
         <QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/>
@@ -1632,7 +1634,7 @@ function App(){
   
   const deleteBullet=(id)=>setNotes(notes.filter(n=>n.id!==id));
   const updateBullet=(id,text)=>{if(!text.trim()){deleteBullet(id);}else{setNotes(notes.map(n=>n.id===id?{...n,text:text.trim()}:n));}setEditingNote(null);};
-  // Auto-clear struck notes older than 30 days (v14-Beta)
+  // Auto-clear struck notes older than 30 days (v14.1-alpha)
   React.useEffect(()=>{
     const thirtyDays=30*24*60*60*1000;
     const now=Date.now();
@@ -1641,17 +1643,17 @@ function App(){
   },[notes.length]);
 
   const toggleStrike=(id)=>setNotes(notes.map(n=>n.id===id?{...n,struck:!n.struck,struckAt:!n.struck?Date.now():null}:n));
-  const noteToTodo=(note)=>{setTodos(t=>[{id:uid(),text:note.text||note.title||note.content,quad:'nn',poms:0,done:false},...t]);deleteBullet(note.id);showT('📋 Moved to Clarify');};
+  const noteToTodo=(note)=>{setTodos(t=>[{id:uid(),text:note.text||note.title||note.content,quad:'nn',poms:0,done:false},...t]);setNotes(notes.map(n=>n.id===note.id?{...n,struck:true,struckAt:Date.now()}:n));showT('📋 Copied to Clarify + struck');};
   
   const rNotes=()=>{
     const inSel=selMode&&selSection==='notes';
     return(
     <div className="space-y-4">
       <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
-        {inSel?<div className="flex items-center justify-between"><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2><button onClick={exitSelMode} className="px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button></div>
-        :<div className="flex items-center justify-between">
+        {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
+        :<div className="flex items-center justify-center relative">
+          {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
           <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Capture</h2>
-          {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
         </div>}
       </div>
       
@@ -1677,25 +1679,24 @@ function App(){
       {notesByDate.length===0?<Empty.Notes/>:notesByDate.map(([date,dayNotes])=>(
         <div key={date} className="space-y-2">
           <div className="flex items-center gap-2 px-1">
-            <span className="text-xs font-bold text-bark-400/60 dark:text-sand-300/60 uppercase tracking-wider">{formatDateHeader(date)}</span>
+            <span className="text-sm font-bold text-bark-600/70 dark:text-sand-200/70 uppercase tracking-wider">{formatDateHeader(date)}</span>
             <div className="flex-1 h-px bg-sand-200 dark:bg-bark-500/50"/>
           </div>
           <div className="gcard rounded-2xl p-3 space-y-1">
             {dayNotes.map(n=>{
               const isSel=inSel&&selIds.has(n.id);
-              let lpT=null;
-              const lpS=()=>{lpT=setTimeout(()=>{if(!selMode)setNoteMenu(n);},500);};
-              const lpE=()=>{if(lpT)clearTimeout(lpT);};
+              let touchData={x:0,y:0,moved:false,menuTap:false};
+              const onTS=(e)=>{const t=e.touches?e.touches[0]:null;if(t)touchData={x:t.clientX,y:t.clientY,moved:false,menuTap:false};};
+              const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
+              const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
               return(
-                <div key={n.id} onMouseDown={!inSel?lpS:undefined} onMouseUp={!inSel?lpE:undefined} onMouseLeave={!inSel?lpE:undefined} onTouchStart={!inSel?lpS:undefined} onTouchEnd={!inSel?lpE:undefined} onClick={()=>{if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}} className={`flex items-start gap-2 py-1.5 px-1 rounded-lg group cursor-pointer ${isSel?'bg-sage-100 dark:bg-sage-400/20':''}`}>
-                  {inSel?<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>:<span className={`mt-0.5 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
+                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
+                  {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
                   {editingNote&&editingNote.id===n.id?
-                    <input autoFocus type="text" value={editingNote.text} onChange={e=>setEditingNote({...editingNote,text:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();updateBullet(n.id,editingNote.text);}if(e.key==='Escape')setEditingNote(null);}} onBlur={()=>updateBullet(n.id,editingNote.text)} onClick={e=>e.stopPropagation()} className="flex-1 bg-transparent focus:outline-none text-bark-600 dark:text-sand-100 border-b border-sage-400"/>
-                  :<span className={`flex-1 sel leading-relaxed ${n.struck?'line-through text-bark-400/40 dark:text-sand-300/40':'text-bark-600 dark:text-sand-100'}`}>{n.text||n.title||n.content}</span>}
-                  {!inSel&&!editingNote&&<div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={e=>{e.stopPropagation();toggleStrike(n.id);}} className={`p-1 font-bold text-xs ${n.struck?'text-sage-500':'text-bark-400/50'} hover:text-sage-500`} title="Strikethrough" aria-label="Toggle strikethrough"><span className="line-through">S</span></button>
-                    <button onClick={e=>{e.stopPropagation();noteToTodo(n);}} className="p-1 text-ocean-400/60 hover:text-ocean-500" title="Move to Clarify" aria-label="Move to Clarify"><I.Check s={14}/></button>
-                  </div>}
+                    <input autoFocus type="text" value={editingNote.text} onChange={e=>setEditingNote({...editingNote,text:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();updateBullet(n.id,editingNote.text);}if(e.key==='Escape')setEditingNote(null);}} onBlur={()=>updateBullet(n.id,editingNote.text)} onClick={e=>e.stopPropagation()} className="flex-1 bg-transparent focus:outline-none text-bark-700 dark:text-sand-100 border-b-2 border-sage-400 font-medium"/>
+                  :<span className={`flex-1 sel leading-relaxed ${n.struck?'line-through text-bark-400/50 dark:text-sand-300/40':'text-bark-700 dark:text-cream-100 font-medium'}`}>{n.text||n.title||n.content}</span>}
+                  {!inSel&&!editingNote&&<button data-menu-btn onTouchStart={e=>{touchData.menuTap=true;}} onClick={e=>{e.stopPropagation();e.preventDefault();setNoteMenu(n);}} className="p-2 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
                 </div>
               );
             })}
@@ -1738,7 +1739,7 @@ function App(){
     return(
       <div className="space-y-4">
         <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📊 Review</h2>
+          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
         </div>
         <div className="gcard rounded-2xl p-4">
           <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
@@ -1797,7 +1798,7 @@ function App(){
                   <span className="text-2xl">📝</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">1. Capture</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Get everything out of your head. Jot quick bullet notes — ideas, tasks, thoughts, anything. Don't organize yet, just capture. Tap to edit, long-press for actions (move to Clarify, strikethrough, delete), or use the checkbox for bulk operations.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Get everything out of your head. Jot quick bullet notes — ideas, tasks, thoughts, anything. Don't organize yet, just capture. Tap to edit inline, use ⋮ menu for actions (promote to Clarify, strikethrough, delete), or use the ☐ header checkbox for bulk operations.</div>
                   </div>
                 </div>
               </div>
@@ -1824,7 +1825,7 @@ function App(){
                   <span className="text-2xl">✅</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">4. Confirm</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to break tasks into steps. Link a checklist to a Clarify task via long-press → Link Checklist. When all items are checked, you'll be prompted to mark the task done. Sections help organize items by context.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to break tasks into steps. Link a checklist to a Clarify task via ⋮ menu → Link Checklist. When all items are checked, you'll be prompted to mark the task done. Tap items to toggle done, use ⋮ to edit or delete, and ☐ header checkbox for bulk operations.</div>
                   </div>
                 </div>
               </div>
@@ -2032,7 +2033,7 @@ function App(){
     <div className="min-h-screen">
       <div className="glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
         <div className="w-10 md:w-12"/>
-        <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-ocean-400 bg-ocean-100 dark:bg-ocean-400/20 px-2 py-0.5 rounded-full ml-1">β</span></h1>
+        <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
         <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
       </div>
       <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-2xl mx-auto">
@@ -2057,10 +2058,10 @@ function App(){
       {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
-      {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)}/>}
+      {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
-      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
-      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onMoveToClarify={()=>noteToTodo(noteMenu)} onDelete={()=>deleteBullet(noteMenu.id)}/>}
+      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
+      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onDelete={()=>deleteBullet(noteMenu.id)}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>deleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
