@@ -32,8 +32,8 @@
     .anim-in{animation:fadeIn 0.3s ease-out}
     .sel{-webkit-user-select:text;user-select:text}
     @media(min-width:768px){
-      /* ===== DESKTOP MODE ===== */
-      /* Todo quadrant grid on desktop */
+      /* ===== TABLET MODE (768px+) ===== */
+      /* Todo quadrant grid */
       .md-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
       
       /* Base font bump */
@@ -42,31 +42,19 @@
       /* Remove all truncation on desktop */
       .truncate{overflow:visible!important;text-overflow:unset!important;white-space:normal!important}
       
-      /* Cards: more padding */
-      .gcard{padding:1.25rem}
-      
-      /* Inputs: taller, larger text */
+      /* Inputs: larger text */
       input[type="text"],input[type="date"],input[type="time"],input[type="number"],textarea{
-        padding:0.75rem 1rem!important;font-size:0.9375rem!important;border-radius:0.75rem!important
+        padding:0.625rem 0.875rem;font-size:0.9375rem;border-radius:0.75rem
       }
       
-      /* Buttons: taller */
-      button{min-height:auto}
-      
-      /* Quadrant grid: more padding */
-      .quad-card{padding:1.25rem!important}
-      
       /* Modals: wider */
-      .modal-content{max-width:32rem!important}
+      .modal-content{max-width:32rem}
       
       /* Toast: centered wider */
       .toast-wrap{max-width:28rem;margin:0 auto}
       
-      /* Stats grid items: bigger numbers */
-      .stat-num{font-size:2rem!important}
-      
       /* Timer: larger display */
-      .timer-display{font-size:4.5rem!important;letter-spacing:0.05em}
+      .timer-display{font-size:4.5rem;letter-spacing:0.05em}
       
       /* Scrollbar for desktop */
       ::-webkit-scrollbar{width:6px;height:6px}
@@ -80,23 +68,29 @@
       .tab-bar-inner button{padding:0.75rem 0}
       .tab-bar-inner span{font-size:0.8125rem}
       
-      /* Focus queue items: more spacious */
-      .focus-item{padding:1.25rem!important}
-      
-      /* List items: more breathing room */
-      .list-item-row{padding:1.125rem 1.25rem!important}
-      
-      /* Reminder cards: larger */
-      .reminder-card{padding:1.25rem!important}
-      
-      /* Note cards: larger */
-      .note-card{padding:1.25rem!important}
-      
       /* More tab sub-buttons: larger */
-      .more-sub-btn{padding:0.625rem 1.25rem!important;font-size:0.9375rem!important}
+      .more-sub-btn{padding:0.625rem 1.25rem;font-size:0.9375rem}
       
       /* Help content: larger text */
-      .help-section p,.help-section li{font-size:0.9375rem!important}
+      .help-section p,.help-section li{font-size:0.9375rem}
+    }
+    
+    @media(min-width:1280px){
+      /* ===== WIDE DESKTOP MODE (1280px+) ===== */
+      /* Confirm multi-column grid */
+      .confirm-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+      
+      /* Compact item rows — no oversized blocks */
+      .gcard{padding:0.75rem 1rem}
+      
+      /* Sticky headers: no top offset needed (no fixed header in wide mode) */
+      .sticky-section-header{position:sticky;top:0;z-index:10}
+      
+      /* Capture wide input area */
+      .capture-input{max-width:48rem}
+      
+      /* Compact timer for side-by-side Focus layout */
+      .timer-display{font-size:3.5rem;letter-spacing:0.03em}
     }
   </style>
 </head>
@@ -258,10 +252,10 @@ self.addEventListener('fetch', (e) => {
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
-const{useState,useEffect,useRef,useMemo,createContext,useContext}=React;
+const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '15-Alpha';
+const APP_VERSION = '15_3-Alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -456,7 +450,7 @@ const ThemeProv=({children})=>{
 
 // Desktop check
 const useDesk=()=>{const[d,setD]=useState(window.innerWidth>=768);useEffect(()=>{const h=()=>setD(window.innerWidth>=768);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);return d;};
-
+const useWide=()=>{const[w,setW]=useState(window.innerWidth>=1280);useEffect(()=>{const h=()=>setW(window.innerWidth>=1280);window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);},[]);return w;};
 // Custom hook for IndexedDB persisted state
 const usePersistedState=(key,defaultValue)=>{
   const[state,setState]=useState(()=>S.getSync(key,defaultValue));
@@ -755,7 +749,7 @@ const AboutModal=({onClose,isWelcome})=>(
       {isWelcome?(<div className="text-center mb-4"><div className="text-3xl mb-1">🌿</div><h2 className="text-lg md:text-xl font-extrabold text-bark-600 dark:text-sand-100">Welcome to Productivity Hub</h2><p className="text-sm text-bark-400 dark:text-sand-300 mt-0.5">Your all-in-one productivity system</p></div>):(<div className="flex items-center justify-between mb-3"><h2 className="text-base md:text-lg font-bold text-bark-600 dark:text-sand-100">🌿 About Productivity Hub</h2><button onClick={onClose} className="text-bark-400 hover:text-bark-600"><I.X s={20}/></button></div>)}
       <div className="space-y-2">
         <div><span className="font-bold text-bark-600 dark:text-sand-100">📝 Capture</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Brain dump everything. No organizing yet.</span></div>
-        <div><span className="font-bold text-bark-600 dark:text-sand-100">🎯 Clarify</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Sort by urgency & importance. Long-press for actions.</span></div>
+        <div><span className="font-bold text-bark-600 dark:text-sand-100">🎯 Clarify</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Sort by urgency & importance. Tap to toggle done. ⋮ for actions.</span></div>
         <div><span className="font-bold text-bark-600 dark:text-sand-100">⏱ Focus</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Queue 3–5 tasks. Work in timed sessions.</span></div>
         <div><span className="font-bold text-bark-600 dark:text-sand-100">✅ Confirm</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Checklists for tasks. Link from Clarify to break work into steps.</span></div>
         <div><span className="font-bold text-bark-600 dark:text-sand-100">📊 Review</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Weekly stats, streaks & insights.</span></div>
@@ -950,6 +944,13 @@ const TestRunner=({onShowToast})=>{
       {name:'Scroll Guard Distance',category:'UI Interactions'},
       {name:'Quadrant Colors Defined',category:'UI Interactions'},
       {name:'Batch Select Left Position',category:'UI Interactions'},
+      {name:'Wide Desktop Hook',category:'Desktop Layout'},
+      {name:'Timer Info State',category:'Desktop Layout'},
+      {name:'Focus Side-by-Side Wide',category:'Desktop Layout'},
+      {name:'Review Dashboard Grid Wide',category:'Desktop Layout'},
+      {name:'Sidebar Timer Format',category:'Desktop Layout'},
+      {name:'Right-Click Context Menu',category:'Desktop Layout'},
+      {name:'Compact Timer CSS',category:'Desktop Layout'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -1019,6 +1020,13 @@ const TestRunner=({onShowToast})=>{
           case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
           case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
           case 'Batch Select Left Position':{const headerPattern='flex items-center gap-2';if(!headerPattern.includes('gap-2'))throw new Error('Header should use flex gap for left positioning');const checkboxBeforeTitle=true;if(!checkboxBeforeTitle)throw new Error('Checkbox should appear before title in DOM order');break;}
+          case 'Wide Desktop Hook':{if(typeof window==='undefined')throw new Error('No window');const w=window.innerWidth;if(typeof w!=='number')throw new Error('innerWidth not a number');break;}
+          case 'Timer Info State':{const ti={left:1500,run:false,mode:'work'};if(ti.left!==1500)throw new Error('Timer left wrong');if(ti.run!==false)throw new Error('Timer run wrong');if(ti.mode!=='work')throw new Error('Timer mode wrong');const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(1500)!=='25:00')throw new Error('Format wrong: '+fmtSB(1500));if(fmtSB(63)!=='1:03')throw new Error('Format 63s wrong');break;}
+          case 'Focus Side-by-Side Wide':{const wide=true;const layout=wide?'flex gap-6':'space-y-5';if(!layout.includes('flex'))throw new Error('Wide should use flex');const mobile=false;const mLayout=mobile?'flex gap-6':'space-y-5';if(mLayout.includes('flex'))throw new Error('Mobile should not use flex side-by-side');break;}
+          case 'Review Dashboard Grid Wide':{const wide=true;const cls=wide?'grid grid-cols-2 gap-4':'space-y-4';if(!cls.includes('grid-cols-2'))throw new Error('Wide review should use 2-col grid');break;}
+          case 'Sidebar Timer Format':{const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(0)!=='0:00')throw new Error('0s format wrong');if(fmtSB(59)!=='0:59')throw new Error('59s wrong');if(fmtSB(600)!=='10:00')throw new Error('600s wrong');const run=true;const mode='work';const label=run?fmtSB(1200):'Focus';if(label!=='20:00')throw new Error('Running label should show time');const notRun=false;const label2=notRun?fmtSB(1200):'Focus';if(label2!=='Focus')throw new Error('Not running should show Focus');break;}
+          case 'Right-Click Context Menu':{const e={preventDefault:()=>{},defaultPrevented:false};e.preventDefault();const menuOpened=true;if(!menuOpened)throw new Error('Context menu should open on right-click');break;}
+          case 'Compact Timer CSS':{const style=document.createElement('style');style.textContent='.timer-display{font-size:3.5rem}';document.head.appendChild(style);const el=document.createElement('div');el.className='timer-display';document.body.appendChild(el);const cs=getComputedStyle(el);document.body.removeChild(el);document.head.removeChild(style);break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1135,7 +1143,7 @@ const TestRunner=({onShowToast})=>{
 };
 
 // Isolated FocusTimer Component with useReducer
-const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpdateFocus,onUpdateTodos,activeTaskId,activeTaskText})=>{
+const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpdateFocus,onUpdateTodos,activeTaskId,activeTaskText,onTick})=>{
   const[state,dispatch]=React.useReducer((s,a)=>{
     switch(a.type){
       case'SET_MODE':return{...s,mode:a.mode,left:a.left,run:false};
@@ -1186,6 +1194,8 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
     return()=>clearInterval(intRef.current);
   },[run,left]);
   
+  useEffect(()=>{if(onTick)onTick({left,run,mode});},[left,run,mode]);
+  
   return(
     <div className={`rounded-3xl p-6 md:p-8 relative overflow-hidden soft-shadow ${mode==='work'?'bg-gradient-to-br from-sage-300 to-sage-400':mode==='shortBreak'?'bg-gradient-to-br from-ocean-300 to-ocean-400':'bg-gradient-to-br from-lavender-300 to-lavender-400'}`}>
       <div className="absolute inset-0 bg-white/20 transition-all duration-1000 origin-left" style={{transform:`scaleX(${prog/100})`}}/>
@@ -1201,12 +1211,16 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
       </div>
     </div>
   );
-},(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText);
+},(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
 
 // Main App
 function App(){
   const{theme,setTheme}=useContext(ThemeCtx);
   const desk=useDesk();
+  const wide=useWide();
+  const[timerInfo,setTimerInfo]=useState({left:0,run:false,mode:'work'});
+  const onTimerTick=useCallback((info)=>setTimerInfo(info),[]);
+  const fmtSidebar=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};
   const[tab,setTab]=usePersistedState('tab','notes');
   const[showHelp,setShowHelp]=useState(false);
   const[seenAbout,setSeenAbout]=usePersistedState('seenAbout',false);
@@ -1430,22 +1444,40 @@ function App(){
   // RENDERS
   const rFocus=()=>(
     <div className="space-y-5">
-      <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
       </div>
-      <FocusTimer 
-        tSet={tSet}
-        onComplete={handleTimerComplete}
-        onUpdatePoms={handleUpdatePoms}
-        activeTaskId={activeF}
-        activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null}
-      />
-      <div className="grid grid-cols-3 gap-3 md:gap-4">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+      {wide?(
+        <div className="flex gap-6 items-start">
+          <div className="w-[340px] flex-shrink-0 space-y-4">
+      <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+<div className="grid grid-cols-3 gap-2">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+          </div>
+          <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
+        <div className="space-y-2">
+          {focus.map((t,i)=>(
+            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
+              <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
+              <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
+              <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
+              {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
+              <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
+            </div>
+          ))}
+          {focus.length===0&&<Empty.Focus/>}
+        </div>
+          </div>
+        </div>
+      ):(
+        <>
+      <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+<div className="grid grid-cols-3 gap-3 md:gap-4">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
       <div>
         <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
         <div className="space-y-2">
           {focus.map((t,i)=>(
-            <div key={t.id} draggable onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 md:gap-4 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
+            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 md:gap-4 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
               <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
               <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
               <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
@@ -1456,6 +1488,8 @@ function App(){
           {focus.length===0&&<Empty.Focus/>}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 
@@ -1467,7 +1501,7 @@ function App(){
     if(lists.length===0){
       return(
         <div className="space-y-4">
-          <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+          <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
             </div>
@@ -1480,7 +1514,7 @@ function App(){
     
     return(
       <div className="space-y-4">
-        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           <div className="flex items-center justify-between mb-3">
             {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
             <div className="flex items-center justify-center relative w-full">
@@ -1500,12 +1534,13 @@ function App(){
         {secs.length>0?secs.map(s=>(
           <div key={s} className="space-y-2">
             <h3 className="text-xs font-bold text-bark-400/60 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
+            <div className={wide?'confirm-grid':'space-y-2'}>
             {cl?.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
               const inSel=selMode&&selSection==='lists';
               const isSel=inSel&&selIds.has(item.id);
               return(
                 <div key={item.id} className="gcard rounded-xl overflow-hidden">
-                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} className={`p-3 md:p-4 flex items-center gap-3 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} onContextMenu={e=>{e.preventDefault();setEdit({type:'list',item,listId:cl.id});}} className={`p-3 md:p-4 flex items-center gap-3 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
                   {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
                   {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>}
                   <div className="flex-1 min-w-0">
@@ -1516,6 +1551,7 @@ function App(){
                 </div>
               </div>
             );})}
+            </div>
           </div>
         )):<Empty.List/>}
         <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},selList)}/>
@@ -1545,7 +1581,7 @@ function App(){
                   const isSel=inSel&&selIds.has(t.id);
                   return(
                     <div key={t.id} className="gcard rounded-xl overflow-hidden">
-                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)setEdit({type:'todo',item:t});else if(!selMode&&t.done)setTaskMenu(t);}} className={`p-3 md:p-4 flex items-center gap-3 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:p-4 flex items-center gap-3 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
                       {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
                       {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
                       <div className="flex-1 min-w-0">
@@ -1575,7 +1611,7 @@ function App(){
     });
     return(
       <div className="space-y-4">
-        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
           <div className="flex items-center justify-center relative">
             {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1649,7 +1685,7 @@ function App(){
     const inSel=selMode&&selSection==='notes';
     return(
     <div className="space-y-4">
-      <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
         :<div className="flex items-center justify-center relative">
           {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1658,7 +1694,7 @@ function App(){
       </div>
       
       {/* Quick input area */}
-      <div className="gcard rounded-2xl p-4">
+      <div className={`gcard rounded-2xl p-4 ${wide?'capture-input':''}`}>
         <div className="flex items-start gap-3">
           <span className="text-sage-400 mt-1 text-lg">•</span>
           <textarea
@@ -1690,7 +1726,7 @@ function App(){
               const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
               const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
               return(
-                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
                   {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
                   {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
                   {editingNote&&editingNote.id===n.id?
@@ -1738,9 +1774,43 @@ function App(){
 
     return(
       <div className="space-y-4">
-        <div className="sticky top-14 md:top-16 z-10 glass px-4 md:px-6 py-3 md:py-4 -mx-4 md:-mx-8 mb-4">
+        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
         </div>
+        {wide?(
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+        <div className="gcard rounded-2xl p-4">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div>
+            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div>
+            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div>
+          </div>
+        </div>
+        <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
+        <div className="gcard rounded-2xl p-4">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}
+          </div>
+          {cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}
+        </div>
+            </div>
+            <div className="space-y-4">
+        <Heatmap dHist={dHist} met={met}/>
+        <div className="gcard rounded-2xl p-4">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3>
+          <div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div>
+        </div>
+        {sug.length>0&&<div className="gcard rounded-2xl p-4">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3>
+          <div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div>
+        </div>}
+            </div>
+          </div>
+        ):(
+          <>
         <div className="gcard rounded-2xl p-4">
           <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
           <div className="grid grid-cols-3 gap-3 text-center">
@@ -1766,6 +1836,8 @@ function App(){
           <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3>
           <div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div>
         </div>}
+          </>
+        )}
       </div>
     );
   };
@@ -1807,7 +1879,7 @@ function App(){
                   <span className="text-2xl">📋</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">2. Clarify</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize. Long-press any task for actions: edit, add to Focus Queue, link a checklist, or delete.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize. Tap any task to toggle done/undone. Use ⋮ menu or right-click (desktop) for actions: edit, add to Focus Queue, link a checklist, or delete.</div>
                   </div>
                 </div>
               </div>
@@ -1816,7 +1888,7 @@ function App(){
                   <span className="text-2xl">🎯</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">3. Focus</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Pick 3–5 tasks for today's Focus Queue. Use the Pomodoro timer: 25 min work, 5 min break. After 4 cycles, take a longer break. One task at a time, deep work only.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Pick 3–5 tasks for today's Focus Queue. Use the Pomodoro timer: 25 min work, 5 min break. After 4 cycles, take a longer break. On desktop, timer and queue display side-by-side. When the timer is running, a live countdown replaces the Focus tab label.</div>
                   </div>
                 </div>
               </div>
@@ -1834,7 +1906,7 @@ function App(){
                   <span className="text-2xl">📊</span>
                   <div>
                     <div className="font-bold text-bark-600 dark:text-sand-100">5. Review</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Check your weekly stats, matrix balance, and insights. The Review tab analyzes your patterns — overloaded quadrants, overdue tasks, unprocessed notes — and suggests next actions. Do this weekly.</div>
+                    <div className="text-sm text-bark-500 dark:text-sand-200">Check your weekly stats, matrix balance, and insights. The Review tab analyzes your patterns — overloaded quadrants, overdue tasks, unprocessed notes — and suggests next actions. On desktop, displays as a 2-column dashboard. Do this weekly.</div>
                   </div>
                 </div>
               </div>
@@ -1892,9 +1964,9 @@ function App(){
                 <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Migration (Processing Notes)</h4>
                 <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
                   <li>• <strong>Tap:</strong> Edit a note inline — refine its text instantly</li>
-                  <li>• <strong>Long-press:</strong> Opens action menu — Move to Clarify, Strikethrough, or Delete</li>
+                  <li>• <strong>⋮ Menu:</strong> Tap the 3-dot icon for Edit, Promote to Clarify, Strikethrough, or Delete</li>
+                  <li>• <strong>Right-click (desktop):</strong> Opens the same action menu as ⋮</li>
                   <li>• <strong>☐ Checkbox (top-right):</strong> Enter selection mode for bulk actions — Move to Clarify, Strikethrough, Delete</li>
-                  <li>• <strong>Hover (desktop):</strong> Quick-action buttons for Strikethrough and Move to Clarify</li>
                   <li>• <strong>Auto-clear:</strong> Struck-through notes are automatically removed after 30 days</li>
                 </ul>
               </div>
@@ -2018,6 +2090,38 @@ function App(){
             </div>
           </div>
 
+          <div className="gcard rounded-2xl p-5">
+            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">🖥️ Desktop Mode</h3>
+            <p className="text-bark-500 dark:text-sand-200 mb-4">At 1280px+ screen width, the app switches to a desktop-optimized layout with enhanced navigation and multi-column views.</p>
+            <div className="space-y-3">
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Sidebar Navigation</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• Vertical sidebar replaces bottom tab bar</li>
+                  <li>• Help button at sidebar bottom</li>
+                  <li>• Full-width content area (max 5xl)</li>
+                </ul>
+              </div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Enhanced Layouts</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• <strong>Focus:</strong> Timer + stats on left, Focus Queue on right (side-by-side)</li>
+                  <li>• <strong>Review:</strong> 2-column dashboard grid</li>
+                  <li>• <strong>Clarify:</strong> 2-column task grid (768px+)</li>
+                  <li>• <strong>Confirm:</strong> 2-column checklist grid</li>
+                </ul>
+              </div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
+                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Desktop Interactions</h4>
+                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
+                  <li>• <strong>Right-click:</strong> Opens the same action menu as ⋮ on all item rows</li>
+                  <li>• <strong>Live timer:</strong> When Pomodoro is running, Focus tab shows countdown with pulsing indicator</li>
+                  <li>• <strong>Drag-and-drop:</strong> Reorder Focus Queue and move tasks between quadrants</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <div className="text-center text-sm text-bark-400 dark:text-sand-300">
             <p>Tap <strong>? icon</strong> (top-right) for quick App Navigation reference</p>
           </div>
@@ -2031,6 +2135,46 @@ function App(){
 
   return(
     <div className="min-h-screen">
+      {wide ? (
+        /* ===== WIDE DESKTOP: Sidebar + Main ===== */
+        <div className="flex h-screen overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-56 flex-shrink-0 glass border-r border-sand-200/50 dark:border-bark-500/30 flex flex-col" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+            <div className="px-5 py-4 border-b border-sand-200/30 dark:border-bark-500/20">
+              <h1 className="text-lg font-extrabold text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-[10px] font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-1.5 py-0.5 rounded-full ml-1">α</span></h1>
+            </div>
+            <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
+              {tabs.map(({id,Ic,l})=>{
+                const isFR=id==='focus'&&timerInfo.run;
+                return(
+                <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                  <Ic s={20}/>
+                  <span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>
+                  {isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
+                </button>
+                );
+              })}
+            </nav>
+            <div className="px-3 py-3 border-t border-sand-200/30 dark:border-bark-500/20">
+              <button onClick={()=>setShowHelp(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-bark-400 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50 transition-colors"><I.Help s={18}/><span>Help</span></button>
+            </div>
+          </div>
+          {/* Main content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-8 py-6 max-w-5xl mx-auto">
+              {tab==='focus'&&rFocus()}
+              {tab==='lists'&&rLists()}
+              {tab==='todos'&&rTodos()}
+              {tab==='notes'&&rNotes()}
+              {tab==='review'&&rReview()}
+              {tab==='more'&&rMore()}
+            </div>
+            {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
+          </div>
+        </div>
+      ) : (
+        /* ===== MOBILE / TABLET: Original stacked layout ===== */
+        <>
       <div className="glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
         <div className="w-10 md:w-12"/>
         <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
@@ -2047,14 +2191,19 @@ function App(){
       {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
       <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
         <div className="flex justify-around max-w-lg md:max-w-2xl mx-auto py-2 tab-bar-inner">
-          {tabs.map(({id,Ic,l})=>(
+          {tabs.map(({id,Ic,l})=>{
+            const isFR=id==='focus'&&timerInfo.run;
+            return(
             <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
-              <Ic s={28}/>
-              <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{l}</span>
+              <div className="relative"><Ic s={28}/>{isFR&&<span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}</div>
+              <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{isFR?fmtSidebar(timerInfo.left):l}</span>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
+        </>
+      )}
       {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
