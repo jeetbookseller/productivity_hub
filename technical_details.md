@@ -317,6 +317,12 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 
 ## 🔧 Technical Stack
 
+### Emoji Encoding
+- **Original issue:** File was double-encoded (UTF-8 bytes misread as cp1252, then re-saved as UTF-8), producing garbled sequences like `ðŸ"²` instead of `📲`
+- **Fix applied in v15_4:** Python script using `char_to_byte()` with cp1252 reverse mapping to recover original UTF-8 bytes, then decode properly
+- **Rule for future edits:** When editing via Python `str_replace` or file writes, always read/write with `encoding='utf-8'` and use proper Unicode emoji characters directly (e.g. `📲`, `🍎`, `→`, `•`). Never mix encoding methods.
+- **If emojis appear garbled again:** Run the cp1252→UTF-8 reversal fix (see v15_4 development notes). The telltale sign is `ð` (U+00F0) appearing where emojis should be.
+
 ### Core Technologies
 - React 18 (production CDN), Tailwind CSS (CDN), Babel (in-browser), IndexedDB, Single-file HTML
 
