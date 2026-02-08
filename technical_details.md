@@ -406,4 +406,64 @@ Removed: arc, reminders, Swipe component
 
 ---
 
+## 🔧 v17 Refactor Plan — Simplification & UI Smoothness
+
+**Goal:** Reduce codebase complexity, eliminate duplication, improve maintainability and UI smoothness while keeping the exact same feature set.
+
+### Priority 1: Extract App into Sub-Components + useAppData Hook (~300 lines net savings)
+- **Problem:** App component (~900 lines) contains ALL state, handlers, and render functions
+- **Solution:** Split into: `FocusSection`, `ClarifySection`, `ConfirmSection`, `CaptureSection`, `ReviewSection`, `SettingsSection`
+- Extract shared state into `useAppData()` custom hook (todos, lists, notes, focus, metrics, selection)
+- Pass shared state via context, eliminating prop-drilling
+- Enables `React.memo` on each section → dramatically fewer re-renders
+
+### Priority 2: Eliminate Desktop/Mobile JSX Duplication (~250 lines saved)
+- **Problem:** `rFocus`, `rReview`, `rMore/settings`, main layout all render TWO complete JSX branches (desk vs mobile)
+- **Worst offender:** Settings is fully copy-pasted for desktop vs mobile (lines 1872-1892)
+- **Solution:** Render once, use responsive Tailwind classes (`flex flex-col lg:flex-row`, `grid grid-cols-1 lg:grid-cols-2`)
+- Only JS-conditional where truly needed (sidebar vs tab-bar)
+
+### Priority 3: Unified ContextMenu + ConfirmDialog (~120 lines saved)
+- **Problem:** 3 near-identical menu components (`TaskMenu`, `NoteMenu`, `ListMenu`) + 2 confirmation modals (`DeleteConfirmation`, `BulkDeleteConfirm`)
+- **Solution:** Single `<ContextMenu items={[{icon, label, onClick, destructive?}]} title onClose />` 
+- Single `<ConfirmDialog title message onConfirm onCancel variant="danger"|"info" />`
+
+### Priority 4: StickyHeader + CSS Class Abstraction (~80 lines saved)
+- **Problem:** Every section repeats: `<div className={\`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4\`}>`
+- Repeated class combos: `text-bark-600 dark:text-sand-100`, `bg-sand-200 dark:bg-bark-600`, etc.
+- **Solution:** `<StickyHeader>` component + Tailwind `@apply` semantic classes (`.text-primary`, `.text-secondary`, `.btn-primary`, `.btn-ghost`)
+
+### Priority 5: UI Smoothness Enhancements (adds ~30 lines)
+- CSS transitions on tab content switches (`opacity 150ms`)
+- `@keyframes slideIn` for list item additions/removals
+- Exit animations for modals (currently only `anim-in` for enter)
+- Debounce `usePersistedState` IndexedDB writes (300ms) — currently writes on every keystroke
+- Virtual scrolling consideration for 100+ item lists
+
+### Priority 6: Lazy-Load Test Suite (restructure, ~0 net)
+- **Problem:** 200-line test suite evaluates on page load even when never used
+- **Solution:** Wrap in function, only evaluate when Test tab is opened
+- Alternative: simplify test cases (many are verbose smoke tests that could be 1/3 the size)
+
+### Implementation Strategy
+- **v17.0:** Priorities 1-3 (component extraction + dedup + unified menus) — biggest structural change
+- **v17.1:** Priorities 4-6 (polish, smoothness, cleanup) — refinement pass
+- Use incremental str_replace edits as usual
+- Verify all 55 tests still pass after each step
+
+### Summary Table
+
+| # | Change | Lines Saved | UI Impact | Difficulty |
+|---|--------|-------------|-----------|------------|
+| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium |
+| 2 | CSS-only responsive (kill JSX duplication) | ~250 | High (smoother, consistent) | Medium |
+| 3 | Unified ContextMenu + ConfirmDialog | ~120 | Medium (consistency) | Easy |
+| 4 | StickyHeader + @apply classes | ~80 | Low (cleaner code) | Easy |
+| 5 | Transitions + debounce | +30 | High (smoothness) | Easy |
+| 6 | Lazy-load test suite | ~0 | Low | Easy |
+
+**Estimated total:** ~750 lines removed, ~30 added = ~720 net reduction (from ~2118 to ~1400 lines)
+
+---
+
 **End of Progress Summary**
