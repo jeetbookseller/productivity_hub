@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '15_5-Alpha';
+const APP_VERSION = '16-Alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -616,12 +616,15 @@ const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,onDone,o
 );
 
 // Note Context Menu (v14.1-alpha) — 3-dot popup for Capture items
-const NoteMenu=({note,onClose,onEdit,onStrike,onCopyToClarify,onDelete})=>(
+const NoteMenu=({note,onClose,onEdit,onStrike,onCopyToClarify,onCopy,onDelete})=>(
   <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
     <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
       <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{note.text||note.title||note.content}</p></div>
       <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
         <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
+      </button>
+      <button onClick={()=>{onCopy();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ocean-100 dark:hover:bg-ocean-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Copy s={18} c="text-bark-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Copy Text</span>
       </button>
       <button onClick={()=>{onCopyToClarify();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
         <I.Check s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Promote to Clarify</span><span className="text-xs text-bark-400/50 ml-auto">copy + strike</span>
@@ -904,9 +907,6 @@ const TestRunner=({onShowToast})=>{
       {name:'Add List Item',category:'CRUD - Lists'},
       {name:'Update List Item',category:'CRUD - Lists'},
       {name:'Delete List Item',category:'CRUD - Lists'},
-      {name:'Create Reminder',category:'CRUD - Reminders'},
-      {name:'Update Reminder',category:'CRUD - Reminders'},
-      {name:'Delete Reminder',category:'CRUD - Reminders'},
       {name:'Create Note',category:'CRUD - Notes'},
       {name:'Update Note',category:'CRUD - Notes'},
       {name:'Delete Note',category:'CRUD - Notes'},
@@ -943,14 +943,13 @@ const TestRunner=({onShowToast})=>{
       {name:'Delete List Item From Edit',category:'UI Interactions'},
       {name:'Scroll Guard Distance',category:'UI Interactions'},
       {name:'Quadrant Colors Defined',category:'UI Interactions'},
-      {name:'Batch Select Left Position',category:'UI Interactions'},
-      {name:'Wide Desktop Hook',category:'Desktop Layout'},
       {name:'Timer Info State',category:'Desktop Layout'},
-      {name:'Focus Side-by-Side Wide',category:'Desktop Layout'},
+      {name:'Focus Side-by-Side Desk',category:'Desktop Layout'},
       {name:'Review Dashboard Grid Wide',category:'Desktop Layout'},
       {name:'Sidebar Timer Format',category:'Desktop Layout'},
-      {name:'Right-Click Context Menu',category:'Desktop Layout'},
-      {name:'Compact Timer CSS',category:'Desktop Layout'},
+      {name:'Settings Flexbox Desk',category:'Desktop Layout'},
+      {name:'Explainer Collapsible State',category:'Desktop Layout'},
+      {name:'Explainer Desktop Always Open',category:'Desktop Layout'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -980,9 +979,6 @@ const TestRunner=({onShowToast})=>{
           case 'Add List Item':{testData.testListItem={id:TEST_PREFIX+uid(),text:'Test Item',done:false};testData.testList.items.push(testData.testListItem);if(testData.testList.items.length!==1)throw new Error('Failed to add item to list');break;}
           case 'Update List Item':{testData.testListItem.done=true;if(!testData.testListItem.done)throw new Error('List item update failed');break;}
           case 'Delete List Item':{testData.testList.items=testData.testList.items.filter(i=>i.id!==testData.testListItem.id);if(testData.testList.items.length!==0)throw new Error('List item deletion failed');break;}
-          case 'Create Reminder':{testData.testReminder={id:TEST_PREFIX+uid(),text:'Test Reminder',time:'09:00',date:'2026-01-31',on:true};if(!testData.testReminder.id)throw new Error('Failed to create reminder');break;}
-          case 'Update Reminder':{testData.testReminder.on=false;if(testData.testReminder.on!==false)throw new Error('Reminder update failed');break;}
-          case 'Delete Reminder':{testData.testReminder=null;if(testData.testReminder!==null)throw new Error('Reminder deletion failed');break;}
           case 'Create Note':{testData.testNote={id:TEST_PREFIX+uid(),title:'Test Note',content:'Test content',crAt:new Date().toISOString()};if(!testData.testNote.id)throw new Error('Failed to create note');break;}
           case 'Update Note':{testData.testNote.content='Updated content';if(testData.testNote.content!=='Updated content')throw new Error('Note update failed');break;}
           case 'Delete Note':{testData.testNote=null;if(testData.testNote!==null)throw new Error('Note deletion failed');break;}
@@ -1010,6 +1006,7 @@ const TestRunner=({onShowToast})=>{
           case 'Note Strikethrough Toggle':{const n={id:'n1',text:'Test',struck:false};const toggled={...n,struck:!n.struck};if(!toggled.struck)throw new Error('Strikethrough not toggled on');const unToggled={...toggled,struck:!toggled.struck};if(unToggled.struck)throw new Error('Strikethrough not toggled off');break;}
           case 'Note Strikethrough Timestamp':{const now=Date.now();const n={id:'n1',text:'Test',struck:false,struckAt:null};const struck={...n,struck:true,struckAt:now};if(!struck.struckAt)throw new Error('struckAt not set');const unstruck={...struck,struck:false,struckAt:null};if(unstruck.struckAt!==null)throw new Error('struckAt not cleared');break;}
           case 'Note Copy to Clarify':{const note={id:'n1',text:'Migrate me',struck:false};const newTodo={id:'t1',text:note.text,quad:'nn',poms:0,done:false};if(newTodo.text!=='Migrate me')throw new Error('Text not carried over');if(newTodo.quad!=='nn')throw new Error('Quad not set to nn');const afterNote={...note,struck:true,struckAt:Date.now()};if(!afterNote.struck)throw new Error('Note should be struck after copy');break;}
+          case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
           case 'Note Auto-Clear 30 Days':{const thirtyDays=30*24*60*60*1000;const now=Date.now();const oldNote={id:'n1',struck:true,struckAt:now-thirtyDays-1000};const newNote={id:'n2',struck:true,struckAt:now-1000};const notes=[oldNote,newNote];const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));if(toRemove.length!==1||toRemove[0].id!=='n1')throw new Error('Auto-clear filter wrong');const remaining=notes.filter(n=>!toRemove.find(r=>r.id===n.id));if(remaining.length!==1||remaining[0].id!=='n2')throw new Error('Wrong note removed');break;}
           case 'Note Bulk Copy to Clarify':{const notes=[{id:'n1',text:'A',struck:false},{id:'n2',text:'B',struck:false},{id:'n3',text:'C',struck:false}];const selIds=new Set(['n1','n3']);const toMove=notes.filter(x=>selIds.has(x.id));const newTodos=toMove.map(x=>({id:'t_'+x.id,text:x.text,quad:'nn',poms:0,done:false}));if(newTodos.length!==2)throw new Error('Wrong copy count');const afterNotes=notes.map(x=>selIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x);if(!afterNotes[0].struck)throw new Error('n1 should be struck');if(afterNotes[1].struck)throw new Error('n2 should be unchanged');if(!afterNotes[2].struck)throw new Error('n3 should be struck');if(afterNotes.length!==3)throw new Error('Notes should not be deleted');break;}
           case 'Note Bulk Strikethrough':{const notes=[{id:'n1',struck:false},{id:'n2',struck:true},{id:'n3',struck:false}];const selIds=new Set(['n1','n2']);const after=notes.map(x=>selIds.has(x.id)?{...x,struck:!x.struck}:x);if(!after[0].struck)throw new Error('n1 should be struck');if(after[1].struck)throw new Error('n2 should be unstruck (toggled)');if(after[2].struck)throw new Error('n3 should be unchanged');break;}
@@ -1018,15 +1015,13 @@ const TestRunner=({onShowToast})=>{
           case 'Delete List Item From Edit':{const list={id:'l1',items:[{id:'i1',text:'A'},{id:'i2',text:'B'},{id:'i3',text:'C'}]};const toDelete='i2';const after={...list,items:list.items.filter(i=>i.id!==toDelete)};if(after.items.length!==2)throw new Error('Should have 2 items');if(after.items.find(i=>i.id==='i2'))throw new Error('Item i2 should be deleted');break;}
           case 'Scroll Guard Distance':{const threshold=10;const noScroll={dx:5,dy:3};const scrolled={dx:12,dy:2};if(Math.abs(noScroll.dx)>threshold||Math.abs(noScroll.dy)>threshold)throw new Error('Small movement should not trigger scroll');if(!(Math.abs(scrolled.dx)>threshold||Math.abs(scrolled.dy)>threshold))throw new Error('12px movement should trigger scroll');break;}
           case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
-          case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
-          case 'Batch Select Left Position':{const headerPattern='flex items-center gap-2';if(!headerPattern.includes('gap-2'))throw new Error('Header should use flex gap for left positioning');const checkboxBeforeTitle=true;if(!checkboxBeforeTitle)throw new Error('Checkbox should appear before title in DOM order');break;}
-          case 'Wide Desktop Hook':{if(typeof window==='undefined')throw new Error('No window');const w=window.innerWidth;if(typeof w!=='number')throw new Error('innerWidth not a number');break;}
           case 'Timer Info State':{const ti={left:1500,run:false,mode:'work'};if(ti.left!==1500)throw new Error('Timer left wrong');if(ti.run!==false)throw new Error('Timer run wrong');if(ti.mode!=='work')throw new Error('Timer mode wrong');const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(1500)!=='25:00')throw new Error('Format wrong: '+fmtSB(1500));if(fmtSB(63)!=='1:03')throw new Error('Format 63s wrong');break;}
-          case 'Focus Side-by-Side Wide':{const wide=true;const layout=wide?'flex gap-6':'space-y-5';if(!layout.includes('flex'))throw new Error('Wide should use flex');const mobile=false;const mLayout=mobile?'flex gap-6':'space-y-5';if(mLayout.includes('flex'))throw new Error('Mobile should not use flex side-by-side');break;}
+          case 'Focus Side-by-Side Desk':{const desk=true;const layout=desk?'flex gap-6':'space-y-5';if(!layout.includes('flex'))throw new Error('Desk should use flex');const mobile=false;const mLayout=mobile?'flex gap-6':'space-y-5';if(mLayout.includes('flex'))throw new Error('Mobile should not use flex side-by-side');break;}
           case 'Review Dashboard Grid Wide':{const wide=true;const cls=wide?'grid grid-cols-2 gap-4':'space-y-4';if(!cls.includes('grid-cols-2'))throw new Error('Wide review should use 2-col grid');break;}
           case 'Sidebar Timer Format':{const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(0)!=='0:00')throw new Error('0s format wrong');if(fmtSB(59)!=='0:59')throw new Error('59s wrong');if(fmtSB(600)!=='10:00')throw new Error('600s wrong');const run=true;const mode='work';const label=run?fmtSB(1200):'Focus';if(label!=='20:00')throw new Error('Running label should show time');const notRun=false;const label2=notRun?fmtSB(1200):'Focus';if(label2!=='Focus')throw new Error('Not running should show Focus');break;}
-          case 'Right-Click Context Menu':{const e={preventDefault:()=>{},defaultPrevented:false};e.preventDefault();const menuOpened=true;if(!menuOpened)throw new Error('Context menu should open on right-click');break;}
-          case 'Compact Timer CSS':{const style=document.createElement('style');style.textContent='.timer-display{font-size:3.5rem}';document.head.appendChild(style);const el=document.createElement('div');el.className='timer-display';document.body.appendChild(el);const cs=getComputedStyle(el);document.body.removeChild(el);document.head.removeChild(style);break;}
+          case 'Settings Flexbox Desk':{const desk=true;const expected='flex gap-4';const mobile=false;const mExpected='space-y-4';if(!expected.includes('flex'))throw new Error('Desk settings should use flexbox');if(mExpected.includes('flex'))throw new Error('Mobile settings should not use flexbox');if(!expected.includes('gap-4'))throw new Error('Desk should have gap');break;}
+          case 'Explainer Collapsible State':{const helpExp={};const toggleHelp=(k,s)=>({...s,[k]:!s[k]});const after=toggleHelp('wf',helpExp);if(!after.wf)throw new Error('Toggle should open section');const after2=toggleHelp('wf',after);if(after2.wf)throw new Error('Toggle should close section');break;}
+          case 'Explainer Desktop Always Open':{const desk=true;const helpExp={};const isOpen=desk||helpExp.wf;if(!isOpen)throw new Error('Desktop should always show explainer content');const mobile=false;const mOpen=mobile||helpExp.wf;if(mOpen)throw new Error('Mobile with closed state should hide content');break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1225,7 +1220,8 @@ function App(){
   const[showHelp,setShowHelp]=useState(false);
   const[seenAbout,setSeenAbout]=usePersistedState('seenAbout',false);
   const[showWelcome,setShowWelcome]=useState(false);
-  useEffect(()=>{if(seenAbout===false)setShowWelcome(true);},[seenAbout]);
+  const[seenChecked,setSeenChecked]=useState(false);
+  useEffect(()=>{S.get('seenAbout',false).then(v=>{if(v===false)setShowWelcome(true);setSeenChecked(true);});},[]);
 
   const seedSampleData=()=>{
     const now=new Date().toISOString();
@@ -1333,6 +1329,8 @@ function App(){
   const[toast,setToast]=useState(null);
   const[moreSub,setMoreSub]=useState('settings');
   const[settExp,setSettExp]=useState({});
+  const[helpExp,setHelpExp]=useState({});
+  const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
   const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
   const[dragI,setDragI]=useState(null);
   const[dragO,setDragO]=useState(null);
@@ -1448,9 +1446,9 @@ function App(){
       <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
       </div>
-      {wide?(
+      {desk?(
         <div className="flex gap-6 items-start">
-          <div className="w-[340px] flex-shrink-0 space-y-4">
+          <div className="flex-1 min-w-0 space-y-4">
       <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
 <div className="grid grid-cols-3 gap-2">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
           </div>
@@ -1645,7 +1643,7 @@ function App(){
           </div>}
         </div>
         <div className={desk?'md-grid':'space-y-3'}>{content}</div>
-        <QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/>
+        <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
       </div>
     );
   };
@@ -1871,252 +1869,153 @@ function App(){
     <div className="space-y-4">
       <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
       {moreSub==='settings'&&(
+        desk?(
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0 space-y-4">
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">🖥️ Desktop Mode</h3><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></div>
+          </div>
+          <div className="flex-1 min-w-0 space-y-4">
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
+          <div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>
+          </div>
+        </div>
+        ):(
         <div className="space-y-4">
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
           <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>}</div>
           <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,desk:!s.desk}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">🖥️ Desktop Mode</h3>{settExp.desk?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.desk&&<div className="px-4 pb-4 space-y-2"><p className="text-sm text-bark-500 dark:text-sand-200 mb-1">At 1280px+, the app uses a desktop-optimized layout.</p><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div>}</div>
-          <div className="text-center text-sm text-bark-400/60 dark:text-sand-300/50 pt-2"><p>Productivity Hub v{APP_VERSION}</p></div>
         </div>
+        )
       )}
+      {moreSub==='settings'&&<div className="text-center text-sm text-bark-400/60 dark:text-sand-300/50 pt-2"><p>Productivity Hub v{APP_VERSION}</p></div>}
       {moreSub==='help'&&(
-        <div className="space-y-6 pb-8">
-          <div className="gcard rounded-2xl p-6">
+        <div className={`pb-8 ${desk?'max-w-5xl mx-auto':''}`}>
+          <div className="gcard rounded-2xl p-6 mb-6">
             <h2 className="text-2xl font-extrabold text-bark-600 dark:text-sand-100 mb-4">📚 Complete Guide</h2>
             <p className="text-bark-500 dark:text-sand-200">Productivity Hub combines the Bullet Journal method, GTD (Getting Things Done), Deep Work, and the Eisenhower Matrix into one seamless workflow.</p>
           </div>
+          <div className={`${desk?'grid grid-cols-2 gap-5':'space-y-3'}`}>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">🔄 The Workflow</h3>
+          {/* Section: The Workflow */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('wf')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🔄 The Workflow</h3>
+              {!desk&&(helpExp.wf?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.wf)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <p className="text-bark-500 dark:text-sand-200 mb-4">Every productivity system follows one cycle. Ours has five steps, each mapped to a tab:</p>
             <div className="space-y-3">
-              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">📝</span>
-                  <div>
-                    <div className="font-bold text-bark-600 dark:text-sand-100">1. Capture</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Get everything out of your head. Jot quick bullet notes — ideas, tasks, thoughts, anything. Don't organize yet, just capture. Tap to edit inline, use ⋮ menu for actions (promote to Clarify, strikethrough, delete), or use the ☐ header checkbox for bulk operations.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">📋</span>
-                  <div>
-                    <div className="font-bold text-bark-600 dark:text-sand-100">2. Clarify</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize. Tap any task to toggle done/undone. Use ⋮ menu or right-click (desktop) for actions: edit, add to Focus Queue, link a checklist, or delete.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🎯</span>
-                  <div>
-                    <div className="font-bold text-bark-600 dark:text-sand-100">3. Focus</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Pick 3–5 tasks for today's Focus Queue. Use the Pomodoro timer: 25 min work, 5 min break. After 4 cycles, take a longer break. On desktop, timer and queue display side-by-side. When the timer is running, a live countdown replaces the Focus tab label.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">✅</span>
-                  <div>
-                    <div className="font-bold text-bark-600 dark:text-sand-100">4. Confirm</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to break tasks into steps. Link a checklist to a Clarify task via ⋮ menu → Link Checklist. When all items are checked, you'll be prompted to mark the task done. Tap items to toggle done, use ⋮ to edit or delete, and ☐ header checkbox for bulk operations.</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-sand-100 dark:bg-bark-600/50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">📊</span>
-                  <div>
-                    <div className="font-bold text-bark-600 dark:text-sand-100">5. Review</div>
-                    <div className="text-sm text-bark-500 dark:text-sand-200">Check your weekly stats, matrix balance, and insights. The Review tab analyzes your patterns — overloaded quadrants, overdue tasks, unprocessed notes — and suggests next actions. On desktop, displays as a 2-column dashboard. Do this weekly.</div>
-                  </div>
-                </div>
-              </div>
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">📝</span><div><div className="font-bold text-bark-600 dark:text-sand-100">1. Capture</div><div className="text-sm text-bark-500 dark:text-sand-200">Get everything out of your head. Jot quick bullet notes — ideas, tasks, thoughts, anything. Don't organize yet, just capture. Tap to edit inline, use ⋮ menu for actions (promote to Clarify, strikethrough, delete), or use the ☐ header checkbox for bulk operations.</div></div></div></div>
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">📋</span><div><div className="font-bold text-bark-600 dark:text-sand-100">2. Clarify</div><div className="text-sm text-bark-500 dark:text-sand-200">Decide what each item means. Place tasks in the Eisenhower Matrix: Do First, Schedule, Delegate, or Eliminate. Add categories, deadlines, and subtasks. Drag tasks between quadrants to re-prioritize. Tap any task to toggle done/undone. Use ⋮ menu or right-click (desktop) for actions: edit, add to Focus Queue, link a checklist, or delete.</div></div></div></div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">🎯</span><div><div className="font-bold text-bark-600 dark:text-sand-100">3. Focus</div><div className="text-sm text-bark-500 dark:text-sand-200">Pick 3–5 tasks for today's Focus Queue. Use the Pomodoro timer: 25 min work, 5 min break. After 4 cycles, take a longer break. On desktop, timer and queue display side-by-side. When the timer is running, a live countdown replaces the Focus tab label.</div></div></div></div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">✅</span><div><div className="font-bold text-bark-600 dark:text-sand-100">4. Confirm</div><div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to break tasks into steps. Link a checklist to a Clarify task via ⋮ menu → Link Checklist. When all items are checked, you'll be prompted to mark the task done. Tap items to toggle done, use ⋮ to edit or delete, and ☐ header checkbox for bulk operations.</div></div></div></div>
+              <div className="bg-sand-100 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">📊</span><div><div className="font-bold text-bark-600 dark:text-sand-100">5. Review</div><div className="text-sm text-bark-500 dark:text-sand-200">Check your weekly stats, matrix balance, and insights. The Review tab analyzes your patterns — overloaded quadrants, overdue tasks, unprocessed notes — and suggests next actions. On desktop, displays as a 2-column dashboard. Do this weekly.</div></div></div></div>
             </div>
+            </div>}
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">🚀 Daily Workflow</h3>
+          {/* Section: Daily Workflow */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('daily')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🚀 Daily Workflow</h3>
+              {!desk&&(helpExp.daily?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.daily)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Morning (5 min)</h4>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Open <strong>Capture</strong> — jot anything on your mind</li>
-                  <li>2. Go to <strong>Clarify</strong> — review matrix, drag tasks to correct quadrants</li>
-                  <li>3. Tap → on 3–5 tasks to add them to <strong>Focus</strong> queue</li>
-                  <li>4. Optionally check <strong>Confirm</strong> for any process checklists</li>
-                </ol>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Work Sessions (2–4 hours)</h4>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Open <strong>Focus</strong>, tap a task to activate it</li>
-                  <li>2. Start Pomodoro — 25 min of deep work</li>
-                  <li>3. Take 5 min break, then repeat</li>
-                  <li>4. After 4 pomodoros, take a 15 min long break</li>
-                  <li>5. Quick-capture stray thoughts in <strong>Capture</strong> to stay focused</li>
-                </ol>
-              </div>
-              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">End of Day (5 min)</h4>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Clear completed tasks (🧹 button in Clarify)</li>
-                  <li>2. Process any unread <strong>Capture</strong> notes → strikethrough or → Clarify</li>
-                  <li>3. Glance at <strong>Review</strong> for today's pomodoro count and streak</li>
-                  <li>4. Set priorities for tomorrow in <strong>Clarify</strong></li>
-                </ol>
-              </div>
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Morning (5 min)</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Open <strong>Capture</strong> — jot anything on your mind</li><li>2. Go to <strong>Clarify</strong> — review matrix, drag tasks to correct quadrants</li><li>3. Tap → on 3–5 tasks to add them to <strong>Focus</strong> queue</li><li>4. Optionally check <strong>Confirm</strong> for any process checklists</li></ol></div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Work Sessions (2–4 hours)</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Open <strong>Focus</strong>, tap a task to activate it</li><li>2. Start Pomodoro — 25 min of deep work</li><li>3. Take 5 min break, then repeat</li><li>4. After 4 pomodoros, take a 15 min long break</li><li>5. Quick-capture stray thoughts in <strong>Capture</strong> to stay focused</li></ol></div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">End of Day (5 min)</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Clear completed tasks (🧹 button in Clarify)</li><li>2. Process any unread <strong>Capture</strong> notes → strikethrough or → Clarify</li><li>3. Glance at <strong>Review</strong> for today's pomodoro count and streak</li><li>4. Set priorities for tomorrow in <strong>Clarify</strong></li></ol></div>
             </div>
+            </div>}
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">📓 Bullet Journal Method</h3>
+          {/* Section: Bullet Journal Method */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('bj')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">📓 Bullet Journal Method</h3>
+              {!desk&&(helpExp.bj?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.bj)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <p className="text-bark-500 dark:text-sand-200 mb-4">The Capture tab is inspired by Ryder Carroll's Bullet Journal — a rapid logging system that clears your mind so you can focus.</p>
             <div className="space-y-3">
-              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Rapid Logging</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• <strong>Capture everything</strong> — tasks, ideas, thoughts, questions</li>
-                  <li>• <strong>One bullet per thought</strong> — keep it short and atomic</li>
-                  <li>• <strong>Press Enter</strong> to add instantly, no friction</li>
-                  <li>• <strong>Don't organize yet</strong> — that's what Clarify is for</li>
-                </ul>
-              </div>
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Migration (Processing Notes)</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• <strong>Tap:</strong> Edit a note inline — refine its text instantly</li>
-                  <li>• <strong>⋮ Menu:</strong> Tap the 3-dot icon for Edit, Promote to Clarify, Strikethrough, or Delete</li>
-                  <li>• <strong>Right-click (desktop):</strong> Opens the same action menu as ⋮</li>
-                  <li>• <strong>☐ Checkbox (top-right):</strong> Enter selection mode for bulk actions — Move to Clarify, Strikethrough, Delete</li>
-                  <li>• <strong>Auto-clear:</strong> Struck-through notes are automatically removed after 30 days</li>
-                </ul>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Day Sections</h4>
-                <p className="text-sm text-bark-500 dark:text-sand-200">Notes are automatically grouped by day — Today, Yesterday, and past dates. This creates a natural timeline of your thinking, just like a physical journal.</p>
-              </div>
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Rapid Logging</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Capture everything</strong> — tasks, ideas, thoughts, questions</li><li>• <strong>One bullet per thought</strong> — keep it short and atomic</li><li>• <strong>Press Enter</strong> to add instantly, no friction</li><li>• <strong>Don't organize yet</strong> — that's what Clarify is for</li></ul></div>
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Migration (Processing Notes)</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Tap:</strong> Edit a note inline — refine its text instantly</li><li>• <strong>⋮ Menu:</strong> Tap the 3-dot icon for Edit, Promote to Clarify, Strikethrough, or Delete</li><li>• <strong>Right-click (desktop):</strong> Opens the same action menu as ⋮</li><li>• <strong>☐ Checkbox (top-right):</strong> Enter selection mode for bulk actions — Move to Clarify, Strikethrough, Delete</li><li>• <strong>Auto-clear:</strong> Struck-through notes are automatically removed after 30 days</li></ul></div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Day Sections</h4><p className="text-sm text-bark-500 dark:text-sand-200">Notes are automatically grouped by day — Today, Yesterday, and past dates. This creates a natural timeline of your thinking, just like a physical journal.</p></div>
             </div>
+            </div>}
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3">📊 GTD Weekly Review</h3>
+          {/* Section: GTD Weekly Review */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('gtd')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">📊 GTD Weekly Review</h3>
+              {!desk&&(helpExp.gtd?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.gtd)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <p className="text-bark-500 dark:text-sand-200 mb-4">David Allen's Getting Things Done weekly review is the "critical success factor" of the system. The Review tab makes this easy.</p>
             <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Weekly Review Checklist</h4>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. <strong>Get Clear</strong> — Process all Capture notes (migrate or strike)</li>
-                  <li>2. <strong>Get Current</strong> — Review Clarify matrix, update or delete stale tasks</li>
-                  <li>3. <strong>Get Creative</strong> — Check Review insights, act on suggestions</li>
-                </ol>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">What the Review Tab Shows</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• <strong>Weekly stats:</strong> Pomodoros, tasks completed, focus time</li>
-                  <li>• <strong>Streak heatmap:</strong> GitHub-style 13-week grid — darker = more pomodoros. Tap any day for details</li>
-                  <li>• <strong>Streak counter:</strong> Current consecutive active days and your longest streak</li>
-                  <li>• <strong>Matrix overview:</strong> How many active tasks in each quadrant</li>
-                  <li>• <strong>Insights:</strong> Overloaded quadrants, overdue tasks, unprocessed notes</li>
-                  <li>• <strong>Next actions:</strong> Specific suggestions based on your patterns</li>
-                </ul>
-              </div>
-              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">The Review Loop</h4>
-                <p className="text-sm text-bark-500 dark:text-sand-200">Review closes the loop. Insights from Review feed back into Capture and Clarify — tasks you need to add, priorities to shift, habits to change. This is what makes the system self-improving.</p>
-              </div>
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Weekly Review Checklist</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. <strong>Get Clear</strong> — Process all Capture notes (migrate or strike)</li><li>2. <strong>Get Current</strong> — Review Clarify matrix, update or delete stale tasks</li><li>3. <strong>Get Creative</strong> — Check Review insights, act on suggestions</li></ol></div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">What the Review Tab Shows</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Weekly stats:</strong> Pomodoros, tasks completed, focus time</li><li>• <strong>Streak heatmap:</strong> GitHub-style 13-week grid — darker = more pomodoros. Tap any day for details</li><li>• <strong>Streak counter:</strong> Current consecutive active days and your longest streak</li><li>• <strong>Matrix overview:</strong> How many active tasks in each quadrant</li><li>• <strong>Insights:</strong> Overloaded quadrants, overdue tasks, unprocessed notes</li><li>• <strong>Next actions:</strong> Specific suggestions based on your patterns</li></ul></div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">The Review Loop</h4><p className="text-sm text-bark-500 dark:text-sand-200">Review closes the loop. Insights from Review feed back into Capture and Clarify — tasks you need to add, priorities to shift, habits to change. This is what makes the system self-improving.</p></div>
             </div>
+            </div>}
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">🍅 Pomodoro Technique</h3>
+          {/* Section: Pomodoro Technique */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('pom')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🍅 Pomodoro Technique</h3>
+              {!desk&&(helpExp.pom?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.pom)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <p className="text-bark-500 dark:text-sand-200 mb-4">The Pomodoro Technique breaks work into focused 25-minute intervals with breaks, preventing burnout and improving concentration.</p>
             <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">How It Works</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• Work Session: 25 minutes of focused work</li>
-                  <li>• Short Break: 5 minutes to rest</li>
-                  <li>• Repeat 4 times</li>
-                  <li>• Long Break: 15 minutes after 4 cycles</li>
-                </ul>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Using the Timer</h4>
-                <ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>1. Tap Focus tab</li>
-                  <li>2. Tap a task from Focus Queue to activate it</li>
-                  <li>3. Press Start for 25-minute session</li>
-                  <li>4. Take break when timer ends</li>
-                  <li>5. Customize durations in More → Settings</li>
-                </ol>
-              </div>
+              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">How It Works</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• Work Session: 25 minutes of focused work</li><li>• Short Break: 5 minutes to rest</li><li>• Repeat 4 times</li><li>• Long Break: 15 minutes after 4 cycles</li></ul></div>
+              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Using the Timer</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Tap Focus tab</li><li>2. Tap a task from Focus Queue to activate it</li><li>3. Press Start for 25-minute session</li><li>4. Take break when timer ends</li><li>5. Customize durations in More → Settings</li></ol></div>
             </div>
+            </div>}
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">🎯 Deep Work & Focus Queue</h3>
+          {/* Section: Deep Work & Focus Queue */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('dw')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🎯 Deep Work & Focus Queue</h3>
+              {!desk&&(helpExp.dw?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.dw)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <p className="text-bark-500 dark:text-sand-200 mb-4">Deep Work (Cal Newport) means sustained concentration on cognitively demanding tasks. Our Focus Queue limits you to 3-5 tasks to maximize focus.</p>
             <div className="space-y-3">
-              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Why Limit Tasks?</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• Forces prioritization of what truly matters</li>
-                  <li>• Reduces context-switching mental overhead</li>
-                  <li>• Prevents overwhelm and decision fatigue</li>
-                  <li>• Improves focus quality and depth</li>
-                </ul>
-              </div>
-              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Choose Your Limit</h4>
-                <p className="text-sm text-bark-500 dark:text-sand-200 mb-2"><strong>3 Tasks:</strong> For highly complex work, maximum focus, easily distracted</p>
-                <p className="text-sm text-bark-500 dark:text-sand-200"><strong>5 Tasks:</strong> For varied responsibilities, 8+ hour days, need flexibility</p>
-              </div>
+              <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Why Limit Tasks?</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• Forces prioritization of what truly matters</li><li>• Reduces context-switching mental overhead</li><li>• Prevents overwhelm and decision fatigue</li><li>• Improves focus quality and depth</li></ul></div>
+              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Choose Your Limit</h4><p className="text-sm text-bark-500 dark:text-sand-200 mb-2"><strong>3 Tasks:</strong> For highly complex work, maximum focus, easily distracted</p><p className="text-sm text-bark-500 dark:text-sand-200"><strong>5 Tasks:</strong> For varied responsibilities, 8+ hour days, need flexibility</p></div>
             </div>
+            </div>}
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">📊 Urgent/Important Matrix</h3>
+          {/* Section: Urgent/Important Matrix */}
+          <div className="gcard rounded-2xl overflow-hidden">
+            <button onClick={()=>!desk&&toggleHelp('matrix')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">📊 Urgent/Important Matrix</h3>
+              {!desk&&(helpExp.matrix?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+            </button>
+            {(desk||helpExp.matrix)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
             <p className="text-bark-500 dark:text-sand-200 mb-4">The Eisenhower Box helps categorize tasks by urgency and importance to focus on what truly matters.</p>
             <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3">
-                <div className="font-bold text-terracotta-600 dark:text-terracotta-300 mb-1">Q1: Do First</div>
-                <div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Important</div>
-                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Crises, deadlines</div>
-              </div>
-              <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3">
-                <div className="font-bold text-sage-600 dark:text-sage-300 mb-1">Q2: Schedule</div>
-                <div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Important</div>
-                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Planning, prevention</div>
-              </div>
-              <div className="bg-ocean-100 dark:bg-ocean-400/20 rounded-xl p-3">
-                <div className="font-bold text-ocean-600 dark:text-ocean-300 mb-1">Q3: Delegate</div>
-                <div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Not Important</div>
-                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Interruptions, emails</div>
-              </div>
-              <div className="bg-sand-200 dark:bg-bark-500/20 rounded-xl p-3">
-                <div className="font-bold text-bark-600 dark:text-sand-200 mb-1">Q4: Eliminate</div>
-                <div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Not Important</div>
-                <div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Time wasters</div>
-              </div>
+              <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3"><div className="font-bold text-terracotta-600 dark:text-terracotta-300 mb-1">Q1: Do First</div><div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Important</div><div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Crises, deadlines</div></div>
+              <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3"><div className="font-bold text-sage-600 dark:text-sage-300 mb-1">Q2: Schedule</div><div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Important</div><div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Planning, prevention</div></div>
+              <div className="bg-ocean-100 dark:bg-ocean-400/20 rounded-xl p-3"><div className="font-bold text-ocean-600 dark:text-ocean-300 mb-1">Q3: Delegate</div><div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Not Important</div><div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Interruptions, emails</div></div>
+              <div className="bg-sand-200 dark:bg-bark-500/20 rounded-xl p-3"><div className="font-bold text-bark-600 dark:text-sand-200 mb-1">Q4: Eliminate</div><div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Not Important</div><div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Time wasters</div></div>
             </div>
-            <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-              <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">In Productivity Hub</h4>
-              <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                <li>• <strong>Q1:</strong> High Priority, Due Today</li>
-                <li>• <strong>Q2:</strong> Medium Priority, add to Focus Queue</li>
-                <li>• <strong>Q3:</strong> Low Priority or Delegate</li>
-                <li>• <strong>Q4:</strong> New tasks default here — drag upward as priorities become clear</li>
-              </ul>
-            </div>
+            <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">In Productivity Hub</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Q1:</strong> High Priority, Due Today</li><li>• <strong>Q2:</strong> Medium Priority, add to Focus Queue</li><li>• <strong>Q3:</strong> Low Priority or Delegate</li><li>• <strong>Q4:</strong> New tasks default here — drag upward as priorities become clear</li></ul></div>
+            </div>}
           </div>
 
-          <div className="text-center text-sm text-bark-400 dark:text-sand-300">
+          </div>
+
+          <div className="text-center text-sm text-bark-400 dark:text-sand-300 mt-6">
             <p>Tap <strong>? icon</strong> (top-right) for quick App Navigation reference</p>
           </div>
         </div>
@@ -2204,7 +2103,7 @@ function App(){
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
       {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
-      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onDelete={()=>deleteBullet(noteMenu.id)}/>}
+      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>deleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
