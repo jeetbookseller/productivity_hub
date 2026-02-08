@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '15_3-Alpha';
+const APP_VERSION = '15_5-Alpha';
 
 // Icons - More visible with less transparency
 const I={
@@ -1332,6 +1332,7 @@ function App(){
   const[deleteConfirm,setDeleteConfirm]=useState(null);
   const[toast,setToast]=useState(null);
   const[moreSub,setMoreSub]=useState('settings');
+  const[settExp,setSettExp]=useState({});
   const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
   const[dragI,setDragI]=useState(null);
   const[dragO,setDragO]=useState(null);
@@ -1457,7 +1458,7 @@ function App(){
         <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
         <div className="space-y-2">
           {focus.map((t,i)=>(
-            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
+            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl px-3 py-2 focus-item flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
               <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
               <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
               <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
@@ -1493,10 +1494,51 @@ function App(){
     </div>
   );
 
+  const rListContent=(cl,isSecondary)=>{
+    if(!cl)return null;
+    const secs=[...new Set(cl.items.map(i=>i.section)||[])];
+    const linkedTask=todos.find(t=>t.linkedList===cl.id);
+    const allDone=cl.items.length>0&&cl.items.every(i=>i.done);
+    return(
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100 text-sm md:text-base truncate">{cl.name}</h3>
+          <button onClick={()=>setEdit({type:'list',item:{},listId:cl.id})} className="p-1.5 rounded-lg bg-sage-400 text-white hover:bg-sage-500 transition-colors flex-shrink-0"><I.Plus s={16}/></button>
+        </div>
+        {linkedTask&&<div className={`p-2.5 rounded-xl flex items-center justify-between ${allDone?'bg-sage-100 dark:bg-sage-400/20 border border-sage-300 dark:border-sage-400/40':'gcard'}`}><div className="flex items-center gap-2 min-w-0"><span className="text-xs">🎯</span><span className="text-sm font-medium text-bark-600 dark:text-sand-100 truncate">{linkedTask.text}</span></div>{allDone&&!linkedTask.done?<button onClick={()=>{doneTodo(linkedTask.id);showT('🎉 Task completed!');}} className="px-3 py-1 bg-sage-400 text-white rounded-lg text-xs font-bold flex-shrink-0 ml-2">✓ Done</button>:<button onClick={()=>{setTab('todos');}} className="text-xs text-ocean-400 font-medium flex-shrink-0 ml-2">View →</button>}</div>}
+        {secs.length>0?secs.map(s=>(
+          <div key={s} className="space-y-1.5">
+            <h4 className="text-xs font-bold text-bark-400/60 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h4>
+            <div className="space-y-1.5">
+            {cl.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
+              const inSel=selMode&&selSection==='lists';
+              const isSel=inSel&&selIds.has(item.id);
+              return(
+                <div key={item.id} className="gcard rounded-xl overflow-hidden">
+                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} onContextMenu={e=>{e.preventDefault();setEdit({type:'list',item,listId:cl.id});}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
+                  {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm md:text-xs">✓</span>}</button>}
+                  <div className="flex-1 min-w-0">
+                    <span className={`block font-medium sel md:text-sm ${item.done?'line-through text-bark-400/60':'text-bark-700 dark:text-cream-100'}`}>{item.text}</span>
+                    {item.notes&&<p className="text-xs text-bark-500 dark:text-sand-300 mt-1 truncate sel">📝 {item.notes}</p>}
+                  </div>
+                  {!inSel&&<button onClick={e=>{e.stopPropagation();setEdit({type:'list',item,listId:cl.id});}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
+                </div>
+              </div>
+            );})}
+            </div>
+          </div>
+        )):<Empty.List/>}
+        <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},cl.id)}/>
+      </div>
+    );
+  };
+
   const rLists=()=>{
     if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
     const cl=lists.find(l=>l.id===selList);
-    const secs=[...new Set(cl?.items.map(i=>i.section)||[])];
+    const otherLists=lists.filter(l=>l.id!==selList);
+    const secondList=desk&&otherLists.length>0?otherLists[0]:null;
     
     if(lists.length===0){
       return(
@@ -1529,32 +1571,15 @@ function App(){
           })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
         </div>
         {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
-        {cl&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
-        {cl&&(()=>{const lt=todos.find(t=>t.linkedList===cl.id);if(!lt)return null;const allDone=cl.items.length>0&&cl.items.every(i=>i.done);return(<div className={`p-3 rounded-xl mb-3 flex items-center justify-between ${allDone?'bg-sage-100 dark:bg-sage-400/20 border border-sage-300 dark:border-sage-400/40':'gcard'}`}><div className="flex items-center gap-2 min-w-0"><span className="text-xs">🎯</span><span className="text-sm font-medium text-bark-600 dark:text-sand-100 truncate">{lt.text}</span></div>{allDone&&!lt.done?<button onClick={()=>{doneTodo(lt.id);showT('🎉 Task completed!');}} className="px-3 py-1.5 bg-sage-400 text-white rounded-lg text-xs font-bold flex-shrink-0 ml-2">✓ Mark Done</button>:<button onClick={()=>{setTab('todos');}} className="text-xs text-ocean-400 font-medium flex-shrink-0 ml-2">View →</button>}</div>);})()}
-        {secs.length>0?secs.map(s=>(
-          <div key={s} className="space-y-2">
-            <h3 className="text-xs font-bold text-bark-400/60 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h3>
-            <div className={wide?'confirm-grid':'space-y-2'}>
-            {cl?.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
-              const inSel=selMode&&selSection==='lists';
-              const isSel=inSel&&selIds.has(item.id);
-              return(
-                <div key={item.id} className="gcard rounded-xl overflow-hidden">
-                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} onContextMenu={e=>{e.preventDefault();setEdit({type:'list',item,listId:cl.id});}} className={`p-3 md:p-4 flex items-center gap-3 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
-                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
-                  {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm">✓</span>}</button>}
-                  <div className="flex-1 min-w-0">
-                    <span className={`block font-medium sel ${item.done?'line-through text-bark-400/60':'text-bark-700 dark:text-cream-100'}`}>{item.text}</span>
-                    {item.notes&&<p className="text-xs text-bark-500 dark:text-sand-300 mt-1 truncate sel">📝 {item.notes}</p>}
-                  </div>
-                  {!inSel&&<button onClick={e=>{e.stopPropagation();setEdit({type:'list',item,listId:cl.id});}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
-                </div>
-              </div>
-            );})}
-            </div>
+        {cl&&!desk&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
+        {desk?(
+          <div className="grid grid-cols-2 gap-6 items-start">
+            <div className="gcard rounded-2xl p-4">{rListContent(cl)}</div>
+            {secondList?<div className="gcard rounded-2xl p-4">{rListContent(secondList,true)}</div>:<div/>}
           </div>
-        )):<Empty.List/>}
-        <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},selList)}/>
+        ):(
+          <>{rListContent(cl)}</>
+        )}
       </div>
     );
   };
@@ -1581,12 +1606,12 @@ function App(){
                   const isSel=inSel&&selIds.has(t.id);
                   return(
                     <div key={t.id} className="gcard rounded-xl overflow-hidden">
-                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:p-4 flex items-center gap-3 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
                       {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
-                      {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
+                      {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm md:text-xs font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={`font-semibold sel leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
+                          <span className={`font-semibold sel md:text-sm md:leading-snug leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
                           {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
                         </div>
                         {(t.cat||t.deadline||t.subtasks?.length>0)&&(
@@ -1850,7 +1875,8 @@ function App(){
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
           <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>
+          <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>}</div>
+          <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,desk:!s.desk}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">🖥️ Desktop Mode</h3>{settExp.desk?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.desk&&<div className="px-4 pb-4 space-y-2"><p className="text-sm text-bark-500 dark:text-sand-200 mb-1">At 1280px+, the app uses a desktop-optimized layout.</p><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div>}</div>
           <div className="text-center text-sm text-bark-400/60 dark:text-sand-300/50 pt-2"><p>Productivity Hub v{APP_VERSION}</p></div>
         </div>
       )}
@@ -2090,38 +2116,6 @@ function App(){
             </div>
           </div>
 
-          <div className="gcard rounded-2xl p-5">
-            <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100 mb-3 flex items-center gap-2">🖥️ Desktop Mode</h3>
-            <p className="text-bark-500 dark:text-sand-200 mb-4">At 1280px+ screen width, the app switches to a desktop-optimized layout with enhanced navigation and multi-column views.</p>
-            <div className="space-y-3">
-              <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Sidebar Navigation</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• Vertical sidebar replaces bottom tab bar</li>
-                  <li>• Help button at sidebar bottom</li>
-                  <li>• Full-width content area (max 5xl)</li>
-                </ul>
-              </div>
-              <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Enhanced Layouts</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• <strong>Focus:</strong> Timer + stats on left, Focus Queue on right (side-by-side)</li>
-                  <li>• <strong>Review:</strong> 2-column dashboard grid</li>
-                  <li>• <strong>Clarify:</strong> 2-column task grid (768px+)</li>
-                  <li>• <strong>Confirm:</strong> 2-column checklist grid</li>
-                </ul>
-              </div>
-              <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4">
-                <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Desktop Interactions</h4>
-                <ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200">
-                  <li>• <strong>Right-click:</strong> Opens the same action menu as ⋮ on all item rows</li>
-                  <li>• <strong>Live timer:</strong> When Pomodoro is running, Focus tab shows countdown with pulsing indicator</li>
-                  <li>• <strong>Drag-and-drop:</strong> Reorder Focus Queue and move tasks between quadrants</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
           <div className="text-center text-sm text-bark-400 dark:text-sand-300">
             <p>Tap <strong>? icon</strong> (top-right) for quick App Navigation reference</p>
           </div>
@@ -2161,7 +2155,7 @@ function App(){
           </div>
           {/* Main content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="px-8 py-6 max-w-5xl mx-auto">
+            <div className="px-8 py-6 mx-auto">
               {tab==='focus'&&rFocus()}
               {tab==='lists'&&rLists()}
               {tab==='todos'&&rTodos()}
@@ -2180,8 +2174,8 @@ function App(){
         <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
         <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
       </div>
-      <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-2xl mx-auto">
-        {tab==='focus'&&rFocus()}
+      <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
+        {tab==='focus'?<div className="max-w-2xl mx-auto">{rFocus()}</div>:null}
         {tab==='lists'&&rLists()}
         {tab==='todos'&&rTodos()}
         {tab==='notes'&&rNotes()}
@@ -2190,7 +2184,7 @@ function App(){
       </div>
       {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
       <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
-        <div className="flex justify-around max-w-lg md:max-w-2xl mx-auto py-2 tab-bar-inner">
+        <div className="flex justify-around max-w-lg md:max-w-5xl mx-auto py-2 tab-bar-inner">
           {tabs.map(({id,Ic,l})=>{
             const isFR=id==='focus'&&timerInfo.run;
             return(

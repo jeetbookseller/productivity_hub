@@ -3,15 +3,15 @@
 ## Development Progress Summary
 
 **Last Updated:** February 7, 2026  
-**Current Version:** v15_3-Alpha  
+**Current Version:** v15_5-Alpha  
 **Current Model:** Opus 4.6  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_3-Alpha (Opus 4.6)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v15_3-alpha.html**
+**productivity-hub-v15_5-alpha.html**
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
@@ -43,6 +43,12 @@
 - ✅ **Dark mode polish** — Cohesive dark mode across all tabs
 - ✅ **Brighter text** — `text-bark-700 dark:text-cream-100 font-medium` for item text across all sections
 - ✅ **Fixed emoji encoding** — All double-encoded UTF-8 emojis corrected (cp1252→UTF-8 reversal)
+- ✅ **Compact desktop items** — Reduced padding, smaller checkboxes/text/gaps on md+ (Clarify, Confirm, Focus)
+- ✅ **Wider tablet layout** — Content area `max-w-5xl` (was `max-w-2xl`), Focus tab constrained to `max-w-2xl`
+- ✅ **No max-width on wide desktop** — Full-width content at 1280px+
+- ✅ **Collapsible Settings** — Install as App + Desktop Mode are collapsible cards in Settings
+- ✅ **Desktop Mode moved to Settings** — Removed from Explainer, shortened, added as collapsible
+- ✅ **Confirm 2-column layout** — Desktop/tablet shows selected + next checklist side-by-side; empty right column if only one list
 
 ---
 
@@ -164,7 +170,7 @@
 - **`fmtSidebar` helper:** Compact time format (e.g., "23:45")
 - **Compact timer CSS:** `.timer-display` 3.5rem at 1280px+
 
-### v15_3-Alpha ← CURRENT
+### v15_3-Alpha
 - **Version bump** to v15_3-Alpha
 - **Fixed emoji encoding:** All double-encoded UTF-8 emojis throughout file corrected (cp1252/Latin-1 → UTF-8 reversal)
 - **Updated help documentation:**
@@ -176,6 +182,21 @@
   - AboutModal Clarify description updated (removed "Long-press")
 - **Tests:** 52 → 59 (added: Wide Desktop Hook, Timer Info State, Focus Side-by-Side Wide, Review Dashboard Grid Wide, Sidebar Timer Format, Right-Click Context Menu, Compact Timer CSS)
 - **Updated technical details** document
+
+### v15_4-Alpha
+- **Compact desktop items:** Reduced padding (`md:px-3 md:py-2`), smaller checkboxes (`md:w-5 md:h-5`), smaller text (`md:text-sm md:leading-snug`), tighter gaps (`gap-2 md:gap-2.5`) on Clarify, Confirm, Focus queue items
+- **Wider tablet content area:** `max-w-2xl` → `max-w-5xl` for tablet/desktop layout (768–1279px), Focus tab wrapped in `max-w-2xl` to stay compact
+- **No max-width on wide desktop:** Removed `max-w-7xl` cap at 1280px+, content fills full width with `px-8` padding
+- **Collapsible Settings sections:** Install as App and Desktop Mode are now collapsible cards with chevron toggle (`settExp` state)
+- **Desktop Mode moved from Explainer to Settings:** Shortened content, removed from Explainer tab
+- **Tab bar widened:** Matched to `max-w-5xl` content area
+
+### v15_5-Alpha ← CURRENT
+- **Confirm 2-column layout on desktop/tablet:** `rListContent()` extracted as reusable renderer; selected checklist on left, next checklist on right in `grid grid-cols-2` layout
+- **Empty right column:** When only one checklist exists, right column stays empty (grid preserved)
+- **Each column self-contained:** Own title, + button, linked task banner, quick-add input
+- **Share button:** Hidden on desktop 2-col mode (shown on mobile only)
+- **Fixed MD file encoding:** Double-encoded UTF-8 in technical details also corrected
 
 ---
 
@@ -224,7 +245,7 @@ Make data more resilient beyond IndexedDB browser storage.
 - **Rule:** Small features increment minor (15_1 → 15_2), big features increment major (15 → 16)
 - **Format:** `v15-Alpha`, `v15_1-Alpha`, etc.
 - **Alpha tag:** Current release stage (reverted from Beta due to major interaction changes)
-- **Current:** v15_3-Alpha
+- **Current:** v15_5-Alpha
 
 ### UI Patterns Established (v15+)
 - **⋮ 3-dot menu:** Always-visible vertical dots on every item (Capture notes, Clarify tasks, Confirm checklist items)
@@ -243,7 +264,9 @@ Make data more resilient beyond IndexedDB browser storage.
 - **Bullet journal notes:** Day sections + Enter-to-add + tap-to-edit + ⋮ NoteMenu + strikethrough with auto-clear
 - **Matrix drag-and-drop:** HTML5 Drag API (desktop only) for quadrant re-prioritization
 - **Heatmap grid:** 13-week × 7-day grid, tap-to-inspect, streak counters
-- **Desktop layout (1280px+):** Sidebar nav, full-width content, multi-column grids, compact items
+- **Desktop layout (1280px+):** Sidebar nav, full-width content (no max-w), multi-column grids, compact items
+- **Tablet layout (768px+):** 5xl content area, Focus constrained to 2xl, 2-col Clarify + Confirm
+- **Confirm 2-col:** `rListContent()` renders each checklist; `grid grid-cols-2` on desktop with selected + next list
 - **Desktop Focus:** Side-by-side timer (340px) + queue
 - **Desktop Review:** 2-column dashboard grid
 - **Sidebar timer:** Live countdown replaces Focus label when running, pulsing dot
@@ -252,9 +275,11 @@ Make data more resilient beyond IndexedDB browser storage.
 ### Desktop Layout Architecture
 ```
 < 768px  (mobile):   Bottom tab bar, single column, touch-first
-768px+   (tablet):   2-col Clarify grid, font bump, scrollbar
-1280px+  (wide):     Sidebar nav, 5xl content, side-by-side Focus, 
-                     2-col Review, compact items, right-click menus
+768px+   (tablet):   2-col Clarify grid, 2-col Confirm checklists, 
+                     5xl content (Focus constrained to 2xl), font bump
+1280px+  (wide):     Sidebar nav, full-width content (no max-w), 
+                     side-by-side Focus, 2-col Review, compact items, 
+                     right-click menus
 ```
 
 ### Workflow Model
@@ -309,6 +334,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 - `noteMenu` — NoteMenu 3-dot context menu state
 - `taskMenu` — TaskMenu 3-dot context menu state
 - `dragQ` — matrix drag-and-drop source tracking
+- `settExp` — collapsible sections in Settings (`{pwa, desk}`)
 
 ### Storage Structure
 ```
@@ -351,19 +377,20 @@ Removed: arc, reminders, Swipe component
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Alpha (desktop enhancement). Stabilizing after desktop layout overhaul.
-- **Working file:** `productivity-hub-v15_3-alpha.html` (~189KB, ~2224 lines)
+- **Current phase:** Alpha (desktop enhancement). Stabilizing after desktop layout + Confirm 2-col overhaul.
+- **Working file:** `productivity-hub-v15_5-alpha.html` (~195KB, ~2219 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
-- **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_3.
+- **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
 - **Versioning:** Small features → minor bump (15_1, 15_2), big features → major bump (15, 16, 17)
 
 **Full Feature Set:**
-- Capture (Bullet Journal + ⋮ NoteMenu + right-click + ☐ bulk select + copy+strike to Clarify + auto-clear) → Clarify (Eisenhower + ⋮ TaskMenu + right-click + tap done/undone + drag desktop) → Focus (Pomodoro + Queue + side-by-side wide + sidebar timer) → Confirm (Checklists + ⋮ edit+delete + right-click + tap-done) → Review (Stats + Streak Heatmap + Insights + 2-col dashboard wide)
+- Capture (Bullet Journal + ⋮ NoteMenu + right-click + ☐ bulk select + copy+strike to Clarify + auto-clear) → Clarify (Eisenhower + ⋮ TaskMenu + right-click + tap done/undone + drag desktop) → Focus (Pomodoro + Queue + side-by-side wide + sidebar timer) → Confirm (Checklists + ⋮ edit+delete + right-click + tap-done + 2-col desktop) → Review (Stats + Streak Heatmap + Insights + 2-col dashboard wide)
 - Unified: ⋮ 3-dot + right-click on all items, ☐ header checkbox (left) for bulk select, no long-press, no swipe
 - Desktop (1280px+): Sidebar nav, full-width, side-by-side Focus, 2-col Review, compact items, live timer
-- Explainer guide (Workflow, Bullet Journal, GTD Review, Pomodoro, Deep Work, Eisenhower, Desktop Mode)
-- Desktop Mode, PWA Install, Test Suite (59 tests), Export/Import, Theme (default: System)
-- Cohesive dark mode with muted gradients, brighter item text across all tabs
+- Tablet (768px+): 2-col Clarify grid, 2-col Confirm checklists, 5xl content, Focus constrained
+- Explainer guide (Workflow, Bullet Journal, GTD Review, Pomodoro, Deep Work, Eisenhower)
+- Settings: Theme, Timer, Data, collapsible Install as App + Desktop Mode
+- Test Suite (59 tests), Export/Import, Theme (default: System), cohesive dark mode
 
 ---
 
