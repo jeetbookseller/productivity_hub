@@ -1357,12 +1357,137 @@ function useAppData(){
   };
 }
 
+// AppDataCtx — shared data context (v17 refactor Step 2)
+const AppDataCtx=React.createContext(null);
+function AppDataProv({children}){
+  const data=useAppData();
+  return React.createElement(AppDataCtx.Provider,{value:data},children);
+}
+function useApp(){const ctx=useContext(AppDataCtx);if(!ctx)throw new Error('useApp must be inside AppDataProv');return ctx;}
+
+// CaptureSection — extracted from rNotes() (v17 refactor Step 3)
+function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode}){
+  const{notes,setNotes,todos,setTodos,showT}=useApp();
+  const[newBullet,setNewBullet]=useState('');
+  const[editingNote,setEditingNote]=useState(null);
+  const[noteMenu,setNoteMenu]=useState(null);
+  const bulletRef=React.useRef(null);
+  const today=new Date().toISOString().split('T')[0];
+
+  const notesByDate=useMemo(()=>{
+    const groups={};
+    notes.forEach(n=>{
+      const d=n.date||new Date(n.crAt).toISOString().split('T')[0];
+      if(!groups[d])groups[d]=[];
+      groups[d].push(n);
+    });
+    return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
+  },[notes]);
+
+  const addBullet=(text)=>{
+    if(!text.trim())return;
+    const newNote={id:uid(),text:text.trim(),date:today,crAt:new Date().toISOString()};
+    setNotes([newNote,...notes]);
+  };
+
+  const handleBulletKeyDown=(e)=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      addBullet(newBullet);
+      setNewBullet('');
+    }
+  };
+
+  const formatDateHeader=(dateStr)=>{
+    const d=new Date(dateStr+'T12:00:00');
+    const now=new Date();
+    const todayStr=now.toISOString().split('T')[0];
+    const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+    const yesterdayStr=yesterday.toISOString().split('T')[0];
+    if(dateStr===todayStr)return'Today';
+    if(dateStr===yesterdayStr)return'Yesterday';
+    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  };
+
+  const deleteBullet=(id)=>setNotes(notes.filter(n=>n.id!==id));
+  const updateBullet=(id,text)=>{if(!text.trim()){deleteBullet(id);}else{setNotes(notes.map(n=>n.id===id?{...n,text:text.trim()}:n));}setEditingNote(null);};
+
+  React.useEffect(()=>{
+    const thirtyDays=30*24*60*60*1000;
+    const now=Date.now();
+    const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));
+    if(toRemove.length>0)setNotes(prev=>prev.filter(n=>!toRemove.find(r=>r.id===n.id)));
+  },[notes.length]);
+
+  const toggleStrike=(id)=>setNotes(notes.map(n=>n.id===id?{...n,struck:!n.struck,struckAt:!n.struck?Date.now():null}:n));
+  const noteToTodo=(note)=>{setTodos(t=>[{id:uid(),text:note.text||note.title||note.content,quad:'nn',poms:0,done:false},...t]);setNotes(notes.map(n=>n.id===note.id?{...n,struck:true,struckAt:Date.now()}:n));showT('📋 Copied to Clarify + struck');};
+
+  const inSel=selMode&&selSection==='notes';
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
+        :<div className="flex items-center justify-center relative">
+          {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Capture</h2>
+        </div>}
+      </div>
+
+      <div className={`gcard rounded-2xl p-4 ${wide?'capture-input':''}`}>
+        <div className="flex items-start gap-3">
+          <span className="text-sage-400 mt-1 text-lg">•</span>
+          <textarea
+            ref={bulletRef}
+            value={newBullet}
+            onChange={e=>setNewBullet(e.target.value)}
+            onKeyDown={handleBulletKeyDown}
+            placeholder="Quick note... (Enter to add)"
+            rows={1}
+            className="flex-1 bg-transparent focus:outline-none text-bark-600 dark:text-sand-100 placeholder-bark-400/50 resize-none text-base leading-relaxed"
+            style={{minHeight:'28px'}}
+          />
+        </div>
+        {newBullet.trim()&&<div className="flex justify-end mt-2"><button onClick={()=>{addBullet(newBullet);setNewBullet('');}} className="px-4 py-1.5 bg-sage-400 rounded-lg text-white font-semibold text-sm">Add</button></div>}
+      </div>
+
+      {notesByDate.length===0?<Empty.Notes/>:notesByDate.map(([date,dayNotes])=>(
+        <div key={date} className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-sm font-bold text-bark-600/70 dark:text-sand-200/70 uppercase tracking-wider">{formatDateHeader(date)}</span>
+            <div className="flex-1 h-px bg-sand-200 dark:bg-bark-500/50"/>
+          </div>
+          <div className="gcard rounded-2xl p-3 space-y-1">
+            {dayNotes.map(n=>{
+              const isSel=inSel&&selIds.has(n.id);
+              let touchData={x:0,y:0,moved:false,menuTap:false};
+              const onTS=(e)=>{const t=e.touches?e.touches[0]:null;if(t)touchData={x:t.clientX,y:t.clientY,moved:false,menuTap:false};};
+              const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
+              const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
+              return(
+                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
+                  {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
+                  {editingNote&&editingNote.id===n.id?
+                    <input autoFocus type="text" value={editingNote.text} onChange={e=>setEditingNote({...editingNote,text:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();updateBullet(n.id,editingNote.text);}if(e.key==='Escape')setEditingNote(null);}} onBlur={()=>updateBullet(n.id,editingNote.text)} onClick={e=>e.stopPropagation()} className="flex-1 bg-transparent focus:outline-none text-bark-700 dark:text-sand-100 border-b-2 border-sage-400 font-medium"/>
+                  :<span className={`flex-1 sel leading-relaxed ${n.struck?'line-through text-bark-400/50 dark:text-sand-300/40':'text-bark-700 dark:text-cream-100 font-medium'}`}>{n.text||n.title||n.content}</span>}
+                  {!inSel&&!editingNote&&<button data-menu-btn onTouchStart={e=>{touchData.menuTap=true;}} onClick={e=>{e.stopPropagation();e.preventDefault();setNoteMenu(n);}} className="p-2 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
+    </div>
+  );
+}
+
 // Main App
 function App(){
   const{theme,setTheme}=useContext(ThemeCtx);
   const desk=useDesk();
   const wide=useWide();
-  const d=useAppData();
+  const d=useApp();
   const{lists,setLists,todos,setTodos,reminders,setReminders,notes,setNotes,
     focus,setFocus,activeF,setActiveF,
     preset,setPreset,customT,setCustomT,tSet,poms,setPoms,
@@ -1430,7 +1555,7 @@ function App(){
   const[showNew,setShowNew]=useState(false);
   const[listMenu,setListMenu]=useState(null);
   const[taskMenu,setTaskMenu]=useState(null);
-  const[noteMenu,setNoteMenu]=useState(null); // Note for 3-dot context menu
+  // noteMenu state moved to CaptureSection (v17 refactor Step 3)
   const[linkPicker,setLinkPicker]=useState(null); // {taskId}
   const[editListId,setEditListId]=useState(null);
   const[editListName,setEditListName]=useState('');
@@ -1685,124 +1810,6 @@ function App(){
         <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
       </div>
     );
-  };
-
-  // Quick Notes - Bullet Journal Style
-  const [newBullet,setNewBullet]=useState('');
-  const [editingNote,setEditingNote]=useState(null); // {id, text}
-  const bulletRef=React.useRef(null);
-  const today=new Date().toISOString().split('T')[0];
-  
-  // Group notes by date
-  const notesByDate=useMemo(()=>{
-    const groups={};
-    notes.forEach(n=>{
-      const d=n.date||new Date(n.crAt).toISOString().split('T')[0];
-      if(!groups[d])groups[d]=[];
-      groups[d].push(n);
-    });
-    // Sort dates descending (newest first)
-    return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
-  },[notes]);
-  
-  const addBullet=(text)=>{
-    if(!text.trim())return;
-    const newNote={id:uid(),text:text.trim(),date:today,crAt:new Date().toISOString()};
-    setNotes([newNote,...notes]);
-  };
-  
-  const handleBulletKeyDown=(e)=>{
-    if(e.key==='Enter'&&!e.shiftKey){
-      e.preventDefault();
-      addBullet(newBullet);
-      setNewBullet('');
-    }
-  };
-  
-  const formatDateHeader=(dateStr)=>{
-    const d=new Date(dateStr+'T12:00:00');
-    const now=new Date();
-    const todayStr=now.toISOString().split('T')[0];
-    const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
-    const yesterdayStr=yesterday.toISOString().split('T')[0];
-    if(dateStr===todayStr)return'Today';
-    if(dateStr===yesterdayStr)return'Yesterday';
-    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-  };
-  
-  const deleteBullet=(id)=>setNotes(notes.filter(n=>n.id!==id));
-  const updateBullet=(id,text)=>{if(!text.trim()){deleteBullet(id);}else{setNotes(notes.map(n=>n.id===id?{...n,text:text.trim()}:n));}setEditingNote(null);};
-  // Auto-clear struck notes older than 30 days (v14.1-alpha)
-  React.useEffect(()=>{
-    const thirtyDays=30*24*60*60*1000;
-    const now=Date.now();
-    const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));
-    if(toRemove.length>0)setNotes(prev=>prev.filter(n=>!toRemove.find(r=>r.id===n.id)));
-  },[notes.length]);
-
-  const toggleStrike=(id)=>setNotes(notes.map(n=>n.id===id?{...n,struck:!n.struck,struckAt:!n.struck?Date.now():null}:n));
-  const noteToTodo=(note)=>{setTodos(t=>[{id:uid(),text:note.text||note.title||note.content,quad:'nn',poms:0,done:false},...t]);setNotes(notes.map(n=>n.id===note.id?{...n,struck:true,struckAt:Date.now()}:n));showT('📋 Copied to Clarify + struck');};
-  
-  const rNotes=()=>{
-    const inSel=selMode&&selSection==='notes';
-    return(
-    <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-        {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
-        :<div className="flex items-center justify-center relative">
-          {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
-          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Capture</h2>
-        </div>}
-      </div>
-      
-      {/* Quick input area */}
-      <div className={`gcard rounded-2xl p-4 ${wide?'capture-input':''}`}>
-        <div className="flex items-start gap-3">
-          <span className="text-sage-400 mt-1 text-lg">•</span>
-          <textarea
-            ref={bulletRef}
-            value={newBullet}
-            onChange={e=>setNewBullet(e.target.value)}
-            onKeyDown={handleBulletKeyDown}
-            placeholder="Quick note... (Enter to add)"
-            rows={1}
-            className="flex-1 bg-transparent focus:outline-none text-bark-600 dark:text-sand-100 placeholder-bark-400/50 resize-none text-base leading-relaxed"
-            style={{minHeight:'28px'}}
-          />
-        </div>
-        {newBullet.trim()&&<div className="flex justify-end mt-2"><button onClick={()=>{addBullet(newBullet);setNewBullet('');}} className="px-4 py-1.5 bg-sage-400 rounded-lg text-white font-semibold text-sm">Add</button></div>}
-      </div>
-      
-      {/* Notes by day */}
-      {notesByDate.length===0?<Empty.Notes/>:notesByDate.map(([date,dayNotes])=>(
-        <div key={date} className="space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <span className="text-sm font-bold text-bark-600/70 dark:text-sand-200/70 uppercase tracking-wider">{formatDateHeader(date)}</span>
-            <div className="flex-1 h-px bg-sand-200 dark:bg-bark-500/50"/>
-          </div>
-          <div className="gcard rounded-2xl p-3 space-y-1">
-            {dayNotes.map(n=>{
-              const isSel=inSel&&selIds.has(n.id);
-              let touchData={x:0,y:0,moved:false,menuTap:false};
-              const onTS=(e)=>{const t=e.touches?e.touches[0]:null;if(t)touchData={x:t.clientX,y:t.clientY,moved:false,menuTap:false};};
-              const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
-              const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
-              return(
-                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
-                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
-                  {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
-                  {editingNote&&editingNote.id===n.id?
-                    <input autoFocus type="text" value={editingNote.text} onChange={e=>setEditingNote({...editingNote,text:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();updateBullet(n.id,editingNote.text);}if(e.key==='Escape')setEditingNote(null);}} onBlur={()=>updateBullet(n.id,editingNote.text)} onClick={e=>e.stopPropagation()} className="flex-1 bg-transparent focus:outline-none text-bark-700 dark:text-sand-100 border-b-2 border-sage-400 font-medium"/>
-                  :<span className={`flex-1 sel leading-relaxed ${n.struck?'line-through text-bark-400/50 dark:text-sand-300/40':'text-bark-700 dark:text-cream-100 font-medium'}`}>{n.text||n.title||n.content}</span>}
-                  {!inSel&&!editingNote&&<button data-menu-btn onTouchStart={e=>{touchData.menuTap=true;}} onClick={e=>{e.stopPropagation();e.preventDefault();setNoteMenu(n);}} className="p-2 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
   };
 
   // Review Tab
@@ -2097,7 +2104,7 @@ function App(){
               {tab==='focus'&&rFocus()}
               {tab==='lists'&&rLists()}
               {tab==='todos'&&rTodos()}
-              {tab==='notes'&&rNotes()}
+              {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
               {tab==='review'&&rReview()}
               {tab==='more'&&rMore()}
             </div>
@@ -2116,7 +2123,7 @@ function App(){
         {tab==='focus'?<div className="max-w-2xl mx-auto">{rFocus()}</div>:null}
         {tab==='lists'&&rLists()}
         {tab==='todos'&&rTodos()}
-        {tab==='notes'&&rNotes()}
+        {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
         {tab==='review'&&rReview()}
         {tab==='more'&&rMore()}
       </div>
@@ -2142,7 +2149,6 @@ function App(){
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
       {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
-      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
@@ -2150,7 +2156,7 @@ function App(){
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><App/></ThemeProv>);
+ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>);
 </script>
 </body>
 </html>

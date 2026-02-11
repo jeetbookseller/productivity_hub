@@ -206,6 +206,8 @@
 
 ### v16.1-Alpha ← CURRENT
 - **v17 Refactor Step 1 (merged):** Extracted `useAppData()` custom hook from App — all shared persisted state and CRUD handlers moved out of App into a standalone hook
+- **v17 Refactor Step 2 (merged):** Created `AppDataCtx` context, `AppDataProv` provider, and `useApp()` convenience hook — render root wrapped with provider, App now reads shared state from context
+- **v17 Refactor Step 3 (merged):** Extracted `CaptureSection` as standalone component from `rNotes()` — all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering now self-contained. Uses `useApp()` for shared state, receives selection props from App
 - **Version stays v16.1-Alpha** while refactor is in progress (no UI changes, internal restructuring only)
 
 ---
@@ -366,7 +368,9 @@ Removed: arc, reminders, Swipe component
 ### Components
 | Component | Purpose |
 |-----------|---------|
-| `App` | Main application with conditional wide/tablet/mobile layout |
+| `App` | Main application shell — layout, routing, selection state, modals |
+| `AppDataProv` | Context provider wrapping App — shares `useAppData()` via `AppDataCtx` |
+| `CaptureSection` | Bullet journal capture tab — local state, NoteMenu, auto-clear, uses `useApp()` |
 | `FocusTimer` | Isolated Pomodoro timer (memo + useReducer + onTick callback) |
 | `Heatmap` | GitHub-style streak heatmap (13-week grid, tap-to-inspect) |
 | `SelCheck` / `BulkActionBar` / `BulkDeleteConfirm` | Batch selection UI |
@@ -394,7 +398,7 @@ Removed: arc, reminders, Swipe component
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Alpha. v17 refactor in progress — extracting App into sub-components (Step 1 of 9 complete).
+- **Current phase:** Alpha. v17 refactor in progress — extracting App into sub-components (Steps 1-3 of 9 complete).
 - **Working file:** `productivity_hub.html` (~195KB, ~2153 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 - **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
@@ -427,8 +431,8 @@ Removed: arc, reminders, Swipe component
 | Step | Description | Status |
 |------|-------------|--------|
 | **Step 1** | Extract `useAppData()` custom hook — move all shared persisted state (todos, lists, notes, focus, metrics, timers, tab, selList) and CRUD handlers (addFocus, doneTodo, saveItem, seedSampleData, etc.) out of App into a reusable hook | ✅ **Merged** |
-| **Step 2** | Create `AppDataCtx` context + `AppDataProv` provider + `useApp()` convenience hook — wrap render root so all child components can access shared state via context instead of prop-drilling | ⏳ **Pending** |
-| **Step 3** | Extract `CaptureSection` from `rNotes()` — move all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering into standalone component. Uses `useApp()` for shared state, receives selection props from App | ⏳ **Pending** |
+| **Step 2** | Create `AppDataCtx` context + `AppDataProv` provider + `useApp()` convenience hook — wrap render root so all child components can access shared state via context instead of prop-drilling | ✅ **Merged** |
+| **Step 3** | Extract `CaptureSection` from `rNotes()` — move all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering into standalone component. Uses `useApp()` for shared state, receives selection props from App | ✅ **Merged** |
 | **Step 4** | Extract `ClarifySection` from `rTodos()` — move Eisenhower matrix rendering, quadrant headers, task list with drag-and-drop, QuickAdd, TaskMenu state, and task interaction handlers into standalone component | ⏳ **Pending** |
 | **Step 5** | Extract `FocusSection` from `rFocus()` — move FocusTimer integration, focus queue rendering, timer controls, side-by-side layout logic into standalone component | ⏳ **Pending** |
 | **Step 6** | Extract `ConfirmSection` from `rLists()` — move checklist rendering (`rListContent`), list tabs, ListMenu state, edit/delete list logic, 2-column layout into standalone component | ⏳ **Pending** |
@@ -495,7 +499,7 @@ Derived:    wkData, doneCount
 
 | # | Change | Lines Saved | UI Impact | Difficulty | Status |
 |---|--------|-------------|-----------|------------|--------|
-| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium | Step 1 done, Steps 2-9 pending |
+| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium | Steps 1-3 done, Steps 4-9 pending |
 | 2 | CSS-only responsive (kill JSX duplication) | ~250 | High (smoother, consistent) | Medium | Pending |
 | 3 | Unified ContextMenu + ConfirmDialog | ~120 | Medium (consistency) | Easy | Pending |
 | 4 | StickyHeader + @apply classes | ~80 | Low (cleaner code) | Easy | Pending |
