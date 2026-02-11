@@ -2,16 +2,16 @@
 
 ## Development Progress Summary
 
-**Last Updated:** February 8, 2026  
-**Current Version:** v16-Alpha  
-**Current Model:** Opus 4.6  
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6)
+**Last Updated:** February 11, 2026
+**Current Version:** v16.1-Alpha
+**Current Model:** Opus 4.6
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1-Alpha (Opus 4.6)
 
 ---
 
 ## 📦 Latest Release
 
-**productivity-hub-v16-alpha.html**
+**productivity_hub.html** (v16.1-Alpha)
 
 ### All Features:
 - ✅ IndexedDB storage with automatic persistence
@@ -199,10 +199,14 @@
 - **Desktop Explainer unchanged:** All sections fully expanded, no chevrons, non-interactive headers
 - **`helpExp` state + `toggleHelp` helper** for accordion toggle
 
-### v16-Alpha ← CURRENT
+### v16-Alpha
 - **Version bump:** v15_9 → v16 (major responsive layout overhaul complete)
 - **Test cleanup:** Removed 7 stale/trivial tests (Reminder CRUD, Wide Desktop Hook, Right-Click Context Menu, Compact Timer CSS, Batch Select Left Position), added 3 new tests (Settings Flexbox Desk, Explainer Collapsible State, Explainer Desktop Always Open), updated Focus Side-by-Side test for `desk` breakpoint
 - **Tests:** 59 → 55 (net reduction from removing stale tests)
+
+### v16.1-Alpha ← CURRENT
+- **v17 Refactor Step 1 (merged):** Extracted `useAppData()` custom hook from App — all shared persisted state and CRUD handlers moved out of App into a standalone hook
+- **Version stays v16.1-Alpha** while refactor is in progress (no UI changes, internal restructuring only)
 
 ---
 
@@ -246,7 +250,7 @@ Make data more resilient beyond IndexedDB browser storage.
 - **Rule:** Small features increment minor (15_1 → 15_2), big features increment major (15 → 16)
 - **Format:** `v16-Alpha`, `v15_1-Alpha`, etc.
 - **Alpha tag:** Current release stage
-- **Current:** v16-Alpha
+- **Current:** v16.1-Alpha (v17 refactor in progress)
 
 ### UI Patterns Established (v15+)
 - **⋮ 3-dot menu:** Always-visible vertical dots on every item (Capture notes, Clarify tasks, Confirm checklist items)
@@ -332,6 +336,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 
 ### State Management
 - `usePersistedState` — auto-persistence to IndexedDB + localStorage sync
+- `useAppData()` — custom hook extracting all shared persisted state and CRUD handlers from App (v17 refactor Step 1). Returns: `lists`, `setLists`, `todos`, `setTodos`, `reminders`, `setReminders`, `notes`, `setNotes`, `focus`, `setFocus`, `activeF`, `setActiveF`, `preset`, `setPreset`, `customT`, `setCustomT`, `tSet`, `poms`, `setPoms`, `met`, `setMet`, `fHist`, `setFHist`, `dHist`, `setDHist`, `toast`, `showT`, `tab`, `setTab`, `selList`, `setSelList`, `handleTimerComplete`, `handleUpdatePoms`, `clearCompleted`, `addFocus`, `doneFocus`, `doneList`, `doneTodo`, `undoneTodo`, `deleteTodo`, `linkTask`, `unlinkTask`, `openLinkedList`, `createAndLink`, `deleteListItem`, `deleteReminder`, `updateListName`, `deleteList`, `saveItem`, `seedSampleData`, `wkData`, `doneCount`
 - `ThemeProv` — `S.getSync()` initial + async IndexedDB load, default `'system'`
 - `useDesk()` — desktop breakpoint detection (768px+)
 - `useWide()` — wide desktop breakpoint detection (1280px+)
@@ -389,8 +394,8 @@ Removed: arc, reminders, Swipe component
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Alpha. Responsive layout overhaul complete (tablet + desktop). Ready for stabilization or new features.
-- **Working file:** `productivity-hub-v16-alpha.html` (~195KB, ~2117 lines)
+- **Current phase:** Alpha. v17 refactor in progress — extracting App into sub-components (Step 1 of 9 complete).
+- **Working file:** `productivity_hub.html` (~195KB, ~2153 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 - **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
 - **Versioning:** Small features → minor bump (15_1, 15_2), big features → major bump (15, 16, 17)
@@ -406,32 +411,65 @@ Removed: arc, reminders, Swipe component
 
 ---
 
-## 🔧 v17 Refactor Plan — Simplification & UI Smoothness
+## 🔧 v17 Refactor — Simplification & UI Smoothness
 
 **Goal:** Reduce codebase complexity, eliminate duplication, improve maintainability and UI smoothness while keeping the exact same feature set.
 
+---
+
 ### Priority 1: Extract App into Sub-Components + useAppData Hook (~300 lines net savings)
-- **Problem:** App component (~900 lines) contains ALL state, handlers, and render functions
-- **Solution:** Split into: `FocusSection`, `ClarifySection`, `ConfirmSection`, `CaptureSection`, `ReviewSection`, `SettingsSection`
-- Extract shared state into `useAppData()` custom hook (todos, lists, notes, focus, metrics, selection)
-- Pass shared state via context, eliminating prop-drilling
-- Enables `React.memo` on each section → dramatically fewer re-renders
+
+**Problem:** App component (~900 lines) contains ALL state, handlers, and render functions
+**Solution:** 8-step extraction into standalone components + shared context
+
+#### Step-by-Step Breakdown
+
+| Step | Description | Status |
+|------|-------------|--------|
+| **Step 1** | Extract `useAppData()` custom hook — move all shared persisted state (todos, lists, notes, focus, metrics, timers, tab, selList) and CRUD handlers (addFocus, doneTodo, saveItem, seedSampleData, etc.) out of App into a reusable hook | ✅ **Merged** |
+| **Step 2** | Create `AppDataCtx` context + `AppDataProv` provider + `useApp()` convenience hook — wrap render root so all child components can access shared state via context instead of prop-drilling | ⏳ **Pending** |
+| **Step 3** | Extract `CaptureSection` from `rNotes()` — move all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering into standalone component. Uses `useApp()` for shared state, receives selection props from App | ⏳ **Pending** |
+| **Step 4** | Extract `ClarifySection` from `rTodos()` — move Eisenhower matrix rendering, quadrant headers, task list with drag-and-drop, QuickAdd, TaskMenu state, and task interaction handlers into standalone component | ⏳ **Pending** |
+| **Step 5** | Extract `FocusSection` from `rFocus()` — move FocusTimer integration, focus queue rendering, timer controls, side-by-side layout logic into standalone component | ⏳ **Pending** |
+| **Step 6** | Extract `ConfirmSection` from `rLists()` — move checklist rendering (`rListContent`), list tabs, ListMenu state, edit/delete list logic, 2-column layout into standalone component | ⏳ **Pending** |
+| **Step 7** | Extract `ReviewSection` from `rReview()` — move weekly stats, streak heatmap, matrix overview, pattern insights, next actions, 2-column dashboard into standalone component | ⏳ **Pending** |
+| **Step 8** | Extract `SettingsSection` from `rMore()` — move theme picker, timer duration, data management, install guide, desktop mode, explainer into standalone component | ⏳ **Pending** |
+| **Step 9** | Clean up App shell — App becomes thin layout shell (sidebar/tab-bar + content area). Verify all 55 tests still pass | ⏳ **Pending** |
+
+#### What `useAppData()` Returns (Step 1 — merged)
+```
+State:      lists, todos, reminders, notes, focus, activeF, preset, customT, tSet,
+            poms, met, fHist, dHist, toast, tab, selList
+Setters:    setLists, setTodos, setReminders, setNotes, setFocus, setActiveF,
+            setPreset, setCustomT, setPoms, setMet, setFHist, setDHist, setTab, setSelList
+Handlers:   handleTimerComplete, handleUpdatePoms, clearCompleted, addFocus,
+            doneFocus, doneList, doneTodo, undoneTodo, deleteTodo, linkTask,
+            unlinkTask, openLinkedList, createAndLink, deleteListItem,
+            deleteReminder, updateListName, deleteList, saveItem, seedSampleData
+Toast:      showT
+Derived:    wkData, doneCount
+```
+
+---
 
 ### Priority 2: Eliminate Desktop/Mobile JSX Duplication (~250 lines saved)
 - **Problem:** `rFocus`, `rReview`, `rMore/settings`, main layout all render TWO complete JSX branches (desk vs mobile)
-- **Worst offender:** Settings is fully copy-pasted for desktop vs mobile (lines 1872-1892)
+- **Worst offender:** Settings is fully copy-pasted for desktop vs mobile
 - **Solution:** Render once, use responsive Tailwind classes (`flex flex-col lg:flex-row`, `grid grid-cols-1 lg:grid-cols-2`)
 - Only JS-conditional where truly needed (sidebar vs tab-bar)
+- **Status:** ⏳ Pending
 
 ### Priority 3: Unified ContextMenu + ConfirmDialog (~120 lines saved)
 - **Problem:** 3 near-identical menu components (`TaskMenu`, `NoteMenu`, `ListMenu`) + 2 confirmation modals (`DeleteConfirmation`, `BulkDeleteConfirm`)
-- **Solution:** Single `<ContextMenu items={[{icon, label, onClick, destructive?}]} title onClose />` 
+- **Solution:** Single `<ContextMenu items={[{icon, label, onClick, destructive?}]} title onClose />`
 - Single `<ConfirmDialog title message onConfirm onCancel variant="danger"|"info" />`
+- **Status:** ⏳ Pending
 
 ### Priority 4: StickyHeader + CSS Class Abstraction (~80 lines saved)
 - **Problem:** Every section repeats: `<div className={\`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4\`}>`
 - Repeated class combos: `text-bark-600 dark:text-sand-100`, `bg-sand-200 dark:bg-bark-600`, etc.
 - **Solution:** `<StickyHeader>` component + Tailwind `@apply` semantic classes (`.text-primary`, `.text-secondary`, `.btn-primary`, `.btn-ghost`)
+- **Status:** ⏳ Pending
 
 ### Priority 5: UI Smoothness Enhancements (adds ~30 lines)
 - CSS transitions on tab content switches (`opacity 150ms`)
@@ -439,28 +477,30 @@ Removed: arc, reminders, Swipe component
 - Exit animations for modals (currently only `anim-in` for enter)
 - Debounce `usePersistedState` IndexedDB writes (300ms) — currently writes on every keystroke
 - Virtual scrolling consideration for 100+ item lists
+- **Status:** ⏳ Pending
 
 ### Priority 6: Lazy-Load Test Suite (restructure, ~0 net)
 - **Problem:** 200-line test suite evaluates on page load even when never used
 - **Solution:** Wrap in function, only evaluate when Test tab is opened
 - Alternative: simplify test cases (many are verbose smoke tests that could be 1/3 the size)
+- **Status:** ⏳ Pending
 
 ### Implementation Strategy
 - **v17.0:** Priorities 1-3 (component extraction + dedup + unified menus) — biggest structural change
 - **v17.1:** Priorities 4-6 (polish, smoothness, cleanup) — refinement pass
-- Use incremental str_replace edits as usual
-- Verify all 55 tests still pass after each step
+- Use incremental edits, verify all 55 tests pass after each step
+- Version stays at v16.1-Alpha until refactor is complete, then bumps to v17
 
 ### Summary Table
 
-| # | Change | Lines Saved | UI Impact | Difficulty |
-|---|--------|-------------|-----------|------------|
-| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium |
-| 2 | CSS-only responsive (kill JSX duplication) | ~250 | High (smoother, consistent) | Medium |
-| 3 | Unified ContextMenu + ConfirmDialog | ~120 | Medium (consistency) | Easy |
-| 4 | StickyHeader + @apply classes | ~80 | Low (cleaner code) | Easy |
-| 5 | Transitions + debounce | +30 | High (smoothness) | Easy |
-| 6 | Lazy-load test suite | ~0 | Low | Easy |
+| # | Change | Lines Saved | UI Impact | Difficulty | Status |
+|---|--------|-------------|-----------|------------|--------|
+| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium | Step 1 done, Steps 2-9 pending |
+| 2 | CSS-only responsive (kill JSX duplication) | ~250 | High (smoother, consistent) | Medium | Pending |
+| 3 | Unified ContextMenu + ConfirmDialog | ~120 | Medium (consistency) | Easy | Pending |
+| 4 | StickyHeader + @apply classes | ~80 | Low (cleaner code) | Easy | Pending |
+| 5 | Transitions + debounce | +30 | High (smoothness) | Easy | Pending |
+| 6 | Lazy-load test suite | ~0 | Low | Easy | Pending |
 
 **Estimated total:** ~750 lines removed, ~30 added = ~720 net reduction (from ~2118 to ~1400 lines)
 
