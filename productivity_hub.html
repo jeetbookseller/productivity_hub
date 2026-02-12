@@ -1603,6 +1603,110 @@ function FocusSection({wide,desk,onTimerTick}){
   );
 }
 
+// ConfirmSection — extracted from rLists() + rListContent() (v16.2 refactor Step 6)
+function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode,setEdit}){
+  const{lists,setLists,todos,selList,setSelList,doneList,doneTodo,saveItem,showT,setTab}=useApp();
+  const{updateListName,deleteList}=useApp();
+  const[newList,setNewList]=useState('');
+  const[showNew,setShowNew]=useState(false);
+  const[listMenu,setListMenu]=useState(null);
+  const[editListId,setEditListId]=useState(null);
+  const[editListName,setEditListName]=useState('');
+  const[deleteConfirm,setDeleteConfirm]=useState(null);
+  const handleUpdateListName=(listId,newName)=>{updateListName(listId,newName);setEditListId(null);setEditListName('');};
+  const handleDeleteList=(listId)=>{deleteList(listId);setDeleteConfirm(null);};
+
+  const rListContent=(cl,isSecondary)=>{
+    if(!cl)return null;
+    const secs=[...new Set(cl.items.map(i=>i.section)||[])];
+    const linkedTask=todos.find(t=>t.linkedList===cl.id);
+    const allDone=cl.items.length>0&&cl.items.every(i=>i.done);
+    return(
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100 text-sm md:text-base truncate">{cl.name}</h3>
+          <button onClick={()=>setEdit({type:'list',item:{},listId:cl.id})} className="p-1.5 rounded-lg bg-sage-400 text-white hover:bg-sage-500 transition-colors flex-shrink-0"><I.Plus s={16}/></button>
+        </div>
+        {linkedTask&&<div className={`p-2.5 rounded-xl flex items-center justify-between ${allDone?'bg-sage-100 dark:bg-sage-400/20 border border-sage-300 dark:border-sage-400/40':'gcard'}`}><div className="flex items-center gap-2 min-w-0"><span className="text-xs">🎯</span><span className="text-sm font-medium text-bark-600 dark:text-sand-100 truncate">{linkedTask.text}</span></div>{allDone&&!linkedTask.done?<button onClick={()=>{doneTodo(linkedTask.id);showT('🎉 Task completed!');}} className="px-3 py-1 bg-sage-400 text-white rounded-lg text-xs font-bold flex-shrink-0 ml-2">✓ Done</button>:<button onClick={()=>{setTab('todos');}} className="text-xs text-ocean-400 font-medium flex-shrink-0 ml-2">View →</button>}</div>}
+        {secs.length>0?secs.map(s=>(
+          <div key={s} className="space-y-1.5">
+            <h4 className="text-xs font-bold text-bark-400/60 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h4>
+            <div className="space-y-1.5">
+            {cl.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
+              const inSel=selMode&&selSection==='lists';
+              const isSel=inSel&&selIds.has(item.id);
+              return(
+                <div key={item.id} className="gcard rounded-xl overflow-hidden">
+                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} onContextMenu={e=>{e.preventDefault();setEdit({type:'list',item,listId:cl.id});}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
+                  {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm md:text-xs">✓</span>}</button>}
+                  <div className="flex-1 min-w-0">
+                    <span className={`block font-medium sel md:text-sm ${item.done?'line-through text-bark-400/60':'text-bark-700 dark:text-cream-100'}`}>{item.text}</span>
+                    {item.notes&&<p className="text-xs text-bark-500 dark:text-sand-300 mt-1 truncate sel">📝 {item.notes}</p>}
+                  </div>
+                  {!inSel&&<button onClick={e=>{e.stopPropagation();setEdit({type:'list',item,listId:cl.id});}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
+                </div>
+              </div>
+            );})}
+            </div>
+          </div>
+        )):<Empty.List/>}
+        <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},cl.id)}/>
+      </div>
+    );
+  };
+
+  if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
+  const cl=lists.find(l=>l.id===selList);
+  const otherLists=lists.filter(l=>l.id!==selList);
+  const secondList=desk&&otherLists.length>0?otherLists[0]:null;
+
+  if(lists.length===0){
+    return(
+      <div className="space-y-4">
+        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
+          </div>
+        </div>
+        <Empty.NoLists onCreate={()=>setShowNew(true)}/>
+        {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
+      </div>
+    );
+  }
+
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <div className="flex items-center justify-between mb-3">
+          {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
+          <div className="flex items-center justify-center relative w-full">
+            {cl&&cl.items.length>0&&<button onClick={()=>enterSelMode('lists',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
+            <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="absolute right-0 p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+          </div></>}
+        </div>
+        {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleUpdateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="Checklist name..."/><button onClick={()=>handleUpdateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
+        <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
+          return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
+        })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
+      </div>
+      {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
+      {cl&&!desk&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
+      {desk?(
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <div className="gcard rounded-2xl p-4">{rListContent(cl)}</div>
+          {secondList?<div className="gcard rounded-2xl p-4">{rListContent(secondList,true)}</div>:<div/>}
+        </div>
+      ):(
+        <>{rListContent(cl)}</>
+      )}
+      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
+      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
+    </div>
+  );
+}
+
 // Main App
 function App(){
   const{theme,setTheme}=useContext(ThemeCtx);
@@ -1672,15 +1776,8 @@ function App(){
   };
   const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
   const cancelBulkDelete=()=>setBulkConfirm(null);
-  const[newList,setNewList]=useState('');
-  const[showNew,setShowNew]=useState(false);
-  const[listMenu,setListMenu]=useState(null);
-  // taskMenu state moved to ClarifySection (v16.2 refactor Step 4)
-  // noteMenu state moved to CaptureSection (v16.2 refactor Step 3)
+  // newList/showNew/listMenu/editListId/editListName/deleteConfirm moved to ConfirmSection (v16.2 refactor Step 6)
   const[linkPicker,setLinkPicker]=useState(null); // {taskId}
-  const[editListId,setEditListId]=useState(null);
-  const[editListName,setEditListName]=useState('');
-  const[deleteConfirm,setDeleteConfirm]=useState(null);
   const[moreSub,setMoreSub]=useState('settings');
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
@@ -1716,101 +1813,7 @@ function App(){
     }catch{}
   };
 
-  // UI wrappers for hook handlers that also need to clear local UI state
-  const handleUpdateListName=(listId,newName)=>{updateListName(listId,newName);setEditListId(null);setEditListName('');};
-  const handleDeleteList=(listId)=>{deleteList(listId);setDeleteConfirm(null);};
-
   // RENDERS
-  const rListContent=(cl,isSecondary)=>{
-    if(!cl)return null;
-    const secs=[...new Set(cl.items.map(i=>i.section)||[])];
-    const linkedTask=todos.find(t=>t.linkedList===cl.id);
-    const allDone=cl.items.length>0&&cl.items.every(i=>i.done);
-    return(
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 text-sm md:text-base truncate">{cl.name}</h3>
-          <button onClick={()=>setEdit({type:'list',item:{},listId:cl.id})} className="p-1.5 rounded-lg bg-sage-400 text-white hover:bg-sage-500 transition-colors flex-shrink-0"><I.Plus s={16}/></button>
-        </div>
-        {linkedTask&&<div className={`p-2.5 rounded-xl flex items-center justify-between ${allDone?'bg-sage-100 dark:bg-sage-400/20 border border-sage-300 dark:border-sage-400/40':'gcard'}`}><div className="flex items-center gap-2 min-w-0"><span className="text-xs">🎯</span><span className="text-sm font-medium text-bark-600 dark:text-sand-100 truncate">{linkedTask.text}</span></div>{allDone&&!linkedTask.done?<button onClick={()=>{doneTodo(linkedTask.id);showT('🎉 Task completed!');}} className="px-3 py-1 bg-sage-400 text-white rounded-lg text-xs font-bold flex-shrink-0 ml-2">✓ Done</button>:<button onClick={()=>{setTab('todos');}} className="text-xs text-ocean-400 font-medium flex-shrink-0 ml-2">View →</button>}</div>}
-        {secs.length>0?secs.map(s=>(
-          <div key={s} className="space-y-1.5">
-            <h4 className="text-xs font-bold text-bark-400/60 dark:text-sand-300/50 uppercase tracking-wider px-2">{s}</h4>
-            <div className="space-y-1.5">
-            {cl.items.filter(i=>i.section===s).sort((a,b)=>(a.done?1:0)-(b.done?1:0)).map(item=>{
-              const inSel=selMode&&selSection==='lists';
-              const isSel=inSel&&selIds.has(item.id);
-              return(
-                <div key={item.id} className="gcard rounded-xl overflow-hidden">
-                <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} onContextMenu={e=>{e.preventDefault();setEdit({type:'list',item,listId:cl.id});}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
-                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
-                  {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm md:text-xs">✓</span>}</button>}
-                  <div className="flex-1 min-w-0">
-                    <span className={`block font-medium sel md:text-sm ${item.done?'line-through text-bark-400/60':'text-bark-700 dark:text-cream-100'}`}>{item.text}</span>
-                    {item.notes&&<p className="text-xs text-bark-500 dark:text-sand-300 mt-1 truncate sel">📝 {item.notes}</p>}
-                  </div>
-                  {!inSel&&<button onClick={e=>{e.stopPropagation();setEdit({type:'list',item,listId:cl.id});}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
-                </div>
-              </div>
-            );})}
-            </div>
-          </div>
-        )):<Empty.List/>}
-        <QuickAdd placeholder="Quick add item..." onAdd={text=>saveItem('list',{text},cl.id)}/>
-      </div>
-    );
-  };
-
-  const rLists=()=>{
-    if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
-    const cl=lists.find(l=>l.id===selList);
-    const otherLists=lists.filter(l=>l.id!==selList);
-    const secondList=desk&&otherLists.length>0?otherLists[0]:null;
-    
-    if(lists.length===0){
-      return(
-        <div className="space-y-4">
-          <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
-            </div>
-          </div>
-          <Empty.NoLists onCreate={()=>setShowNew(true)}/>
-          {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
-        </div>
-      );
-    }
-    
-    return(
-      <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-          <div className="flex items-center justify-between mb-3">
-            {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
-            <div className="flex items-center justify-center relative w-full">
-              {cl&&cl.items.length>0&&<button onClick={()=>enterSelMode('lists',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
-              <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
-              <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="absolute right-0 p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
-            </div></>}
-          </div>
-          {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleUpdateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="Checklist name..."/><button onClick={()=>handleUpdateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
-          <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
-            return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
-          })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
-        </div>
-        {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
-        {cl&&!desk&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
-        {desk?(
-          <div className="grid grid-cols-2 gap-6 items-start">
-            <div className="gcard rounded-2xl p-4">{rListContent(cl)}</div>
-            {secondList?<div className="gcard rounded-2xl p-4">{rListContent(secondList,true)}</div>:<div/>}
-          </div>
-        ):(
-          <>{rListContent(cl)}</>
-        )}
-      </div>
-    );
-  };
-
   // Review Tab
   const rReview=()=>{
     const qc=QUADS.map(q=>({...q,n:todos.filter(t=>t.quad===q.id&&!t.done).length}));
@@ -2101,7 +2104,7 @@ function App(){
           <div className="flex-1 overflow-y-auto">
             <div className="px-8 py-6 mx-auto">
               {tab==='focus'&&<FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/>}
-              {tab==='lists'&&rLists()}
+              {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
               {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
               {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
               {tab==='review'&&rReview()}
@@ -2120,7 +2123,7 @@ function App(){
       </div>
       <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
         {tab==='focus'?<div className="max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>:null}
-        {tab==='lists'&&rLists()}
+        {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
         {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
         {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
         {tab==='review'&&rReview()}
@@ -2146,9 +2149,7 @@ function App(){
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
-      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
-      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
     </div>
   );
