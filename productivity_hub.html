@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16-Alpha';
+const APP_VERSION = '16.7';
 
 // Icons - More visible with less transparency
 const I={
@@ -1208,7 +1208,7 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
   );
 },(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
 
-// useAppData — shared persisted data state and CRUD handlers (v17 refactor Step 1)
+// useAppData — shared persisted data state and CRUD handlers (v16.2 refactor Step 1)
 function useAppData(){
   // Data
   const[lists,setLists]=usePersistedState('lists',[]);
@@ -1357,130 +1357,229 @@ function useAppData(){
   };
 }
 
-// Main App
-function App(){
-  const{theme,setTheme}=useContext(ThemeCtx);
-  const desk=useDesk();
-  const wide=useWide();
-  const d=useAppData();
-  const{lists,setLists,todos,setTodos,reminders,setReminders,notes,setNotes,
-    focus,setFocus,activeF,setActiveF,
-    preset,setPreset,customT,setCustomT,tSet,poms,setPoms,
-    met,setMet,fHist,setFHist,dHist,setDHist,
-    toast,showT,tab,setTab,selList,setSelList,
-    handleTimerComplete,handleUpdatePoms,clearCompleted,
-    addFocus,doneFocus,doneList,doneTodo,undoneTodo,deleteTodo,
-    linkTask,unlinkTask,openLinkedList,createAndLink,
-    deleteListItem,deleteReminder,updateListName,deleteList,saveItem,
-    seedSampleData,wkData,doneCount}=d;
+// AppDataCtx — shared data context (v16.2 refactor Step 2)
+const AppDataCtx=React.createContext(null);
+function AppDataProv({children}){
+  const data=useAppData();
+  return React.createElement(AppDataCtx.Provider,{value:data},children);
+}
+function useApp(){const ctx=useContext(AppDataCtx);if(!ctx)throw new Error('useApp must be inside AppDataProv');return ctx;}
 
-  const[timerInfo,setTimerInfo]=useState({left:0,run:false,mode:'work'});
-  const onTimerTick=useCallback((info)=>setTimerInfo(info),[]);
-  const fmtSidebar=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};
-  const[showHelp,setShowHelp]=useState(false);
-  const[seenAbout,setSeenAbout]=usePersistedState('seenAbout',false);
-  const[showWelcome,setShowWelcome]=useState(false);
-  const[seenChecked,setSeenChecked]=useState(false);
-  useEffect(()=>{S.get('seenAbout',false).then(v=>{if(v===false)setShowWelcome(true);setSeenChecked(true);});},[]);
+// CaptureSection — extracted from rNotes() (v16.2 refactor Step 3)
+function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode}){
+  const{notes,setNotes,todos,setTodos,showT}=useApp();
+  const[newBullet,setNewBullet]=useState('');
+  const[editingNote,setEditingNote]=useState(null);
+  const[noteMenu,setNoteMenu]=useState(null);
+  const bulletRef=React.useRef(null);
+  const today=new Date().toISOString().split('T')[0];
 
-  // UI
-  const[edit,setEdit]=useState(null);
-  // Batch Selection State (v10.2)
-  const[selMode,setSelMode]=useState(false);
-  const[selSection,setSelSection]=useState(null); // 'todos'|'lists'|'reminders'|'notes'
-  const[selIds,setSelIds]=useState(new Set());
-  const[bulkConfirm,setBulkConfirm]=useState(null); // {ids:Set, section:string} when awaiting confirm
-  const exitSelMode=()=>{setSelMode(false);setSelSection(null);setSelIds(new Set());};
-  const toggleSelId=(id)=>setSelIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});
-  const enterSelMode=(section,firstId)=>{setSelMode(true);setSelSection(section);setSelIds(firstId?new Set([firstId]):new Set());};
-  // Bulk helpers (v10.4)
-  const getAllIdsForSection=()=>{
-    if(selSection==='todos')return todos.map(t=>t.id);
-    if(selSection==='lists'){const cl=lists.find(l=>l.id===selList);return cl?cl.items.map(i=>i.id):[];}
-    if(selSection==='notes')return notes.map(n=>n.id);
-    return[];
+  const notesByDate=useMemo(()=>{
+    const groups={};
+    notes.forEach(n=>{
+      const d=n.date||new Date(n.crAt).toISOString().split('T')[0];
+      if(!groups[d])groups[d]=[];
+      groups[d].push(n);
+    });
+    return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
+  },[notes]);
+
+  const addBullet=(text)=>{
+    if(!text.trim())return;
+    const newNote={id:uid(),text:text.trim(),date:today,crAt:new Date().toISOString()};
+    setNotes([newNote,...notes]);
   };
-  const selectAll=()=>setSelIds(new Set(getAllIdsForSection()));
-  const deselectAll=()=>setSelIds(new Set());
-  const executeBulk=(action,sIds,sec)=>{
-    const ids=[...sIds];const cnt=ids.length;
-    if(sec==='todos'){
-      if(action==='done'){setTodos(t=>t.map(x=>sIds.has(x.id)?{...x,done:true}:x));setFocus(f=>f.filter(x=>!sIds.has(x.id)));setMet(p=>({...p,d:{...p.d,t:p.d.t+cnt},w:{...p.w,t:p.w.t+cnt}}));showT(`✅ ${cnt} task${cnt>1?'s':''} done`);}
-      if(action==='delete'){setTodos(t=>t.filter(x=>!sIds.has(x.id)));setFocus(f=>f.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
-    }else if(sec==='lists'){
-      const lid=selList;
-      if(action==='done'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.map(i=>sIds.has(i.id)?{...i,done:!i.done}:i)}:l));showT(`✅ ${cnt} toggled`);}
-      if(action==='delete'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.filter(i=>!sIds.has(i.id))}:l));showT(`🗑 ${cnt} deleted`);}
-    }else if(sec==='notes'){
-      if(action==='delete'){setNotes(n=>n.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
-      if(action==='strike'){setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:!x.struck}:x));showT(`${cnt} toggled`);}
-      if(action==='clarify'){const toMove=notes.filter(x=>sIds.has(x.id));setTodos(t=>[...toMove.map(x=>({id:uid(),text:x.text||x.title||x.content,quad:'nn',poms:0,done:false})),...t]);setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x));showT(`📋 ${cnt} copied to Clarify`);}
+
+  const handleBulletKeyDown=(e)=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      addBullet(newBullet);
+      setNewBullet('');
     }
-    exitSelMode();
   };
-  const bulkAction=(action)=>{
-    if(selIds.size===0)return;
-    // Confirmation gate: delete ≥3 items triggers dialog
-    if(action==='delete'&&selIds.size>=3){setBulkConfirm({ids:new Set(selIds),section:selSection});return;}
-    executeBulk(action,selIds,selSection);
+
+  const formatDateHeader=(dateStr)=>{
+    const d=new Date(dateStr+'T12:00:00');
+    const now=new Date();
+    const todayStr=now.toISOString().split('T')[0];
+    const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+    const yesterdayStr=yesterday.toISOString().split('T')[0];
+    if(dateStr===todayStr)return'Today';
+    if(dateStr===yesterdayStr)return'Yesterday';
+    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   };
-  const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
-  const cancelBulkDelete=()=>setBulkConfirm(null);
-  const[newList,setNewList]=useState('');
-  const[showNew,setShowNew]=useState(false);
-  const[listMenu,setListMenu]=useState(null);
-  const[taskMenu,setTaskMenu]=useState(null);
-  const[noteMenu,setNoteMenu]=useState(null); // Note for 3-dot context menu
-  const[linkPicker,setLinkPicker]=useState(null); // {taskId}
-  const[editListId,setEditListId]=useState(null);
-  const[editListName,setEditListName]=useState('');
-  const[deleteConfirm,setDeleteConfirm]=useState(null);
-  const[moreSub,setMoreSub]=useState('settings');
-  const[settExp,setSettExp]=useState({});
-  const[helpExp,setHelpExp]=useState({});
-  const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
+
+  const deleteBullet=(id)=>setNotes(notes.filter(n=>n.id!==id));
+  const updateBullet=(id,text)=>{if(!text.trim()){deleteBullet(id);}else{setNotes(notes.map(n=>n.id===id?{...n,text:text.trim()}:n));}setEditingNote(null);};
+
+  React.useEffect(()=>{
+    const thirtyDays=30*24*60*60*1000;
+    const now=Date.now();
+    const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));
+    if(toRemove.length>0)setNotes(prev=>prev.filter(n=>!toRemove.find(r=>r.id===n.id)));
+  },[notes.length]);
+
+  const toggleStrike=(id)=>setNotes(notes.map(n=>n.id===id?{...n,struck:!n.struck,struckAt:!n.struck?Date.now():null}:n));
+  const noteToTodo=(note)=>{setTodos(t=>[{id:uid(),text:note.text||note.title||note.content,quad:'nn',poms:0,done:false},...t]);setNotes(notes.map(n=>n.id===note.id?{...n,struck:true,struckAt:Date.now()}:n));showT('📋 Copied to Clarify + struck');};
+
+  const inSel=selMode&&selSection==='notes';
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
+        :<div className="flex items-center justify-center relative">
+          {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Capture</h2>
+        </div>}
+      </div>
+
+      <div className={`gcard rounded-2xl p-4 ${wide?'capture-input':''}`}>
+        <div className="flex items-start gap-3">
+          <span className="text-sage-400 mt-1 text-lg">•</span>
+          <textarea
+            ref={bulletRef}
+            value={newBullet}
+            onChange={e=>setNewBullet(e.target.value)}
+            onKeyDown={handleBulletKeyDown}
+            placeholder="Quick note... (Enter to add)"
+            rows={1}
+            className="flex-1 bg-transparent focus:outline-none text-bark-600 dark:text-sand-100 placeholder-bark-400/50 resize-none text-base leading-relaxed"
+            style={{minHeight:'28px'}}
+          />
+        </div>
+        {newBullet.trim()&&<div className="flex justify-end mt-2"><button onClick={()=>{addBullet(newBullet);setNewBullet('');}} className="px-4 py-1.5 bg-sage-400 rounded-lg text-white font-semibold text-sm">Add</button></div>}
+      </div>
+
+      {notesByDate.length===0?<Empty.Notes/>:notesByDate.map(([date,dayNotes])=>(
+        <div key={date} className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-sm font-bold text-bark-600/70 dark:text-sand-200/70 uppercase tracking-wider">{formatDateHeader(date)}</span>
+            <div className="flex-1 h-px bg-sand-200 dark:bg-bark-500/50"/>
+          </div>
+          <div className="gcard rounded-2xl p-3 space-y-1">
+            {dayNotes.map(n=>{
+              const isSel=inSel&&selIds.has(n.id);
+              let touchData={x:0,y:0,moved:false,menuTap:false};
+              const onTS=(e)=>{const t=e.touches?e.touches[0]:null;if(t)touchData={x:t.clientX,y:t.clientY,moved:false,menuTap:false};};
+              const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
+              const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
+              return(
+                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
+                  {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
+                  {editingNote&&editingNote.id===n.id?
+                    <input autoFocus type="text" value={editingNote.text} onChange={e=>setEditingNote({...editingNote,text:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();updateBullet(n.id,editingNote.text);}if(e.key==='Escape')setEditingNote(null);}} onBlur={()=>updateBullet(n.id,editingNote.text)} onClick={e=>e.stopPropagation()} className="flex-1 bg-transparent focus:outline-none text-bark-700 dark:text-sand-100 border-b-2 border-sage-400 font-medium"/>
+                  :<span className={`flex-1 sel leading-relaxed ${n.struck?'line-through text-bark-400/50 dark:text-sand-300/40':'text-bark-700 dark:text-cream-100 font-medium'}`}>{n.text||n.title||n.content}</span>}
+                  {!inSel&&!editingNote&&<button data-menu-btn onTouchStart={e=>{touchData.menuTap=true;}} onClick={e=>{e.stopPropagation();e.preventDefault();setNoteMenu(n);}} className="p-2 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
+    </div>
+  );
+}
+
+// ClarifySection — extracted from rTodos() (v16.2 refactor Step 4)
+function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode,setEdit,setLinkPicker}){
+  const{todos,setTodos,doneTodo,undoneTodo,deleteTodo,addFocus,focus,openLinkedList,clearCompleted,doneCount,saveItem,showT}=useApp();
   const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
+  const[dragQ,setDragQ]=useState(null);
+  const moveTodoQuad=(tid,nq)=>{setTodos(t=>t.map(x=>x.id===tid?{...x,quad:nq}:x));setDragQ(null);showT(`→ ${QUADS.find(q=>q.id===nq)?.l}`);};
+  const[taskMenu,setTaskMenu]=useState(null);
+
+  const content=QUADS.map(q=>{
+    const tasks=todos.filter(t=>t.quad===q.id).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+    const isExp=expQ[q.id];
+    const vis=isExp?tasks:tasks.slice(0,2);
+    return(
+      <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} ${q.dbdr} overflow-hidden transition-all ${dragQ&&dragQ!==q.id?'ring-2 ring-sage-300 ring-offset-1':''}`}
+        onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='move';}}
+        onDrop={e=>{e.preventDefault();const tid=e.dataTransfer.getData('text/plain');if(tid&&q.id!==todos.find(x=>x.id===tid)?.quad)moveTodoQuad(tid,q.id);}}>
+        <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2 md:p-3 bg-gradient-to-r ${q.clr} ${q.dclr} flex items-center justify-between`}><div><h3 className={`font-bold text-sm md:text-base ${q.txt} ${q.dtxt}`}>{q.l}</h3><p className="text-[11px] md:text-xs text-bark-500/60 dark:text-sand-300/50">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt} ${q.dtxt}`}>{tasks.length}</span>{isExp?<I.Up s={16} c={`${q.txt} ${q.dtxt}`}/>:<I.Down s={16} c={`${q.txt} ${q.dtxt}`}/>}</div></button>
+        <div className={`bg-white/40 dark:bg-white/5 ${tasks.length>0?'p-2 md:p-3':'p-1'}`}>
+          {tasks.length===0?<Empty.Tasks/>:(
+            <div className="space-y-1.5">
+              {vis.map(t=>{
+                const inSel=selMode&&selSection==='todos';
+                const isSel=inSel&&selIds.has(t.id);
+                return(
+                  <div key={t.id} className="gcard rounded-xl overflow-hidden">
+                  <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                    {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
+                    {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm md:text-xs font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold sel md:text-sm md:leading-snug leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
+                        {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
+                      </div>
+                      {(t.cat||t.deadline||t.subtasks?.length>0)&&(
+                        <div className="flex items-center gap-2 flex-wrap text-xs mt-1">
+                          {t.cat&&<span className="px-2 py-0.5 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
+                          {t.deadline&&<span className="px-2 py-0.5 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
+                          {t.subtasks?.length>0&&<span className="px-2 py-0.5 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
+                        </div>
+                      )}
+                      {t.poms>0&&<div className="flex items-center gap-1.5 mt-1"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span></div>}
+                    </div>
+                    {!inSel&&<button onClick={e=>{e.stopPropagation();setTaskMenu(t);}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
+                  </div>
+                </div>
+              );})}
+              {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  });
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
+        <div className="flex items-center justify-center relative">
+          {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Clarify</h2>
+          <div className="absolute right-0 flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div>
+        </div>}
+      </div>
+      <div className={desk?'md-grid':'space-y-3'}>{content}</div>
+      <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
+      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
+    </div>
+  );
+}
+
+// FocusSection — extracted from rFocus() (v16.2 refactor Step 5)
+function FocusSection({wide,desk,onTimerTick}){
+  const{tSet,poms,met,focus,setFocus,activeF,setActiveF,handleTimerComplete,handleUpdatePoms,doneFocus}=useApp();
   const[dragI,setDragI]=useState(null);
   const[dragO,setDragO]=useState(null);
-
-  // PWA Install state
-  const[pwaPrompt,setPwaPrompt]=useState(!!window.__pwaInstallPrompt);
-  const[pwaInstalled,setPwaInstalled]=useState(!!window.__pwaInstalled);
-  const pwaStatus=useMemo(()=>{
-    if(pwaInstalled)return'installed';
-    if(window.matchMedia('(display-mode:standalone)').matches)return'installed';
-    if(window.navigator.standalone===true)return'installed';
-    if(pwaPrompt)return'ready';
-    return'unavailable';
-  },[pwaPrompt,pwaInstalled]);
-
-  useEffect(()=>{
-    const onReady=()=>setPwaPrompt(true);
-    const onInstalled=()=>{setPwaInstalled(true);setPwaPrompt(false);showT('✅ App installed!');};
-    window.addEventListener('pwa-prompt-ready',onReady);
-    window.addEventListener('pwa-installed',onInstalled);
-    return()=>{window.removeEventListener('pwa-prompt-ready',onReady);window.removeEventListener('pwa-installed',onInstalled);};
-  },[]);
-
-  const triggerInstall=async()=>{
-    if(!window.__pwaInstallPrompt)return;
-    try{
-      window.__pwaInstallPrompt.prompt();
-      const{outcome}=await window.__pwaInstallPrompt.userChoice;
-      if(outcome==='accepted'){setPwaInstalled(true);setPwaPrompt(false);}
-    }catch{}
-  };
-
   const handleDS=i=>setDragI(i);
   const handleDO=(e,i)=>{e.preventDefault();setDragO(i);};
   const handleDE=()=>{if(dragI!==null&&dragO!==null&&dragI!==dragO){const n=[...focus],[d]=n.splice(dragI,1);n.splice(dragO,0,d);setFocus(n);}setDragI(null);setDragO(null);};
 
-  // UI wrappers for hook handlers that also need to clear local UI state
-  const handleUpdateListName=(listId,newName)=>{updateListName(listId,newName);setEditListId(null);setEditListName('');};
-  const handleDeleteList=(listId)=>{deleteList(listId);setDeleteConfirm(null);};
+  const statsCards=[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}];
 
-  // RENDERS
-  const rFocus=()=>(
+  const renderQueue=(compact)=>(<>
+    <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
+    <div className="space-y-2">
+      {focus.map((t,i)=>(
+        <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard ${compact?'rounded-2xl px-3 py-2':'rounded-2xl p-4'} focus-item flex items-center gap-${compact?'2.5':'3 md:gap-4'} cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
+          <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
+          <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
+          <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
+          {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
+          <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
+        </div>
+      ))}
+      {focus.length===0&&<Empty.Focus/>}
+    </div>
+  </>);
+
+  return(
     <div className="space-y-5">
       <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
@@ -1488,48 +1587,34 @@ function App(){
       {desk?(
         <div className="flex gap-6 items-start">
           <div className="flex-1 min-w-0 space-y-4">
-      <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-<div className="grid grid-cols-3 gap-2">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+            <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+            <div className="grid grid-cols-3 gap-2">{statsCards.map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
           </div>
-          <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
-        <div className="space-y-2">
-          {focus.map((t,i)=>(
-            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl px-3 py-2 focus-item flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
-              <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
-              <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
-              <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
-              {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
-              <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
-            </div>
-          ))}
-          {focus.length===0&&<Empty.Focus/>}
-        </div>
-          </div>
+          <div className="flex-1 min-w-0">{renderQueue(true)}</div>
         </div>
       ):(
         <>
-      <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-<div className="grid grid-cols-3 gap-3 md:gap-4">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
-      <div>
-        <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
-        <div className="space-y-2">
-          {focus.map((t,i)=>(
-            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 md:gap-4 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
-              <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
-              <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
-              <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
-              {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
-              <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
-            </div>
-          ))}
-          {focus.length===0&&<Empty.Focus/>}
-        </div>
-      </div>
+          <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+          <div className="grid grid-cols-3 gap-3 md:gap-4">{statsCards.map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+          <div>{renderQueue(false)}</div>
         </>
       )}
     </div>
   );
+}
+
+// ConfirmSection — extracted from rLists() + rListContent() (v16.2 refactor Step 6)
+function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode,setEdit}){
+  const{lists,setLists,todos,selList,setSelList,doneList,doneTodo,saveItem,showT,setTab}=useApp();
+  const{updateListName,deleteList}=useApp();
+  const[newList,setNewList]=useState('');
+  const[showNew,setShowNew]=useState(false);
+  const[listMenu,setListMenu]=useState(null);
+  const[editListId,setEditListId]=useState(null);
+  const[editListName,setEditListName]=useState('');
+  const[deleteConfirm,setDeleteConfirm]=useState(null);
+  const handleUpdateListName=(listId,newName)=>{updateListName(listId,newName);setEditListId(null);setEditListName('');};
+  const handleDeleteList=(listId)=>{deleteList(listId);setDeleteConfirm(null);};
 
   const rListContent=(cl,isSecondary)=>{
     if(!cl)return null;
@@ -1571,360 +1656,146 @@ function App(){
     );
   };
 
-  const rLists=()=>{
-    if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
-    const cl=lists.find(l=>l.id===selList);
-    const otherLists=lists.filter(l=>l.id!==selList);
-    const secondList=desk&&otherLists.length>0?otherLists[0]:null;
-    
-    if(lists.length===0){
-      return(
-        <div className="space-y-4">
-          <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
-            </div>
-          </div>
-          <Empty.NoLists onCreate={()=>setShowNew(true)}/>
-          {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
-        </div>
-      );
-    }
-    
+  if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
+  const cl=lists.find(l=>l.id===selList);
+  const otherLists=lists.filter(l=>l.id!==selList);
+  const secondList=desk&&otherLists.length>0?otherLists[0]:null;
+
+  if(lists.length===0){
     return(
       <div className="space-y-4">
         <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           <div className="flex items-center justify-between mb-3">
-            {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
-            <div className="flex items-center justify-center relative w-full">
-              {cl&&cl.items.length>0&&<button onClick={()=>enterSelMode('lists',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
-              <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
-              <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="absolute right-0 p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
-            </div></>}
+            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
           </div>
-          {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleUpdateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="Checklist name..."/><button onClick={()=>handleUpdateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
-          <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
-            return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
-          })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
         </div>
+        <Empty.NoLists onCreate={()=>setShowNew(true)}/>
         {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
-        {cl&&!desk&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
-        {desk?(
-          <div className="grid grid-cols-2 gap-6 items-start">
-            <div className="gcard rounded-2xl p-4">{rListContent(cl)}</div>
-            {secondList?<div className="gcard rounded-2xl p-4">{rListContent(secondList,true)}</div>:<div/>}
-          </div>
-        ):(
-          <>{rListContent(cl)}</>
-        )}
       </div>
     );
-  };
+  }
 
-  // Drag-and-drop for matrix re-prioritization
-  const[dragQ,setDragQ]=useState(null);
-  const moveTodoQuad=(tid,nq)=>{setTodos(t=>t.map(x=>x.id===tid?{...x,quad:nq}:x));setDragQ(null);showT(`→ ${QUADS.find(q=>q.id===nq)?.l}`);};
-
-  const rTodos=()=>{
-    const content=QUADS.map(q=>{
-      const tasks=todos.filter(t=>t.quad===q.id).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
-      const isExp=expQ[q.id];
-      const vis=isExp?tasks:tasks.slice(0,2);
-      return(
-        <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} ${q.dbdr} overflow-hidden transition-all ${dragQ&&dragQ!==q.id?'ring-2 ring-sage-300 ring-offset-1':''}`}
-          onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='move';}}
-          onDrop={e=>{e.preventDefault();const tid=e.dataTransfer.getData('text/plain');if(tid&&q.id!==todos.find(x=>x.id===tid)?.quad)moveTodoQuad(tid,q.id);}}>
-          <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2 md:p-3 bg-gradient-to-r ${q.clr} ${q.dclr} flex items-center justify-between`}><div><h3 className={`font-bold text-sm md:text-base ${q.txt} ${q.dtxt}`}>{q.l}</h3><p className="text-[11px] md:text-xs text-bark-500/60 dark:text-sand-300/50">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt} ${q.dtxt}`}>{tasks.length}</span>{isExp?<I.Up s={16} c={`${q.txt} ${q.dtxt}`}/>:<I.Down s={16} c={`${q.txt} ${q.dtxt}`}/>}</div></button>
-          <div className={`bg-white/40 dark:bg-white/5 ${tasks.length>0?'p-2 md:p-3':'p-1'}`}>
-            {tasks.length===0?<Empty.Tasks/>:(
-              <div className="space-y-1.5">
-                {vis.map(t=>{
-                  const inSel=selMode&&selSection==='todos';
-                  const isSel=inSel&&selIds.has(t.id);
-                  return(
-                    <div key={t.id} className="gcard rounded-xl overflow-hidden">
-                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
-                      {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
-                      {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm md:text-xs font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-semibold sel md:text-sm md:leading-snug leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
-                          {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
-                        </div>
-                        {(t.cat||t.deadline||t.subtasks?.length>0)&&(
-                          <div className="flex items-center gap-2 flex-wrap text-xs mt-1">
-                            {t.cat&&<span className="px-2 py-0.5 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
-                            {t.deadline&&<span className="px-2 py-0.5 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
-                            {t.subtasks?.length>0&&<span className="px-2 py-0.5 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
-                          </div>
-                        )}
-                        {t.poms>0&&<div className="flex items-center gap-1.5 mt-1"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span></div>}
-                      </div>
-                      {!inSel&&<button onClick={e=>{e.stopPropagation();setTaskMenu(t);}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
-                    </div>
-                  </div>
-                );})}
-                {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    });
-    return(
-      <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-          {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
-          <div className="flex items-center justify-center relative">
-            {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
-            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Clarify</h2>
-            <div className="absolute right-0 flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div>
-          </div>}
-        </div>
-        <div className={desk?'md-grid':'space-y-3'}>{content}</div>
-        <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
-      </div>
-    );
-  };
-
-  // Quick Notes - Bullet Journal Style
-  const [newBullet,setNewBullet]=useState('');
-  const [editingNote,setEditingNote]=useState(null); // {id, text}
-  const bulletRef=React.useRef(null);
-  const today=new Date().toISOString().split('T')[0];
-  
-  // Group notes by date
-  const notesByDate=useMemo(()=>{
-    const groups={};
-    notes.forEach(n=>{
-      const d=n.date||new Date(n.crAt).toISOString().split('T')[0];
-      if(!groups[d])groups[d]=[];
-      groups[d].push(n);
-    });
-    // Sort dates descending (newest first)
-    return Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
-  },[notes]);
-  
-  const addBullet=(text)=>{
-    if(!text.trim())return;
-    const newNote={id:uid(),text:text.trim(),date:today,crAt:new Date().toISOString()};
-    setNotes([newNote,...notes]);
-  };
-  
-  const handleBulletKeyDown=(e)=>{
-    if(e.key==='Enter'&&!e.shiftKey){
-      e.preventDefault();
-      addBullet(newBullet);
-      setNewBullet('');
-    }
-  };
-  
-  const formatDateHeader=(dateStr)=>{
-    const d=new Date(dateStr+'T12:00:00');
-    const now=new Date();
-    const todayStr=now.toISOString().split('T')[0];
-    const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
-    const yesterdayStr=yesterday.toISOString().split('T')[0];
-    if(dateStr===todayStr)return'Today';
-    if(dateStr===yesterdayStr)return'Yesterday';
-    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-  };
-  
-  const deleteBullet=(id)=>setNotes(notes.filter(n=>n.id!==id));
-  const updateBullet=(id,text)=>{if(!text.trim()){deleteBullet(id);}else{setNotes(notes.map(n=>n.id===id?{...n,text:text.trim()}:n));}setEditingNote(null);};
-  // Auto-clear struck notes older than 30 days (v14.1-alpha)
-  React.useEffect(()=>{
-    const thirtyDays=30*24*60*60*1000;
-    const now=Date.now();
-    const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));
-    if(toRemove.length>0)setNotes(prev=>prev.filter(n=>!toRemove.find(r=>r.id===n.id)));
-  },[notes.length]);
-
-  const toggleStrike=(id)=>setNotes(notes.map(n=>n.id===id?{...n,struck:!n.struck,struckAt:!n.struck?Date.now():null}:n));
-  const noteToTodo=(note)=>{setTodos(t=>[{id:uid(),text:note.text||note.title||note.content,quad:'nn',poms:0,done:false},...t]);setNotes(notes.map(n=>n.id===note.id?{...n,struck:true,struckAt:Date.now()}:n));showT('📋 Copied to Clarify + struck');};
-  
-  const rNotes=()=>{
-    const inSel=selMode&&selSection==='notes';
-    return(
+  return(
     <div className="space-y-4">
       <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-        {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
-        :<div className="flex items-center justify-center relative">
-          {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
-          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📝 Capture</h2>
-        </div>}
-      </div>
-      
-      {/* Quick input area */}
-      <div className={`gcard rounded-2xl p-4 ${wide?'capture-input':''}`}>
-        <div className="flex items-start gap-3">
-          <span className="text-sage-400 mt-1 text-lg">•</span>
-          <textarea
-            ref={bulletRef}
-            value={newBullet}
-            onChange={e=>setNewBullet(e.target.value)}
-            onKeyDown={handleBulletKeyDown}
-            placeholder="Quick note... (Enter to add)"
-            rows={1}
-            className="flex-1 bg-transparent focus:outline-none text-bark-600 dark:text-sand-100 placeholder-bark-400/50 resize-none text-base leading-relaxed"
-            style={{minHeight:'28px'}}
-          />
+        <div className="flex items-center justify-between mb-3">
+          {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
+          <div className="flex items-center justify-center relative w-full">
+            {cl&&cl.items.length>0&&<button onClick={()=>enterSelMode('lists',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
+            <button onClick={()=>setEdit({type:'list',item:{},listId:selList})} aria-label="Add item to list" className="absolute right-0 p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button>
+          </div></>}
         </div>
-        {newBullet.trim()&&<div className="flex justify-end mt-2"><button onClick={()=>{addBullet(newBullet);setNewBullet('');}} className="px-4 py-1.5 bg-sage-400 rounded-lg text-white font-semibold text-sm">Add</button></div>}
+        {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleUpdateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="Checklist name..."/><button onClick={()=>handleUpdateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
+        <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
+          return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
+        })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
       </div>
-      
-      {/* Notes by day */}
-      {notesByDate.length===0?<Empty.Notes/>:notesByDate.map(([date,dayNotes])=>(
-        <div key={date} className="space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <span className="text-sm font-bold text-bark-600/70 dark:text-sand-200/70 uppercase tracking-wider">{formatDateHeader(date)}</span>
-            <div className="flex-1 h-px bg-sand-200 dark:bg-bark-500/50"/>
-          </div>
-          <div className="gcard rounded-2xl p-3 space-y-1">
-            {dayNotes.map(n=>{
-              const isSel=inSel&&selIds.has(n.id);
-              let touchData={x:0,y:0,moved:false,menuTap:false};
-              const onTS=(e)=>{const t=e.touches?e.touches[0]:null;if(t)touchData={x:t.clientX,y:t.clientY,moved:false,menuTap:false};};
-              const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
-              const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
-              return(
-                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
-                  {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
-                  {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
-                  {editingNote&&editingNote.id===n.id?
-                    <input autoFocus type="text" value={editingNote.text} onChange={e=>setEditingNote({...editingNote,text:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();updateBullet(n.id,editingNote.text);}if(e.key==='Escape')setEditingNote(null);}} onBlur={()=>updateBullet(n.id,editingNote.text)} onClick={e=>e.stopPropagation()} className="flex-1 bg-transparent focus:outline-none text-bark-700 dark:text-sand-100 border-b-2 border-sage-400 font-medium"/>
-                  :<span className={`flex-1 sel leading-relaxed ${n.struck?'line-through text-bark-400/50 dark:text-sand-300/40':'text-bark-700 dark:text-cream-100 font-medium'}`}>{n.text||n.title||n.content}</span>}
-                  {!inSel&&!editingNote&&<button data-menu-btn onTouchStart={e=>{touchData.menuTap=true;}} onClick={e=>{e.stopPropagation();e.preventDefault();setNoteMenu(n);}} className="p-2 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
-                </div>
-              );
-            })}
-          </div>
+      {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
+      {cl&&!desk&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
+      {desk?(
+        <div className="grid grid-cols-2 gap-6 items-start">
+          <div className="gcard rounded-2xl p-4">{rListContent(cl)}</div>
+          {secondList?<div className="gcard rounded-2xl p-4">{rListContent(secondList,true)}</div>:<div/>}
         </div>
-      ))}
+      ):(
+        <>{rListContent(cl)}</>
+      )}
+      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
+      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
     </div>
   );
-  };
+}
 
-  // Review Tab
-  const rReview=()=>{
-    const qc=QUADS.map(q=>({...q,n:todos.filter(t=>t.quad===q.id&&!t.done).length}));
-    const cc=CATS.map(c=>({...c,n:todos.filter(t=>t.cat===c.id&&!t.done).length})).filter(c=>c.n>0);
-    const active=todos.filter(t=>!t.done).length;
-    const done=todos.filter(t=>t.done).length;
-    const overdue=todos.filter(t=>!t.done&&t.deadline&&t.deadline<new Date().toISOString().split('T')[0]);
-    const nWeek=notes.filter(n=>{const d=new Date(n.crAt||n.date);return Date.now()-d.getTime()<7*864e5;}).length;
-    const struck=notes.filter(n=>n.struck).length;
+// ReviewSection — extracted from rReview() (v16.2 refactor Step 7)
+function ReviewSection({wide}){
+  const{todos,notes,focus,met,dHist,wkData}=useApp();
+  const qc=QUADS.map(q=>({...q,n:todos.filter(t=>t.quad===q.id&&!t.done).length}));
+  const cc=CATS.map(c=>({...c,n:todos.filter(t=>t.cat===c.id&&!t.done).length})).filter(c=>c.n>0);
+  const active=todos.filter(t=>!t.done).length;
+  const done=todos.filter(t=>t.done).length;
+  const overdue=todos.filter(t=>!t.done&&t.deadline&&t.deadline<new Date().toISOString().split('T')[0]);
+  const nWeek=notes.filter(n=>{const d=new Date(n.crAt||n.date);return Date.now()-d.getTime()<7*864e5;}).length;
+  const struck=notes.filter(n=>n.struck).length;
 
-    const ins=[];
-    if(qc[0].n>5)ins.push({e:'🔥',t:'Overloaded',m:`${qc[0].n} urgent+important tasks. Delegate or schedule some.`});
-    if(qc[3].n>3)ins.push({e:'🗑',t:'Clean up',m:`${qc[3].n} tasks in Eliminate. Review if still needed.`});
-    if(overdue.length>0)ins.push({e:'⏰',t:`${overdue.length} overdue`,m:overdue.map(t=>t.text).slice(0,2).join(', ')+(overdue.length>2?'...':'')});
-    if(focus.length===0&&active>0)ins.push({e:'🎯',t:'Empty focus queue',m:'Pick 1–3 tasks to focus on today.'});
-    if(focus.length>=4)ins.push({e:'🌿',t:'Focus queue full',m:'Finish current tasks before adding more.'});
-    if(struck>3)ins.push({e:'📝',t:'Struck notes',m:`${struck} struck notes. Clear or convert to tasks.`});
-    if(nWeek>10)ins.push({e:'💡',t:'Active capture',m:`${nWeek} notes this week. Promote the best to Clarify.`});
-    if(done>0&&active>0)ins.push({e:'📊',t:'Completion',m:`${done}/${done+active} (${Math.round(done/(done+active)*100)}%)`});
-    if(met.w.p>0)ins.push({e:'🍅',t:`${met.w.p} pomodoros`,m:`${Math.floor(met.w.m/60)}h ${met.w.m%60}m deep focus this week.`});
-    if(ins.length===0)ins.push({e:'✨',t:'Looking good!',m:'No issues found. Keep it up.'});
+  const ins=[];
+  if(qc[0].n>5)ins.push({e:'🔥',t:'Overloaded',m:`${qc[0].n} urgent+important tasks. Delegate or schedule some.`});
+  if(qc[3].n>3)ins.push({e:'🗑',t:'Clean up',m:`${qc[3].n} tasks in Eliminate. Review if still needed.`});
+  if(overdue.length>0)ins.push({e:'⏰',t:`${overdue.length} overdue`,m:overdue.map(t=>t.text).slice(0,2).join(', ')+(overdue.length>2?'...':'')});
+  if(focus.length===0&&active>0)ins.push({e:'🎯',t:'Empty focus queue',m:'Pick 1–3 tasks to focus on today.'});
+  if(focus.length>=4)ins.push({e:'🌿',t:'Focus queue full',m:'Finish current tasks before adding more.'});
+  if(struck>3)ins.push({e:'📝',t:'Struck notes',m:`${struck} struck notes. Clear or convert to tasks.`});
+  if(nWeek>10)ins.push({e:'💡',t:'Active capture',m:`${nWeek} notes this week. Promote the best to Clarify.`});
+  if(done>0&&active>0)ins.push({e:'📊',t:'Completion',m:`${done}/${done+active} (${Math.round(done/(done+active)*100)}%)`});
+  if(met.w.p>0)ins.push({e:'🍅',t:`${met.w.p} pomodoros`,m:`${Math.floor(met.w.m/60)}h ${met.w.m%60}m deep focus this week.`});
+  if(ins.length===0)ins.push({e:'✨',t:'Looking good!',m:'No issues found. Keep it up.'});
 
-    const sug=[];
-    if(qc[1].n>0)sug.push(`Schedule time for ${qc[1].n} important task${qc[1].n>1?'s':''}`);
-    if(overdue.length>0)sug.push('Reschedule or complete overdue tasks');
-    if(active>10)sug.push('Eliminate low-value tasks to reduce overwhelm');
-    if(focus.length<3&&active>0)sug.push('Add top priorities to Focus queue');
-    if(struck>0)sug.push(`Convert or delete ${struck} struck notes`);
+  const sug=[];
+  if(qc[1].n>0)sug.push(`Schedule time for ${qc[1].n} important task${qc[1].n>1?'s':''}`);
+  if(overdue.length>0)sug.push('Reschedule or complete overdue tasks');
+  if(active>10)sug.push('Eliminate low-value tasks to reduce overwhelm');
+  if(focus.length<3&&active>0)sug.push('Add top priorities to Focus queue');
+  if(struck>0)sug.push(`Convert or delete ${struck} struck notes`);
 
-    return(
-      <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
-        </div>
-        {wide?(
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div>
-            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div>
-            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div>
-          </div>
-        </div>
-        <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}
-          </div>
-          {cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}
-        </div>
-            </div>
-            <div className="space-y-4">
-        <Heatmap dHist={dHist} met={met}/>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3>
-          <div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div>
-        </div>
-        {sug.length>0&&<div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3>
-          <div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div>
-        </div>}
-            </div>
-          </div>
-        ):(
-          <>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div>
-            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div>
-            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div>
-          </div>
-        </div>
-        <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
-        <Heatmap dHist={dHist} met={met}/>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}
-          </div>
-          {cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}
-        </div>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3>
-          <div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div>
-        </div>
-        {sug.length>0&&<div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3>
-          <div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div>
-        </div>}
-          </>
-        )}
+  const weekStats=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3><div className="grid grid-cols-3 gap-3 text-center"><div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div><div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div><div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div></div></div>;
+  const matrixCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3><div className="grid grid-cols-2 gap-2">{qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}</div>{cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}</div>;
+  const insightsCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3><div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div></div>;
+  const actionsCard=sug.length>0?<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3><div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div></div>:null;
+
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
       </div>
-    );
-  };
+      {wide?(
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>{matrixCard}</div>
+          <div className="space-y-4"><Heatmap dHist={dHist} met={met}/>{insightsCard}{actionsCard}</div>
+        </div>
+      ):(
+        <>{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/><Heatmap dHist={dHist} met={met}/>{matrixCard}{insightsCard}{actionsCard}</>
+      )}
+    </div>
+  );
+}
 
-  const rMore=()=>(
+// SettingsSection — extracted from rMore() (v16.2 refactor Step 8)
+function SettingsSection({desk}){
+  const{theme,setTheme}=useContext(ThemeCtx);
+  const{preset,setPreset,customT,setCustomT,showT}=useApp();
+  const[moreSub,setMoreSub]=useState('settings');
+  const[settExp,setSettExp]=useState({});
+  const[helpExp,setHelpExp]=useState({});
+  const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
+
+  const themeCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>;
+  const timerCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>;
+  const dataCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>;
+  const installCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>;
+  const deskModeCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">🖥️ Desktop Mode</h3><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></div>;
+
+  const helpSection=(key,title,content)=>(
+    <div className="gcard rounded-2xl overflow-hidden">
+      <button onClick={()=>!desk&&toggleHelp(key)} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
+        <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">{title}</h3>
+        {!desk&&(helpExp[key]?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
+      </button>
+      {(desk||helpExp[key])&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>{content}</div>}
+    </div>
+  );
+
+  return(
     <div className="space-y-4">
       <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
       {moreSub==='settings'&&(
         desk?(
         <div className="flex gap-4">
-          <div className="flex-1 min-w-0 space-y-4">
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">🖥️ Desktop Mode</h3><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></div>
-          </div>
-          <div className="flex-1 min-w-0 space-y-4">
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>
-          </div>
+          <div className="flex-1 min-w-0 space-y-4">{themeCard}{dataCard}{deskModeCard}</div>
+          <div className="flex-1 min-w-0 space-y-4">{timerCard}{installCard}</div>
         </div>
         ):(
         <div className="space-y-4">
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>
-          <div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>
+          {themeCard}{timerCard}{dataCard}
           <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>}</div>
           <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,desk:!s.desk}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">🖥️ Desktop Mode</h3>{settExp.desk?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.desk&&<div className="px-4 pb-4 space-y-2"><p className="text-sm text-bark-500 dark:text-sand-200 mb-1">At 1280px+, the app uses a desktop-optimized layout.</p><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div>}</div>
         </div>
@@ -1938,14 +1809,7 @@ function App(){
             <p className="text-bark-500 dark:text-sand-200">Productivity Hub combines the Bullet Journal method, GTD (Getting Things Done), Deep Work, and the Eisenhower Matrix into one seamless workflow.</p>
           </div>
           <div className={`${desk?'grid grid-cols-2 gap-5':'space-y-3'}`}>
-
-          {/* Section: The Workflow */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('wf')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🔄 The Workflow</h3>
-              {!desk&&(helpExp.wf?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.wf)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
+          {helpSection('wf','🔄 The Workflow',<>
             <p className="text-bark-500 dark:text-sand-200 mb-4">Every productivity system follows one cycle. Ours has five steps, each mapped to a tab:</p>
             <div className="space-y-3">
               <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">📝</span><div><div className="font-bold text-bark-600 dark:text-sand-100">1. Capture</div><div className="text-sm text-bark-500 dark:text-sand-200">Get everything out of your head. Jot quick bullet notes — ideas, tasks, thoughts, anything. Don't organize yet, just capture. Tap to edit inline, use ⋮ menu for actions (promote to Clarify, strikethrough, delete), or use the ☐ header checkbox for bulk operations.</div></div></div></div>
@@ -1954,93 +1818,43 @@ function App(){
               <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">✅</span><div><div className="font-bold text-bark-600 dark:text-sand-100">4. Confirm</div><div className="text-sm text-bark-500 dark:text-sand-200">Use checklists to break tasks into steps. Link a checklist to a Clarify task via ⋮ menu → Link Checklist. When all items are checked, you'll be prompted to mark the task done. Tap items to toggle done, use ⋮ to edit or delete, and ☐ header checkbox for bulk operations.</div></div></div></div>
               <div className="bg-sand-100 dark:bg-bark-600/50 rounded-xl p-4"><div className="flex items-start gap-3"><span className="text-2xl">📊</span><div><div className="font-bold text-bark-600 dark:text-sand-100">5. Review</div><div className="text-sm text-bark-500 dark:text-sand-200">Check your weekly stats, matrix balance, and insights. The Review tab analyzes your patterns — overloaded quadrants, overdue tasks, unprocessed notes — and suggests next actions. On desktop, displays as a 2-column dashboard. Do this weekly.</div></div></div></div>
             </div>
-            </div>}
-          </div>
-
-          {/* Section: Daily Workflow */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('daily')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🚀 Daily Workflow</h3>
-              {!desk&&(helpExp.daily?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.daily)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
-            <div className="space-y-3">
+          </>)}
+          {helpSection('daily','🚀 Daily Workflow',<div className="space-y-3">
               <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Morning (5 min)</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Open <strong>Capture</strong> — jot anything on your mind</li><li>2. Go to <strong>Clarify</strong> — review matrix, drag tasks to correct quadrants</li><li>3. Tap → on 3–5 tasks to add them to <strong>Focus</strong> queue</li><li>4. Optionally check <strong>Confirm</strong> for any process checklists</li></ol></div>
               <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Work Sessions (2–4 hours)</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Open <strong>Focus</strong>, tap a task to activate it</li><li>2. Start Pomodoro — 25 min of deep work</li><li>3. Take 5 min break, then repeat</li><li>4. After 4 pomodoros, take a 15 min long break</li><li>5. Quick-capture stray thoughts in <strong>Capture</strong> to stay focused</li></ol></div>
               <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">End of Day (5 min)</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Clear completed tasks (🧹 button in Clarify)</li><li>2. Process any unread <strong>Capture</strong> notes → strikethrough or → Clarify</li><li>3. Glance at <strong>Review</strong> for today's pomodoro count and streak</li><li>4. Set priorities for tomorrow in <strong>Clarify</strong></li></ol></div>
-            </div>
-            </div>}
-          </div>
-
-          {/* Section: Bullet Journal Method */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('bj')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">📓 Bullet Journal Method</h3>
-              {!desk&&(helpExp.bj?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.bj)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
+            </div>)}
+          {helpSection('bj','📓 Bullet Journal Method',<>
             <p className="text-bark-500 dark:text-sand-200 mb-4">The Capture tab is inspired by Ryder Carroll's Bullet Journal — a rapid logging system that clears your mind so you can focus.</p>
             <div className="space-y-3">
               <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Rapid Logging</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Capture everything</strong> — tasks, ideas, thoughts, questions</li><li>• <strong>One bullet per thought</strong> — keep it short and atomic</li><li>• <strong>Press Enter</strong> to add instantly, no friction</li><li>• <strong>Don't organize yet</strong> — that's what Clarify is for</li></ul></div>
               <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Migration (Processing Notes)</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Tap:</strong> Edit a note inline — refine its text instantly</li><li>• <strong>⋮ Menu:</strong> Tap the 3-dot icon for Edit, Promote to Clarify, Strikethrough, or Delete</li><li>• <strong>Right-click (desktop):</strong> Opens the same action menu as ⋮</li><li>• <strong>☐ Checkbox (top-right):</strong> Enter selection mode for bulk actions — Move to Clarify, Strikethrough, Delete</li><li>• <strong>Auto-clear:</strong> Struck-through notes are automatically removed after 30 days</li></ul></div>
               <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Day Sections</h4><p className="text-sm text-bark-500 dark:text-sand-200">Notes are automatically grouped by day — Today, Yesterday, and past dates. This creates a natural timeline of your thinking, just like a physical journal.</p></div>
             </div>
-            </div>}
-          </div>
-
-          {/* Section: GTD Weekly Review */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('gtd')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">📊 GTD Weekly Review</h3>
-              {!desk&&(helpExp.gtd?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.gtd)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
+          </>)}
+          {helpSection('gtd','📊 GTD Weekly Review',<>
             <p className="text-bark-500 dark:text-sand-200 mb-4">David Allen's Getting Things Done weekly review is the "critical success factor" of the system. The Review tab makes this easy.</p>
             <div className="space-y-3">
               <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Weekly Review Checklist</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. <strong>Get Clear</strong> — Process all Capture notes (migrate or strike)</li><li>2. <strong>Get Current</strong> — Review Clarify matrix, update or delete stale tasks</li><li>3. <strong>Get Creative</strong> — Check Review insights, act on suggestions</li></ol></div>
               <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">What the Review Tab Shows</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Weekly stats:</strong> Pomodoros, tasks completed, focus time</li><li>• <strong>Streak heatmap:</strong> GitHub-style 13-week grid — darker = more pomodoros. Tap any day for details</li><li>• <strong>Streak counter:</strong> Current consecutive active days and your longest streak</li><li>• <strong>Matrix overview:</strong> How many active tasks in each quadrant</li><li>• <strong>Insights:</strong> Overloaded quadrants, overdue tasks, unprocessed notes</li><li>• <strong>Next actions:</strong> Specific suggestions based on your patterns</li></ul></div>
               <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">The Review Loop</h4><p className="text-sm text-bark-500 dark:text-sand-200">Review closes the loop. Insights from Review feed back into Capture and Clarify — tasks you need to add, priorities to shift, habits to change. This is what makes the system self-improving.</p></div>
             </div>
-            </div>}
-          </div>
-
-          {/* Section: Pomodoro Technique */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('pom')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🍅 Pomodoro Technique</h3>
-              {!desk&&(helpExp.pom?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.pom)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
+          </>)}
+          {helpSection('pom','🍅 Pomodoro Technique',<>
             <p className="text-bark-500 dark:text-sand-200 mb-4">The Pomodoro Technique breaks work into focused 25-minute intervals with breaks, preventing burnout and improving concentration.</p>
             <div className="space-y-3">
               <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">How It Works</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• Work Session: 25 minutes of focused work</li><li>• Short Break: 5 minutes to rest</li><li>• Repeat 4 times</li><li>• Long Break: 15 minutes after 4 cycles</li></ul></div>
               <div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Using the Timer</h4><ol className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>1. Tap Focus tab</li><li>2. Tap a task from Focus Queue to activate it</li><li>3. Press Start for 25-minute session</li><li>4. Take break when timer ends</li><li>5. Customize durations in More → Settings</li></ol></div>
             </div>
-            </div>}
-          </div>
-
-          {/* Section: Deep Work & Focus Queue */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('dw')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">🎯 Deep Work & Focus Queue</h3>
-              {!desk&&(helpExp.dw?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.dw)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
+          </>)}
+          {helpSection('dw','🎯 Deep Work & Focus Queue',<>
             <p className="text-bark-500 dark:text-sand-200 mb-4">Deep Work (Cal Newport) means sustained concentration on cognitively demanding tasks. Our Focus Queue limits you to 3-5 tasks to maximize focus.</p>
             <div className="space-y-3">
               <div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Why Limit Tasks?</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• Forces prioritization of what truly matters</li><li>• Reduces context-switching mental overhead</li><li>• Prevents overwhelm and decision fatigue</li><li>• Improves focus quality and depth</li></ul></div>
               <div className="bg-terracotta-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">Choose Your Limit</h4><p className="text-sm text-bark-500 dark:text-sand-200 mb-2"><strong>3 Tasks:</strong> For highly complex work, maximum focus, easily distracted</p><p className="text-sm text-bark-500 dark:text-sand-200"><strong>5 Tasks:</strong> For varied responsibilities, 8+ hour days, need flexibility</p></div>
             </div>
-            </div>}
-          </div>
-
-          {/* Section: Urgent/Important Matrix */}
-          <div className="gcard rounded-2xl overflow-hidden">
-            <button onClick={()=>!desk&&toggleHelp('matrix')} className={`w-full ${desk?'p-5':'p-4'} flex items-center justify-between text-left`}>
-              <h3 className="text-xl font-bold text-bark-600 dark:text-sand-100">📊 Urgent/Important Matrix</h3>
-              {!desk&&(helpExp.matrix?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>)}
-            </button>
-            {(desk||helpExp.matrix)&&<div className={`${desk?'px-5 pb-5':'px-4 pb-4'}`}>
+          </>)}
+          {helpSection('matrix','📊 Urgent/Important Matrix',<>
             <p className="text-bark-500 dark:text-sand-200 mb-4">The Eisenhower Box helps categorize tasks by urgency and importance to focus on what truly matters.</p>
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3"><div className="font-bold text-terracotta-600 dark:text-terracotta-300 mb-1">Q1: Do First</div><div className="text-xs text-bark-500 dark:text-sand-200">Urgent & Important</div><div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Crises, deadlines</div></div>
@@ -2049,11 +1863,8 @@ function App(){
               <div className="bg-sand-200 dark:bg-bark-500/20 rounded-xl p-3"><div className="font-bold text-bark-600 dark:text-sand-200 mb-1">Q4: Eliminate</div><div className="text-xs text-bark-500 dark:text-sand-200">Not Urgent & Not Important</div><div className="text-xs text-bark-400 dark:text-sand-300 mt-1">Time wasters</div></div>
             </div>
             <div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-4"><h4 className="font-bold text-bark-600 dark:text-sand-100 mb-2">In Productivity Hub</h4><ul className="space-y-1 text-sm text-bark-500 dark:text-sand-200"><li>• <strong>Q1:</strong> High Priority, Due Today</li><li>• <strong>Q2:</strong> Medium Priority, add to Focus Queue</li><li>• <strong>Q3:</strong> Low Priority or Delegate</li><li>• <strong>Q4:</strong> New tasks default here — drag upward as priorities become clear</li></ul></div>
-            </div>}
+          </>)}
           </div>
-
-          </div>
-
           <div className="text-center text-sm text-bark-400 dark:text-sand-300 mt-6">
             <p>Tap <strong>? icon</strong> (top-right) for quick App Navigation reference</p>
           </div>
@@ -2062,7 +1873,67 @@ function App(){
       {moreSub==='test'&&<><TestRunner onShowToast={showT}/><div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div></>}
     </div>
   );
+}
 
+// Main App — thin layout shell (sidebar/tab-bar + content area) (v16.2 refactor Step 9)
+function App(){
+  const desk=useDesk();
+  const wide=useWide();
+  const{lists,setLists,todos,setTodos,notes,setNotes,
+    setFocus,setMet,
+    toast,showT,tab,setTab,selList,
+    linkTask,unlinkTask,createAndLink,
+    deleteListItem,saveItem,seedSampleData}=useApp();
+
+  const[timerInfo,setTimerInfo]=useState({left:0,run:false,mode:'work'});
+  const onTimerTick=useCallback((info)=>setTimerInfo(info),[]);
+  const fmtSidebar=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};
+  const[showHelp,setShowHelp]=useState(false);
+  const[seenAbout,setSeenAbout]=usePersistedState('seenAbout',false);
+  const[showWelcome,setShowWelcome]=useState(false);
+  const[seenChecked,setSeenChecked]=useState(false);
+  useEffect(()=>{S.get('seenAbout',false).then(v=>{if(v===false)setShowWelcome(true);setSeenChecked(true);});},[]);
+
+  const[edit,setEdit]=useState(null);
+  const[selMode,setSelMode]=useState(false);
+  const[selSection,setSelSection]=useState(null);
+  const[selIds,setSelIds]=useState(new Set());
+  const[bulkConfirm,setBulkConfirm]=useState(null);
+  const exitSelMode=()=>{setSelMode(false);setSelSection(null);setSelIds(new Set());};
+  const toggleSelId=(id)=>setSelIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});
+  const enterSelMode=(section,firstId)=>{setSelMode(true);setSelSection(section);setSelIds(firstId?new Set([firstId]):new Set());};
+  const getAllIdsForSection=()=>{
+    if(selSection==='todos')return todos.map(t=>t.id);
+    if(selSection==='lists'){const cl=lists.find(l=>l.id===selList);return cl?cl.items.map(i=>i.id):[];}
+    if(selSection==='notes')return notes.map(n=>n.id);
+    return[];
+  };
+  const selectAll=()=>setSelIds(new Set(getAllIdsForSection()));
+  const deselectAll=()=>setSelIds(new Set());
+  const executeBulk=(action,sIds,sec)=>{
+    const ids=[...sIds];const cnt=ids.length;
+    if(sec==='todos'){
+      if(action==='done'){setTodos(t=>t.map(x=>sIds.has(x.id)?{...x,done:true}:x));setFocus(f=>f.filter(x=>!sIds.has(x.id)));setMet(p=>({...p,d:{...p.d,t:p.d.t+cnt},w:{...p.w,t:p.w.t+cnt}}));showT(`✅ ${cnt} task${cnt>1?'s':''} done`);}
+      if(action==='delete'){setTodos(t=>t.filter(x=>!sIds.has(x.id)));setFocus(f=>f.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
+    }else if(sec==='lists'){
+      const lid=selList;
+      if(action==='done'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.map(i=>sIds.has(i.id)?{...i,done:!i.done}:i)}:l));showT(`✅ ${cnt} toggled`);}
+      if(action==='delete'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.filter(i=>!sIds.has(i.id))}:l));showT(`🗑 ${cnt} deleted`);}
+    }else if(sec==='notes'){
+      if(action==='delete'){setNotes(n=>n.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
+      if(action==='strike'){setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:!x.struck}:x));showT(`${cnt} toggled`);}
+      if(action==='clarify'){const toMove=notes.filter(x=>sIds.has(x.id));setTodos(t=>[...toMove.map(x=>({id:uid(),text:x.text||x.title||x.content,quad:'nn',poms:0,done:false})),...t]);setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x));showT(`📋 ${cnt} copied to Clarify`);}
+    }
+    exitSelMode();
+  };
+  const bulkAction=(action)=>{
+    if(selIds.size===0)return;
+    if(action==='delete'&&selIds.size>=3){setBulkConfirm({ids:new Set(selIds),section:selSection});return;}
+    executeBulk(action,selIds,selSection);
+  };
+  const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
+  const cancelBulkDelete=()=>setBulkConfirm(null);
+  const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
 
   return(
@@ -2094,12 +1965,12 @@ function App(){
           {/* Main content */}
           <div className="flex-1 overflow-y-auto">
             <div className="px-8 py-6 mx-auto">
-              {tab==='focus'&&rFocus()}
-              {tab==='lists'&&rLists()}
-              {tab==='todos'&&rTodos()}
-              {tab==='notes'&&rNotes()}
-              {tab==='review'&&rReview()}
-              {tab==='more'&&rMore()}
+              {tab==='focus'&&<FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/>}
+              {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
+              {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
+              {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
+              {tab==='review'&&<ReviewSection wide={wide}/>}
+              {tab==='more'&&<SettingsSection desk={desk}/>}
             </div>
             {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
           </div>
@@ -2113,12 +1984,12 @@ function App(){
         <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
       </div>
       <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
-        {tab==='focus'?<div className="max-w-2xl mx-auto">{rFocus()}</div>:null}
-        {tab==='lists'&&rLists()}
-        {tab==='todos'&&rTodos()}
-        {tab==='notes'&&rNotes()}
-        {tab==='review'&&rReview()}
-        {tab==='more'&&rMore()}
+        {tab==='focus'?<div className="max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>:null}
+        {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
+        {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
+        {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
+        {tab==='review'&&<ReviewSection wide={wide}/>}
+        {tab==='more'&&<SettingsSection desk={desk}/>}
       </div>
       {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
       <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
@@ -2140,17 +2011,13 @@ function App(){
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
-      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
-      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
-      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
-      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><App/></ThemeProv>);
+ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>);
 </script>
 </body>
 </html>
