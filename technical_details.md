@@ -3,7 +3,7 @@
 ## Development Progress Summary
 
 **Last Updated:** February 12, 2026
-**Current Version:** v16.7-Alpha
+**Current Version:** v16.8-Alpha
 **Current Model:** Opus 4.6
 **Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1 → v16.6 (Opus 4.6)
 
@@ -23,8 +23,8 @@
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** v16.7 — Priority 1 refactoring complete (all 9 steps merged). App is now a thin layout shell.
-- **Working file:** `productivity_hub.html` (~185KB, ~2023 lines)
+- **Current phase:** v16.8 — P0 interaction hardening + state consistency + test coverage expansion.
+- **Working file:** `productivity_hub.html` (~185KB, ~1950 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 - **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
 - **Versioning:** Small features → minor bump (15_1, 15_2), big features → major bump (15, 16, 17)
@@ -36,18 +36,23 @@
 - Tablet (768px+): Side-by-side Focus (equal flex-1 cols), 2-col Clarify/Confirm/Settings (flexbox), constrained QuickAdd, Explainer 2-col grid
 - Settings: Theme + Timer + Data + Install as App + Desktop Mode; flexbox 2-col on tablet+ with always-expanded cards; collapsible on mobile
 - Explainer: 7 collapsible accordion sections on mobile, always-expanded 2-col grid on tablet+
-- Test Suite (55 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
+- Test Suite (59 tests), Export/Import, Theme (default: System), cohesive dark mode
 
 ---
 
 ## 📦 Latest Release
 
-**productivity_hub.html** (v16.7-Alpha)
+**productivity_hub.html** (v16.8-Alpha)
 
 ### Release Focus
-- ✅ Refactor Step 9 completed: App is now a thin layout shell (sidebar/tab-bar + content area + modals), with dead state/comment cleanup.
-- ✅ No UI changes in this release; restructuring only.
-- ✅ Canonical full feature inventory is maintained in `## 📞 Context for New Session` above.
+- ✅ Gemini P0 implementation: introduced unified `ActionMenu` and reusable `ConfirmDialog` primitives to replace duplicated menu/dialog patterns across sections.
+- ✅ Migrated Capture, Clarify, and Confirm list-level actions to shared menu infrastructure (`NoteMenu`/`TaskMenu`/`ListMenu` behavior unified under `ActionMenu`).
+- ✅ Added confirmation dialogs for single-item delete actions in Capture, Clarify, and Confirm checklist menu flows.
+- ✅ Completed P0 responsive JSX dedup pass: Settings uses shared responsive wrappers, Review matrix card render was deduplicated, and App sidebar/mobile tab rendering now shares common helpers.
+- ✅ Centralized checklist selection reconciliation in `useAppData()` and made `deleteList` pure (`setLists`-only updater).
+- ✅ Updated bulk note strikethrough logic to correctly set/clear `struckAt` metadata.
+- ✅ Expanded TestRunner coverage with new cases for delete-confirmation flows and global `selList` reconciliation.
+- ✅ Tests updated: 55 → 59.
 
 ---
 
@@ -208,11 +213,18 @@
 - **Test cleanup:** Removed 7 stale/trivial tests (Reminder CRUD, Wide Desktop Hook, Right-Click Context Menu, Compact Timer CSS, Batch Select Left Position), added 3 new tests (Settings Flexbox Desk, Explainer Collapsible State, Explainer Desktop Always Open), updated Focus Side-by-Side test for `desk` breakpoint
 - **Tests:** 59 → 55 (net reduction from removing stale tests)
 
-### Phase 10: v16.x Refactor (v16.1 - v16.7) — Opus 4.6
+### Phase 10: v16.x Refactor (v16.1 - v16.8) — Opus 4.6
 - **Archived summary:** Priority 1 refactor is complete (all 9 steps merged by v16.7); App is now a thin layout shell.
 - **Tracking note:** Remaining refactor/product work is maintained under `## 🔮 Future Features` → `### 📌 Combined Prioritized Backlog (Refactor + Product Features)`.
 
-### v16.7 ← CURRENT
+### v16.8 ← CURRENT
+- **Gemini P0 implementation (shared interaction primitives):** Added unified `ActionMenu` and reusable `ConfirmDialog`, and migrated section-specific menu flows to shared action configuration patterns.
+- **P0 hardening pass:** Added confirm-gated single-item delete flows for note/task/checklist actions via `ConfirmDialog`, fixed bulk note strike metadata parity (`struckAt` set/clear), centralized global `selList` reconciliation in `useAppData()`, and made `deleteList` a pure list-state update path.
+- **P0 responsive dedup completion:** Completed desktop/mobile JSX dedup for remaining targets by using shared responsive wrappers in Settings, a single responsive matrix-card render path in Review, and shared tab/render helpers in App for sidebar + bottom-tab layouts.
+- **TestRunner expansion:** Added new tests — `Global selList Reconciliation`, `Note Delete Confirmation Flow`, `Task Delete Confirmation Flow`, `Checklist Delete Confirmation Flow`; and updated `Note Bulk Strikethrough` to validate `struckAt`.
+- **Tests:** 55 → 59
+
+### v16.7
 - **Refactor Step 9:** App becomes thin layout shell — sidebar/tab-bar + content area + modals only. Removed 34 unused destructured variables from `useApp()`, removed dead PWA state (pwaPrompt, pwaInstalled, pwaStatus, triggerInstall + event listeners), removed stale comments. App now destructures only 18 values from `useApp()` (down from 52). Version bump to v16.7.
 - No UI changes — internal restructuring only
 
@@ -246,37 +258,31 @@
 
 ### 📌 Combined Prioritized Backlog (Refactor + Product Features)
 
-1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**  
-   Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
-
-2. `P0` **Unified ContextMenu + ConfirmDialog**  
-   Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
-
-3. `P1` **Recurring Tasks**  
+1. `P1` **Recurring Tasks**  
    Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
 
-4. `P1` **Tags & Filters**  
+2. `P1` **Tags & Filters**  
    Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
 
-5. `P1` **Command Palette Search**  
+3. `P1` **Command Palette Search**  
    Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
 
-6. `P2` **Task Templates**  
+4. `P2` **Task Templates**  
    Save task + subtask bundles and quick-create from a reusable template library.
 
-7. `P2` **Storage Enhancement**  
+5. `P2` **Storage Enhancement**  
    Improve resilience beyond IndexedDB-only browser storage.
 
-8. `P2` **StickyHeader + CSS class abstraction**  
+6. `P2` **StickyHeader + CSS class abstraction**  
    Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
 
-9. `P2` **UI smoothness pass**  
+7. `P2` **UI smoothness pass**  
    Add transitions, modal exit animations, and debounce persisted writes (~300ms); evaluate virtual scrolling for large lists.
 
-10. `P3` **Lazy-load test suite**  
+8. `P3` **Lazy-load test suite**  
     Defer test suite initialization until the Test tab is opened.
 
-11. `P3` **Checklist tab management UX**  
+9. `P3` **Checklist tab management UX**  
     Add better tab controls (e.g., right-click/`⋮` rename/delete behavior) for checklist tabs.
 
 ---
@@ -287,7 +293,7 @@
 - **Rule:** Small features increment minor (15_1 → 15_2), big features increment major (15 → 16)
 - **Format:** `v16-Alpha`, `v15_1-Alpha`, etc.
 - **Alpha tag:** Current release stage
-- **Current:** v16.7 (Priority 1 refactoring complete — all 9 steps merged)
+- **Current:** v16.8 (P0 hardening and test coverage expansion complete)
 
 ### UI Patterns Established (v15+)
 - **⋮ 3-dot menu:** Always-visible vertical dots on every item (Capture notes, Clarify tasks, Confirm checklist items)
@@ -437,7 +443,7 @@ Removed: arc, reminders, Swipe component
 | `TaskMenu` | 3-dot task menu in Clarify (Edit, Done/Undone, Focus, Link, Delete) |
 | `NoteMenu` | 3-dot note menu in Capture (Edit, Copy Text, Promote to Clarify, Strikethrough, Delete) |
 | `LinkPicker` | Modal to link/unlink/create checklists for tasks |
-| `TestRunner` | Test suite (55 tests, 9 categories) |
+| `TestRunner` | Test suite (59 tests, expanded for P0 confirmation/state coverage) |
 | `QuickAdd` / `Chart` | Input, visualization |
 | `ListMenu` / `DeleteConfirmation` / `Subtasks` | List management |
 | `Empty.*` / `ThemeProv` / `I.*` | Empty states, theme, icons (includes MoreV) |
