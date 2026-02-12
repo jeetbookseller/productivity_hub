@@ -259,8 +259,8 @@
 1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**  
    Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
 
-2. `P0` **Unified ContextMenu + ConfirmDialog**  
-   Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
+2. `P0` **Unified ContextMenu + ConfirmDialog** — ✅ **Completed in v16.8**  
+   Replaced TaskMenu/NoteMenu/ListMenu and delete-confirm variants with shared `ActionMenu` + `ConfirmDialog` patterns.
 
 3. `P1` **Recurring Tasks**  
    Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
