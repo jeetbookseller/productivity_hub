@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16.3';
+const APP_VERSION = '16.7';
 
 // Icons - More visible with less transparency
 const I={
@@ -1875,22 +1875,15 @@ function SettingsSection({desk}){
   );
 }
 
-// Main App
+// Main App — thin layout shell (sidebar/tab-bar + content area) (v16.2 refactor Step 9)
 function App(){
-  const{theme,setTheme}=useContext(ThemeCtx);
   const desk=useDesk();
   const wide=useWide();
-  const d=useApp();
-  const{lists,setLists,todos,setTodos,reminders,setReminders,notes,setNotes,
-    focus,setFocus,activeF,setActiveF,
-    preset,setPreset,customT,setCustomT,tSet,poms,setPoms,
-    met,setMet,fHist,setFHist,dHist,setDHist,
-    toast,showT,tab,setTab,selList,setSelList,
-    handleTimerComplete,handleUpdatePoms,clearCompleted,
-    addFocus,doneFocus,doneList,doneTodo,undoneTodo,deleteTodo,
-    linkTask,unlinkTask,openLinkedList,createAndLink,
-    deleteListItem,deleteReminder,updateListName,deleteList,saveItem,
-    seedSampleData,wkData,doneCount}=d;
+  const{lists,setLists,todos,setTodos,notes,setNotes,
+    setFocus,setMet,
+    toast,showT,tab,setTab,selList,
+    linkTask,unlinkTask,createAndLink,
+    deleteListItem,saveItem,seedSampleData}=useApp();
 
   const[timerInfo,setTimerInfo]=useState({left:0,run:false,mode:'work'});
   const onTimerTick=useCallback((info)=>setTimerInfo(info),[]);
@@ -1901,17 +1894,14 @@ function App(){
   const[seenChecked,setSeenChecked]=useState(false);
   useEffect(()=>{S.get('seenAbout',false).then(v=>{if(v===false)setShowWelcome(true);setSeenChecked(true);});},[]);
 
-  // UI
   const[edit,setEdit]=useState(null);
-  // Batch Selection State (v10.2)
   const[selMode,setSelMode]=useState(false);
-  const[selSection,setSelSection]=useState(null); // 'todos'|'lists'|'reminders'|'notes'
+  const[selSection,setSelSection]=useState(null);
   const[selIds,setSelIds]=useState(new Set());
-  const[bulkConfirm,setBulkConfirm]=useState(null); // {ids:Set, section:string} when awaiting confirm
+  const[bulkConfirm,setBulkConfirm]=useState(null);
   const exitSelMode=()=>{setSelMode(false);setSelSection(null);setSelIds(new Set());};
   const toggleSelId=(id)=>setSelIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});
   const enterSelMode=(section,firstId)=>{setSelMode(true);setSelSection(section);setSelIds(firstId?new Set([firstId]):new Set());};
-  // Bulk helpers (v10.4)
   const getAllIdsForSection=()=>{
     if(selSection==='todos')return todos.map(t=>t.id);
     if(selSection==='lists'){const cl=lists.find(l=>l.id===selList);return cl?cl.items.map(i=>i.id):[];}
@@ -1938,48 +1928,12 @@ function App(){
   };
   const bulkAction=(action)=>{
     if(selIds.size===0)return;
-    // Confirmation gate: delete ≥3 items triggers dialog
     if(action==='delete'&&selIds.size>=3){setBulkConfirm({ids:new Set(selIds),section:selSection});return;}
     executeBulk(action,selIds,selSection);
   };
   const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
   const cancelBulkDelete=()=>setBulkConfirm(null);
-  // newList/showNew/listMenu/editListId/editListName/deleteConfirm moved to ConfirmSection (v16.2 refactor Step 6)
-  const[linkPicker,setLinkPicker]=useState(null); // {taskId}
-  // moreSub/settExp/helpExp/toggleHelp moved to SettingsSection (v16.2 refactor Step 8)
-  // expQ state moved to ClarifySection (v16.2 refactor Step 4)
-  // dragI/dragO state moved to FocusSection (v16.2 refactor Step 5)
-
-  // PWA Install state
-  const[pwaPrompt,setPwaPrompt]=useState(!!window.__pwaInstallPrompt);
-  const[pwaInstalled,setPwaInstalled]=useState(!!window.__pwaInstalled);
-  const pwaStatus=useMemo(()=>{
-    if(pwaInstalled)return'installed';
-    if(window.matchMedia('(display-mode:standalone)').matches)return'installed';
-    if(window.navigator.standalone===true)return'installed';
-    if(pwaPrompt)return'ready';
-    return'unavailable';
-  },[pwaPrompt,pwaInstalled]);
-
-  useEffect(()=>{
-    const onReady=()=>setPwaPrompt(true);
-    const onInstalled=()=>{setPwaInstalled(true);setPwaPrompt(false);showT('✅ App installed!');};
-    window.addEventListener('pwa-prompt-ready',onReady);
-    window.addEventListener('pwa-installed',onInstalled);
-    return()=>{window.removeEventListener('pwa-prompt-ready',onReady);window.removeEventListener('pwa-installed',onInstalled);};
-  },[]);
-
-  const triggerInstall=async()=>{
-    if(!window.__pwaInstallPrompt)return;
-    try{
-      window.__pwaInstallPrompt.prompt();
-      const{outcome}=await window.__pwaInstallPrompt.userChoice;
-      if(outcome==='accepted'){setPwaInstalled(true);setPwaPrompt(false);}
-    }catch{}
-  };
-
-  // RENDERS
-  // rMore moved to SettingsSection (v16.2 refactor Step 8)
+  const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
 
   return(
