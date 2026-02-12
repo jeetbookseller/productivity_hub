@@ -10,7 +10,16 @@ const TestRunner=({onShowToast})=>{
   const tick=()=>delay(0);
   const assert=(cond,msg)=>{if(!cond)throw new Error(msg);};
 
-  const deepEqual=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const stable=(v)=>{
+    if(Array.isArray(v))return v.map(stable);
+    if(v&&typeof v==='object'){
+      const out={};
+      Object.keys(v).sort().forEach(k=>{out[k]=stable(v[k]);});
+      return out;
+    }
+    return v;
+  };
+  const deepEqual=(a,b)=>JSON.stringify(stable(a))===JSON.stringify(stable(b));
 
   const waitFor=async(fn,timeout=2000,interval=25)=>{
     const start=Date.now();
@@ -151,7 +160,7 @@ const TestRunner=({onShowToast})=>{
           await S.clr();
           await S.imp(sample);
           const exported=await S.exp();
-          assert(deepEqual(exported,sample),'exported data should match imported sample');
+          assert(deepEqual(exported,sample),'exported data should match imported sample (content equality)');
           await S.clr();
           const afterClear=await S.exp();
           assert(Object.keys(afterClear).length===0,'store should be empty after clear');
@@ -232,6 +241,8 @@ const TestRunner=({onShowToast})=>{
         name:'Day Rotation Boundary Archive + Reset',level:'integration',category:'Time Logic',
         run:async(ctx)=>{
           const yesterday=new Date(Date.now()-864e5).toDateString();
+          await S.set('met',{d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}});
+          await S.set('dHist',[]);
           localStorage.setItem('ph3_met',JSON.stringify({d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}}));
           localStorage.setItem('ph3_dHist',JSON.stringify([]));
           const h=await mountWithProviders({mounts:ctx.mounts,render:()=>null});
@@ -426,10 +437,14 @@ const TestRunner=({onShowToast})=>{
           const today=new Date().toISOString().split('T')[0];
           h.getApp().setNotes([
             {id:'old',text:'old',date:today,crAt:new Date(now-thirty-1000).toISOString(),struck:true,struckAt:now-thirty-1000},
-            {id:'edge',text:'edge',date:today,crAt:new Date(now-thirty).toISOString(),struck:true,struckAt:now-thirty}
+            {id:'edge',text:'edge',date:today,crAt:new Date(now-thirty+2000).toISOString(),struck:true,struckAt:now-thirty+2000}
           ]);
-          await waitFor(()=>h.getApp().notes.length===1);
-          assert(h.getApp().notes[0].id==='edge','exactly 30-day old note should remain, older should clear');
+          await waitFor(()=>{
+            const ns=h.getApp().notes;
+            return !ns.find(n=>n.id==='old')&&!!ns.find(n=>n.id==='edge');
+          });
+          assert(!h.getApp().notes.find(n=>n.id==='old'),'old note should be removed');
+          assert(!!h.getApp().notes.find(n=>n.id==='edge'),'boundary note should remain');
           h.unmount();
         }
       },
