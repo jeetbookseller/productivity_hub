@@ -257,40 +257,33 @@ const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=Re
 // App Version
 const APP_VERSION = '16.9';
 const TEST_RUNNER_SRC='test_runner.jsx';
+const TEST_RUNNER_LOAD_TIMEOUT_MS=8000;
 let testRunnerLoadPromise=null;
-const waitForTestRunner=(attempts=120)=>new Promise((resolve,reject)=>{
-  const check=()=>{
-    if(window.TestRunner)return resolve(window.TestRunner);
-    if(attempts<=0)return reject(new Error('Test suite failed to initialize.'));
-    attempts-=1;
-    setTimeout(check,25);
-  };
-  check();
-});
-const loadTestRunner=()=>{
+const loadTestRunner=(onProgress=()=>{})=>{
   if(window.TestRunner)return Promise.resolve(window.TestRunner);
   if(testRunnerLoadPromise)return testRunnerLoadPromise;
-  testRunnerLoadPromise=new Promise((resolve,reject)=>{
-    const existing=document.querySelector('script[data-test-runner="true"]');
-    if(existing){
-      waitForTestRunner().then(resolve).catch(reject);
-      return;
+  testRunnerLoadPromise=new Promise(async(resolve,reject)=>{
+    const timeoutId=setTimeout(()=>reject(new Error(`Test suite load timed out after ${Math.round(TEST_RUNNER_LOAD_TIMEOUT_MS/1000)}s.`)),TEST_RUNNER_LOAD_TIMEOUT_MS);
+    try{
+      onProgress({stage:'Downloading test suite...',pct:20});
+      const res=await fetch(TEST_RUNNER_SRC,{cache:'no-cache'});
+      if(!res.ok)throw new Error(`Failed to load test suite file (${res.status}).`);
+      const src=await res.text();
+      if(!window.Babel||typeof window.Babel.transform!=='function'){
+        throw new Error('Babel runtime is unavailable.');
+      }
+      onProgress({stage:'Compiling test suite...',pct:60});
+      const transformed=window.Babel.transform(src,{presets:['react']});
+      onProgress({stage:'Initializing test suite...',pct:85});
+      (new Function(transformed.code))();
+      if(!window.TestRunner)throw new Error('Test suite failed to initialize.');
+      onProgress({stage:'Ready',pct:100});
+      clearTimeout(timeoutId);
+      resolve(window.TestRunner);
+    }catch(err){
+      clearTimeout(timeoutId);
+      reject(err);
     }
-    const s=document.createElement('script');
-    s.type='text/babel';
-    s.src=TEST_RUNNER_SRC;
-    s.async=true;
-    s.dataset.testRunner='true';
-    s.onload=()=>{
-      try{
-        if(window.Babel&&typeof window.Babel.transformScriptTags==='function'){
-          window.Babel.transformScriptTags();
-        }
-      }catch{}
-      waitForTestRunner().then(resolve).catch(reject);
-    };
-    s.onerror=()=>reject(new Error('Failed to load test suite file.'));
-    document.body.appendChild(s);
   }).catch(err=>{
     testRunnerLoadPromise=null;
     throw err;
@@ -1492,7 +1485,7 @@ function SettingsSection({desk}){
   const[moreSub,setMoreSub]=useState('settings');
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
-  const[testSuiteState,setTestSuiteState]=useState({loading:false,error:''});
+  const[testSuiteState,setTestSuiteState]=useState({loading:false,error:'',pct:0,stage:''});
   const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
   const TestRunnerComp=window.TestRunner;
 
@@ -1500,13 +1493,13 @@ function SettingsSection({desk}){
     let active=true;
     if(moreSub!=='test')return undefined;
     if(window.TestRunner){
-      setTestSuiteState({loading:false,error:''});
+      setTestSuiteState({loading:false,error:'',pct:100,stage:'Ready'});
       return undefined;
     }
-    setTestSuiteState({loading:true,error:''});
-    loadTestRunner()
-      .then(()=>{if(active)setTestSuiteState({loading:false,error:''});})
-      .catch((err)=>{if(active)setTestSuiteState({loading:false,error:err?.message||'Failed to load test suite.'});});
+    setTestSuiteState({loading:true,error:'',pct:5,stage:'Starting...'});
+    loadTestRunner((p)=>{if(active)setTestSuiteState(s=>({...s,loading:true,error:'',pct:p.pct,stage:p.stage}));})
+      .then(()=>{if(active)setTestSuiteState({loading:false,error:'',pct:100,stage:'Ready'});})
+      .catch((err)=>{if(active)setTestSuiteState({loading:false,error:err?.message||'Failed to load test suite.',pct:0,stage:''});});
     return()=>{active=false;};
   },[moreSub]);
 
@@ -1629,7 +1622,10 @@ function SettingsSection({desk}){
         </div>
       )}
       {moreSub==='test'&&<>
-        {testSuiteState.loading&&!TestRunnerComp&&<div className="gcard rounded-2xl p-5 text-sm text-bark-500 dark:text-sand-200">Loading test suite...</div>}
+        {testSuiteState.loading&&!TestRunnerComp&&<div className="gcard rounded-2xl p-5 text-sm text-bark-500 dark:text-sand-200">
+          <div className="flex items-center justify-between mb-2"><span>{testSuiteState.stage||'Loading test suite...'}</span><span className="font-semibold text-sage-500">{Math.max(0,Math.min(100,testSuiteState.pct||0))}%</span></div>
+          <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden"><div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${Math.max(0,Math.min(100,testSuiteState.pct||0))}%`}}/></div>
+        </div>}
         {!testSuiteState.loading&&testSuiteState.error&&!TestRunnerComp&&<div className="gcard rounded-2xl p-5 text-sm text-terracotta-500 dark:text-terracotta-300">{testSuiteState.error}</div>}
         {TestRunnerComp&&<TestRunnerComp onShowToast={showT}/>}
         <div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div>
