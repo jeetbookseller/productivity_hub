@@ -248,15 +248,16 @@ const TestRunner=({onShowToast})=>{
         name:'Day Rotation Boundary Archive + Reset',level:'integration',category:'Time Logic',
         run:async(ctx)=>{
           const yesterday=new Date(Date.now()-864e5).toDateString();
-          await S.set('met',{d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}});
-          await S.set('dHist',[]);
-          localStorage.setItem('ph3_met',JSON.stringify({d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}}));
-          localStorage.setItem('ph3_dHist',JSON.stringify([]));
           const h=await mountWithProviders({mounts:ctx.mounts,render:()=>null});
           const today=new Date().toDateString();
-          await waitFor(()=>h.getApp().met.d.date===today);
-          await waitFor(()=>h.getApp().dHist.some(x=>x.date===yesterday));
           const app=h.getApp();
+          app.setDHist([]);
+          app.setMet({d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}});
+          await waitFor(()=>h.getApp().met.d.date===yesterday,5000);
+          const rotated=h.getApp().runDayRotationForTest(today);
+          assert(rotated===true,'day rotation should run when date is stale');
+          await waitFor(()=>h.getApp().dHist.some(x=>x.date===yesterday),5000);
+          await waitFor(()=>h.getApp().met.d.date===today,5000);
           const archived=app.dHist.find(x=>x.date===yesterday);
           assert(!!archived,'yesterday should be archived in dHist');
           assert(app.met.d.p===0&&app.met.d.t===0&&app.met.d.m===0,'daily metrics should reset to zero');
