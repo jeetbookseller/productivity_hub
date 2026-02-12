@@ -1707,6 +1707,58 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   );
 }
 
+// ReviewSection — extracted from rReview() (v16.2 refactor Step 7)
+function ReviewSection({wide}){
+  const{todos,notes,focus,met,dHist,wkData}=useApp();
+  const qc=QUADS.map(q=>({...q,n:todos.filter(t=>t.quad===q.id&&!t.done).length}));
+  const cc=CATS.map(c=>({...c,n:todos.filter(t=>t.cat===c.id&&!t.done).length})).filter(c=>c.n>0);
+  const active=todos.filter(t=>!t.done).length;
+  const done=todos.filter(t=>t.done).length;
+  const overdue=todos.filter(t=>!t.done&&t.deadline&&t.deadline<new Date().toISOString().split('T')[0]);
+  const nWeek=notes.filter(n=>{const d=new Date(n.crAt||n.date);return Date.now()-d.getTime()<7*864e5;}).length;
+  const struck=notes.filter(n=>n.struck).length;
+
+  const ins=[];
+  if(qc[0].n>5)ins.push({e:'🔥',t:'Overloaded',m:`${qc[0].n} urgent+important tasks. Delegate or schedule some.`});
+  if(qc[3].n>3)ins.push({e:'🗑',t:'Clean up',m:`${qc[3].n} tasks in Eliminate. Review if still needed.`});
+  if(overdue.length>0)ins.push({e:'⏰',t:`${overdue.length} overdue`,m:overdue.map(t=>t.text).slice(0,2).join(', ')+(overdue.length>2?'...':'')});
+  if(focus.length===0&&active>0)ins.push({e:'🎯',t:'Empty focus queue',m:'Pick 1–3 tasks to focus on today.'});
+  if(focus.length>=4)ins.push({e:'🌿',t:'Focus queue full',m:'Finish current tasks before adding more.'});
+  if(struck>3)ins.push({e:'📝',t:'Struck notes',m:`${struck} struck notes. Clear or convert to tasks.`});
+  if(nWeek>10)ins.push({e:'💡',t:'Active capture',m:`${nWeek} notes this week. Promote the best to Clarify.`});
+  if(done>0&&active>0)ins.push({e:'📊',t:'Completion',m:`${done}/${done+active} (${Math.round(done/(done+active)*100)}%)`});
+  if(met.w.p>0)ins.push({e:'🍅',t:`${met.w.p} pomodoros`,m:`${Math.floor(met.w.m/60)}h ${met.w.m%60}m deep focus this week.`});
+  if(ins.length===0)ins.push({e:'✨',t:'Looking good!',m:'No issues found. Keep it up.'});
+
+  const sug=[];
+  if(qc[1].n>0)sug.push(`Schedule time for ${qc[1].n} important task${qc[1].n>1?'s':''}`);
+  if(overdue.length>0)sug.push('Reschedule or complete overdue tasks');
+  if(active>10)sug.push('Eliminate low-value tasks to reduce overwhelm');
+  if(focus.length<3&&active>0)sug.push('Add top priorities to Focus queue');
+  if(struck>0)sug.push(`Convert or delete ${struck} struck notes`);
+
+  const weekStats=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3><div className="grid grid-cols-3 gap-3 text-center"><div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div><div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div><div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div></div></div>;
+  const matrixCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3><div className="grid grid-cols-2 gap-2">{qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}</div>{cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}</div>;
+  const insightsCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3><div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div></div>;
+  const actionsCard=sug.length>0?<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3><div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div></div>:null;
+
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
+      </div>
+      {wide?(
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>{matrixCard}</div>
+          <div className="space-y-4"><Heatmap dHist={dHist} met={met}/>{insightsCard}{actionsCard}</div>
+        </div>
+      ):(
+        <>{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/><Heatmap dHist={dHist} met={met}/>{matrixCard}{insightsCard}{actionsCard}</>
+      )}
+    </div>
+  );
+}
+
 // Main App
 function App(){
   const{theme,setTheme}=useContext(ThemeCtx);
@@ -1814,105 +1866,6 @@ function App(){
   };
 
   // RENDERS
-  // Review Tab
-  const rReview=()=>{
-    const qc=QUADS.map(q=>({...q,n:todos.filter(t=>t.quad===q.id&&!t.done).length}));
-    const cc=CATS.map(c=>({...c,n:todos.filter(t=>t.cat===c.id&&!t.done).length})).filter(c=>c.n>0);
-    const active=todos.filter(t=>!t.done).length;
-    const done=todos.filter(t=>t.done).length;
-    const overdue=todos.filter(t=>!t.done&&t.deadline&&t.deadline<new Date().toISOString().split('T')[0]);
-    const nWeek=notes.filter(n=>{const d=new Date(n.crAt||n.date);return Date.now()-d.getTime()<7*864e5;}).length;
-    const struck=notes.filter(n=>n.struck).length;
-
-    const ins=[];
-    if(qc[0].n>5)ins.push({e:'🔥',t:'Overloaded',m:`${qc[0].n} urgent+important tasks. Delegate or schedule some.`});
-    if(qc[3].n>3)ins.push({e:'🗑',t:'Clean up',m:`${qc[3].n} tasks in Eliminate. Review if still needed.`});
-    if(overdue.length>0)ins.push({e:'⏰',t:`${overdue.length} overdue`,m:overdue.map(t=>t.text).slice(0,2).join(', ')+(overdue.length>2?'...':'')});
-    if(focus.length===0&&active>0)ins.push({e:'🎯',t:'Empty focus queue',m:'Pick 1–3 tasks to focus on today.'});
-    if(focus.length>=4)ins.push({e:'🌿',t:'Focus queue full',m:'Finish current tasks before adding more.'});
-    if(struck>3)ins.push({e:'📝',t:'Struck notes',m:`${struck} struck notes. Clear or convert to tasks.`});
-    if(nWeek>10)ins.push({e:'💡',t:'Active capture',m:`${nWeek} notes this week. Promote the best to Clarify.`});
-    if(done>0&&active>0)ins.push({e:'📊',t:'Completion',m:`${done}/${done+active} (${Math.round(done/(done+active)*100)}%)`});
-    if(met.w.p>0)ins.push({e:'🍅',t:`${met.w.p} pomodoros`,m:`${Math.floor(met.w.m/60)}h ${met.w.m%60}m deep focus this week.`});
-    if(ins.length===0)ins.push({e:'✨',t:'Looking good!',m:'No issues found. Keep it up.'});
-
-    const sug=[];
-    if(qc[1].n>0)sug.push(`Schedule time for ${qc[1].n} important task${qc[1].n>1?'s':''}`);
-    if(overdue.length>0)sug.push('Reschedule or complete overdue tasks');
-    if(active>10)sug.push('Eliminate low-value tasks to reduce overwhelm');
-    if(focus.length<3&&active>0)sug.push('Add top priorities to Focus queue');
-    if(struck>0)sug.push(`Convert or delete ${struck} struck notes`);
-
-    return(
-      <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
-        </div>
-        {wide?(
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div>
-            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div>
-            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div>
-          </div>
-        </div>
-        <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}
-          </div>
-          {cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}
-        </div>
-            </div>
-            <div className="space-y-4">
-        <Heatmap dHist={dHist} met={met}/>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3>
-          <div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div>
-        </div>
-        {sug.length>0&&<div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3>
-          <div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div>
-        </div>}
-            </div>
-          </div>
-        ):(
-          <>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">This Week</h3>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div><div className="text-2xl font-bold text-terracotta-400">{met.w.p}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">🍅 Pomodoros</div></div>
-            <div><div className="text-2xl font-bold text-sage-500">{met.w.t}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">✓ Tasks</div></div>
-            <div><div className="text-2xl font-bold text-ocean-400">{Math.floor(met.w.m/60)}h{met.w.m%60>0?`${met.w.m%60}m`:''}</div><div className="text-xs text-bark-400/50 dark:text-sand-300/50">⏱ Focus</div></div>
-          </div>
-        </div>
-        <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
-        <Heatmap dHist={dHist} met={met}/>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Matrix Overview</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {qc.map(q=><div key={q.id} className={`rounded-xl p-3 bg-gradient-to-r ${q.clr} ${q.dclr} border ${q.bdr} ${q.dbdr}`}><div className={`text-lg font-bold ${q.txt} ${q.dtxt}`}>{q.n}</div><div className="text-xs text-bark-500/70 dark:text-sand-300/50">{q.l}</div></div>)}
-          </div>
-          {cc.length>0&&<div className="flex flex-wrap gap-2 mt-3">{cc.map(c=><span key={c.id} className="px-2 py-1 rounded-full text-xs font-medium bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-200">{c.e} {c.l}: {c.n}</span>)}</div>}
-        </div>
-        <div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">Insights</h3>
-          <div className="space-y-2">{ins.map((x,i)=><div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-sand-50 dark:bg-bark-600/50"><span className="text-lg">{x.e}</span><div><div className="font-semibold text-sm text-bark-600 dark:text-sand-100">{x.t}</div><div className="text-xs text-bark-500 dark:text-sand-300">{x.m}</div></div></div>)}</div>
-        </div>
-        {sug.length>0&&<div className="gcard rounded-2xl p-4">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">💡 Next Actions</h3>
-          <div className="space-y-2">{sug.map((s,i)=><div key={i} className="flex items-start gap-2 text-sm text-bark-600 dark:text-sand-100"><span className="text-sage-500 mt-0.5">→</span><span>{s}</span></div>)}</div>
-        </div>}
-          </>
-        )}
-      </div>
-    );
-  };
-
   const rMore=()=>(
     <div className="space-y-4">
       <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
@@ -2107,7 +2060,7 @@ function App(){
               {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
               {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
               {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
-              {tab==='review'&&rReview()}
+              {tab==='review'&&<ReviewSection wide={wide}/>}
               {tab==='more'&&rMore()}
             </div>
             {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
@@ -2126,7 +2079,7 @@ function App(){
         {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
         {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
         {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
-        {tab==='review'&&rReview()}
+        {tab==='review'&&<ReviewSection wide={wide}/>}
         {tab==='more'&&rMore()}
       </div>
       {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
