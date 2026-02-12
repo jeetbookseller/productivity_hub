@@ -1482,6 +1482,76 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
   );
 }
 
+// ClarifySection — extracted from rTodos() (v17 refactor Step 4)
+function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode,setEdit,setLinkPicker}){
+  const{todos,setTodos,doneTodo,undoneTodo,deleteTodo,addFocus,focus,openLinkedList,clearCompleted,doneCount,saveItem,showT}=useApp();
+  const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
+  const[dragQ,setDragQ]=useState(null);
+  const moveTodoQuad=(tid,nq)=>{setTodos(t=>t.map(x=>x.id===tid?{...x,quad:nq}:x));setDragQ(null);showT(`→ ${QUADS.find(q=>q.id===nq)?.l}`);};
+  const[taskMenu,setTaskMenu]=useState(null);
+
+  const content=QUADS.map(q=>{
+    const tasks=todos.filter(t=>t.quad===q.id).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+    const isExp=expQ[q.id];
+    const vis=isExp?tasks:tasks.slice(0,2);
+    return(
+      <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} ${q.dbdr} overflow-hidden transition-all ${dragQ&&dragQ!==q.id?'ring-2 ring-sage-300 ring-offset-1':''}`}
+        onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='move';}}
+        onDrop={e=>{e.preventDefault();const tid=e.dataTransfer.getData('text/plain');if(tid&&q.id!==todos.find(x=>x.id===tid)?.quad)moveTodoQuad(tid,q.id);}}>
+        <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2 md:p-3 bg-gradient-to-r ${q.clr} ${q.dclr} flex items-center justify-between`}><div><h3 className={`font-bold text-sm md:text-base ${q.txt} ${q.dtxt}`}>{q.l}</h3><p className="text-[11px] md:text-xs text-bark-500/60 dark:text-sand-300/50">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt} ${q.dtxt}`}>{tasks.length}</span>{isExp?<I.Up s={16} c={`${q.txt} ${q.dtxt}`}/>:<I.Down s={16} c={`${q.txt} ${q.dtxt}`}/>}</div></button>
+        <div className={`bg-white/40 dark:bg-white/5 ${tasks.length>0?'p-2 md:p-3':'p-1'}`}>
+          {tasks.length===0?<Empty.Tasks/>:(
+            <div className="space-y-1.5">
+              {vis.map(t=>{
+                const inSel=selMode&&selSection==='todos';
+                const isSel=inSel&&selIds.has(t.id);
+                return(
+                  <div key={t.id} className="gcard rounded-xl overflow-hidden">
+                  <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
+                    {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
+                    {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm md:text-xs font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold sel md:text-sm md:leading-snug leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
+                        {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
+                      </div>
+                      {(t.cat||t.deadline||t.subtasks?.length>0)&&(
+                        <div className="flex items-center gap-2 flex-wrap text-xs mt-1">
+                          {t.cat&&<span className="px-2 py-0.5 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
+                          {t.deadline&&<span className="px-2 py-0.5 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
+                          {t.subtasks?.length>0&&<span className="px-2 py-0.5 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
+                        </div>
+                      )}
+                      {t.poms>0&&<div className="flex items-center gap-1.5 mt-1"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span></div>}
+                    </div>
+                    {!inSel&&<button onClick={e=>{e.stopPropagation();setTaskMenu(t);}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
+                  </div>
+                </div>
+              );})}
+              {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  });
+  return(
+    <div className="space-y-4">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
+        <div className="flex items-center justify-center relative">
+          {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
+          <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Clarify</h2>
+          <div className="absolute right-0 flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div>
+        </div>}
+      </div>
+      <div className={desk?'md-grid':'space-y-3'}>{content}</div>
+      <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
+      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
+    </div>
+  );
+}
+
 // Main App
 function App(){
   const{theme,setTheme}=useContext(ThemeCtx);
@@ -1554,7 +1624,7 @@ function App(){
   const[newList,setNewList]=useState('');
   const[showNew,setShowNew]=useState(false);
   const[listMenu,setListMenu]=useState(null);
-  const[taskMenu,setTaskMenu]=useState(null);
+  // taskMenu state moved to ClarifySection (v17 refactor Step 4)
   // noteMenu state moved to CaptureSection (v17 refactor Step 3)
   const[linkPicker,setLinkPicker]=useState(null); // {taskId}
   const[editListId,setEditListId]=useState(null);
@@ -1564,7 +1634,7 @@ function App(){
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
   const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
-  const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
+  // expQ state moved to ClarifySection (v17 refactor Step 4)
   const[dragI,setDragI]=useState(null);
   const[dragO,setDragO]=useState(null);
 
@@ -1742,72 +1812,6 @@ function App(){
         ):(
           <>{rListContent(cl)}</>
         )}
-      </div>
-    );
-  };
-
-  // Drag-and-drop for matrix re-prioritization
-  const[dragQ,setDragQ]=useState(null);
-  const moveTodoQuad=(tid,nq)=>{setTodos(t=>t.map(x=>x.id===tid?{...x,quad:nq}:x));setDragQ(null);showT(`→ ${QUADS.find(q=>q.id===nq)?.l}`);};
-
-  const rTodos=()=>{
-    const content=QUADS.map(q=>{
-      const tasks=todos.filter(t=>t.quad===q.id).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
-      const isExp=expQ[q.id];
-      const vis=isExp?tasks:tasks.slice(0,2);
-      return(
-        <div key={q.id} className={`rounded-2xl border-2 ${q.bdr} ${q.dbdr} overflow-hidden transition-all ${dragQ&&dragQ!==q.id?'ring-2 ring-sage-300 ring-offset-1':''}`}
-          onDragOver={e=>{e.preventDefault();e.dataTransfer.dropEffect='move';}}
-          onDrop={e=>{e.preventDefault();const tid=e.dataTransfer.getData('text/plain');if(tid&&q.id!==todos.find(x=>x.id===tid)?.quad)moveTodoQuad(tid,q.id);}}>
-          <button onClick={()=>setExpQ({...expQ,[q.id]:!isExp})} className={`w-full p-2 md:p-3 bg-gradient-to-r ${q.clr} ${q.dclr} flex items-center justify-between`}><div><h3 className={`font-bold text-sm md:text-base ${q.txt} ${q.dtxt}`}>{q.l}</h3><p className="text-[11px] md:text-xs text-bark-500/60 dark:text-sand-300/50">{q.sub}</p></div><div className="flex items-center gap-2"><span className={`text-sm md:text-base font-semibold ${q.txt} ${q.dtxt}`}>{tasks.length}</span>{isExp?<I.Up s={16} c={`${q.txt} ${q.dtxt}`}/>:<I.Down s={16} c={`${q.txt} ${q.dtxt}`}/>}</div></button>
-          <div className={`bg-white/40 dark:bg-white/5 ${tasks.length>0?'p-2 md:p-3':'p-1'}`}>
-            {tasks.length===0?<Empty.Tasks/>:(
-              <div className="space-y-1.5">
-                {vis.map(t=>{
-                  const inSel=selMode&&selSection==='todos';
-                  const isSel=inSel&&selIds.has(t.id);
-                  return(
-                    <div key={t.id} className="gcard rounded-xl overflow-hidden">
-                    <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
-                      {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
-                      {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm md:text-xs font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-semibold sel md:text-sm md:leading-snug leading-relaxed ${t.done?'line-through text-bark-400 dark:text-sand-300':'text-bark-700 dark:text-cream-100'}`}>{t.text}</span>
-                          {t.linkedList&&<span className="text-xs opacity-60" title="Linked checklist">📋</span>}
-                        </div>
-                        {(t.cat||t.deadline||t.subtasks?.length>0)&&(
-                          <div className="flex items-center gap-2 flex-wrap text-xs mt-1">
-                            {t.cat&&<span className="px-2 py-0.5 rounded-full bg-sage-100 dark:bg-sage-400/20 text-sage-600 dark:text-sage-300 font-medium">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}
-                            {t.deadline&&<span className="px-2 py-0.5 rounded-full bg-ocean-100 dark:bg-ocean-400/20 text-ocean-500 dark:text-ocean-300 font-medium">📅 {t.deadline}</span>}
-                            {t.subtasks?.length>0&&<span className="px-2 py-0.5 rounded-full bg-lavender-100 dark:bg-lavender-400/20 text-lavender-500 dark:text-lavender-300 font-medium">☑️ {t.subtasks.filter(x=>x.done).length}/{t.subtasks.length}</span>}
-                          </div>
-                        )}
-                        {t.poms>0&&<div className="flex items-center gap-1.5 mt-1"><span className="text-terracotta-400 font-bold text-sm">🍅 {t.poms}</span></div>}
-                      </div>
-                      {!inSel&&<button onClick={e=>{e.stopPropagation();setTaskMenu(t);}} className="p-1.5 rounded-lg text-bark-600 dark:text-sand-200 hover:text-bark-700 dark:hover:text-white hover:bg-sand-200 dark:hover:bg-bark-500 transition-colors flex-shrink-0" aria-label="More options"><I.MoreV s={18}/></button>}
-                    </div>
-                  </div>
-                );})}
-                {tasks.length>2&&!isExp&&<button onClick={()=>setExpQ({...expQ,[q.id]:true})} className="w-full py-2 text-center text-sm text-bark-400/60 font-medium">Show {tasks.length-2} more...</button>}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    });
-    return(
-      <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-          {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
-          <div className="flex items-center justify-center relative">
-            {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
-            <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">📋 Clarify</h2>
-            <div className="absolute right-0 flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div>
-          </div>}
-        </div>
-        <div className={desk?'md-grid':'space-y-3'}>{content}</div>
-        <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
       </div>
     );
   };
@@ -2103,7 +2107,7 @@ function App(){
             <div className="px-8 py-6 mx-auto">
               {tab==='focus'&&rFocus()}
               {tab==='lists'&&rLists()}
-              {tab==='todos'&&rTodos()}
+              {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
               {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
               {tab==='review'&&rReview()}
               {tab==='more'&&rMore()}
@@ -2122,7 +2126,7 @@ function App(){
       <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
         {tab==='focus'?<div className="max-w-2xl mx-auto">{rFocus()}</div>:null}
         {tab==='lists'&&rLists()}
-        {tab==='todos'&&rTodos()}
+        {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
         {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
         {tab==='review'&&rReview()}
         {tab==='more'&&rMore()}
@@ -2148,7 +2152,6 @@ function App(){
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
-      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
       {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
