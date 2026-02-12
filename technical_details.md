@@ -204,12 +204,17 @@
 - **Test cleanup:** Removed 7 stale/trivial tests (Reminder CRUD, Wide Desktop Hook, Right-Click Context Menu, Compact Timer CSS, Batch Select Left Position), added 3 new tests (Settings Flexbox Desk, Explainer Collapsible State, Explainer Desktop Always Open), updated Focus Side-by-Side test for `desk` breakpoint
 - **Tests:** 59 → 55 (net reduction from removing stale tests)
 
-### v16.1-Alpha ← CURRENT
-- **v17 Refactor Step 1 (merged):** Extracted `useAppData()` custom hook from App — all shared persisted state and CRUD handlers moved out of App into a standalone hook
-- **v17 Refactor Step 2 (merged):** Created `AppDataCtx` context, `AppDataProv` provider, and `useApp()` convenience hook — render root wrapped with provider, App now reads shared state from context
-- **v17 Refactor Step 3 (merged):** Extracted `CaptureSection` as standalone component from `rNotes()` — all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering now self-contained. Uses `useApp()` for shared state, receives selection props from App
-- **v17 Refactor Step 4 (merged):** Extracted `ClarifySection` as standalone component from `rTodos()` — Eisenhower matrix rendering, quadrant expand/collapse (expQ), drag-and-drop re-prioritization (dragQ/moveTodoQuad), TaskMenu state + rendering, QuickAdd all self-contained. Uses `useApp()` for shared state, receives selection + setEdit/setLinkPicker props from App
-- **Version stays v16.1-Alpha** while refactor is in progress (no UI changes, internal restructuring only)
+### v16.3 ← CURRENT
+- **Refactor Step 5:** Extracted `FocusSection` from `rFocus()` — FocusTimer integration, focus queue drag-and-drop reordering (dragI/dragO), stats cards, desktop side-by-side layout, all self-contained. Uses `useApp()` for shared state, receives `onTimerTick` callback from App for sidebar timer display
+- No UI changes — internal restructuring only
+
+### v16.2
+- **Refactor Step 2:** Created `AppDataCtx` context, `AppDataProv` provider, and `useApp()` convenience hook — render root wrapped with provider, App now reads shared state from context
+- **Refactor Step 3:** Extracted `CaptureSection` as standalone component from `rNotes()` — all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering now self-contained. Uses `useApp()` for shared state, receives selection props from App
+- **Refactor Step 4:** Extracted `ClarifySection` as standalone component from `rTodos()` — Eisenhower matrix rendering, quadrant expand/collapse (expQ), drag-and-drop re-prioritization (dragQ/moveTodoQuad), TaskMenu state + rendering, QuickAdd all self-contained. Uses `useApp()` for shared state, receives selection + setEdit/setLinkPicker props from App
+
+### v16.1
+- **Refactor Step 1:** Extracted `useAppData()` custom hook from App — all shared persisted state and CRUD handlers moved out of App into a standalone hook
 
 ---
 
@@ -253,7 +258,7 @@ Make data more resilient beyond IndexedDB browser storage.
 - **Rule:** Small features increment minor (15_1 → 15_2), big features increment major (15 → 16)
 - **Format:** `v16-Alpha`, `v15_1-Alpha`, etc.
 - **Alpha tag:** Current release stage
-- **Current:** v16.1-Alpha (v17 refactor in progress)
+- **Current:** v16.3 (refactoring in progress — extracting App into sub-components)
 
 ### UI Patterns Established (v15+)
 - **⋮ 3-dot menu:** Always-visible vertical dots on every item (Capture notes, Clarify tasks, Confirm checklist items)
@@ -339,7 +344,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 
 ### State Management
 - `usePersistedState` — auto-persistence to IndexedDB + localStorage sync
-- `useAppData()` — custom hook extracting all shared persisted state and CRUD handlers from App (v17 refactor Step 1). Returns: `lists`, `setLists`, `todos`, `setTodos`, `reminders`, `setReminders`, `notes`, `setNotes`, `focus`, `setFocus`, `activeF`, `setActiveF`, `preset`, `setPreset`, `customT`, `setCustomT`, `tSet`, `poms`, `setPoms`, `met`, `setMet`, `fHist`, `setFHist`, `dHist`, `setDHist`, `toast`, `showT`, `tab`, `setTab`, `selList`, `setSelList`, `handleTimerComplete`, `handleUpdatePoms`, `clearCompleted`, `addFocus`, `doneFocus`, `doneList`, `doneTodo`, `undoneTodo`, `deleteTodo`, `linkTask`, `unlinkTask`, `openLinkedList`, `createAndLink`, `deleteListItem`, `deleteReminder`, `updateListName`, `deleteList`, `saveItem`, `seedSampleData`, `wkData`, `doneCount`
+- `useAppData()` — custom hook extracting all shared persisted state and CRUD handlers from App (v16.1 refactor Step 1). Returns: `lists`, `setLists`, `todos`, `setTodos`, `reminders`, `setReminders`, `notes`, `setNotes`, `focus`, `setFocus`, `activeF`, `setActiveF`, `preset`, `setPreset`, `customT`, `setCustomT`, `tSet`, `poms`, `setPoms`, `met`, `setMet`, `fHist`, `setFHist`, `dHist`, `setDHist`, `toast`, `showT`, `tab`, `setTab`, `selList`, `setSelList`, `handleTimerComplete`, `handleUpdatePoms`, `clearCompleted`, `addFocus`, `doneFocus`, `doneList`, `doneTodo`, `undoneTodo`, `deleteTodo`, `linkTask`, `unlinkTask`, `openLinkedList`, `createAndLink`, `deleteListItem`, `deleteReminder`, `updateListName`, `deleteList`, `saveItem`, `seedSampleData`, `wkData`, `doneCount`
 - `ThemeProv` — `S.getSync()` initial + async IndexedDB load, default `'system'`
 - `useDesk()` — desktop breakpoint detection (768px+)
 - `useWide()` — wide desktop breakpoint detection (1280px+)
@@ -373,6 +378,7 @@ Removed: arc, reminders, Swipe component
 | `AppDataProv` | Context provider wrapping App — shares `useAppData()` via `AppDataCtx` |
 | `CaptureSection` | Bullet journal capture tab — local state, NoteMenu, auto-clear, uses `useApp()` |
 | `ClarifySection` | Eisenhower matrix clarify tab — quadrant rendering, drag-and-drop, TaskMenu, uses `useApp()` |
+| `FocusSection` | Focus tab — FocusTimer integration, queue drag-and-drop, stats cards, desktop layout, uses `useApp()` |
 | `FocusTimer` | Isolated Pomodoro timer (memo + useReducer + onTick callback) |
 | `Heatmap` | GitHub-style streak heatmap (13-week grid, tap-to-inspect) |
 | `SelCheck` / `BulkActionBar` / `BulkDeleteConfirm` | Batch selection UI |
@@ -400,7 +406,7 @@ Removed: arc, reminders, Swipe component
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** Alpha. v17 refactor in progress — extracting App into sub-components (Steps 1-4 of 9 complete).
+- **Current phase:** v16.3 — refactoring in progress, extracting App into sub-components (Steps 1-5 of 9 complete).
 - **Working file:** `productivity_hub.html` (~195KB, ~2153 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 - **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
@@ -417,7 +423,7 @@ Removed: arc, reminders, Swipe component
 
 ---
 
-## 🔧 v17 Refactor — Simplification & UI Smoothness
+## 🔧 v16.x Refactor — Simplification & UI Smoothness
 
 **Goal:** Reduce codebase complexity, eliminate duplication, improve maintainability and UI smoothness while keeping the exact same feature set.
 
@@ -436,7 +442,7 @@ Removed: arc, reminders, Swipe component
 | **Step 2** | Create `AppDataCtx` context + `AppDataProv` provider + `useApp()` convenience hook — wrap render root so all child components can access shared state via context instead of prop-drilling | ✅ **Merged** |
 | **Step 3** | Extract `CaptureSection` from `rNotes()` — move all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering into standalone component. Uses `useApp()` for shared state, receives selection props from App | ✅ **Merged** |
 | **Step 4** | Extract `ClarifySection` from `rTodos()` — move Eisenhower matrix rendering, quadrant expand/collapse (expQ), drag-and-drop re-prioritization (dragQ/moveTodoQuad), TaskMenu state + rendering, QuickAdd, and task interaction handlers into standalone component. Uses `useApp()` for shared state, receives selection + setEdit/setLinkPicker props from App | ✅ **Merged** |
-| **Step 5** | Extract `FocusSection` from `rFocus()` — move FocusTimer integration, focus queue rendering, timer controls, side-by-side layout logic into standalone component | ⏳ **Pending** |
+| **Step 5** | Extract `FocusSection` from `rFocus()` — move FocusTimer integration, focus queue drag-and-drop reordering (dragI/dragO), stats cards, desktop side-by-side layout into standalone component. Uses `useApp()` for shared state, receives `onTimerTick` callback from App for sidebar timer display | ✅ **Merged** |
 | **Step 6** | Extract `ConfirmSection` from `rLists()` — move checklist rendering (`rListContent`), list tabs, ListMenu state, edit/delete list logic, 2-column layout into standalone component | ⏳ **Pending** |
 | **Step 7** | Extract `ReviewSection` from `rReview()` — move weekly stats, streak heatmap, matrix overview, pattern insights, next actions, 2-column dashboard into standalone component | ⏳ **Pending** |
 | **Step 8** | Extract `SettingsSection` from `rMore()` — move theme picker, timer duration, data management, install guide, desktop mode, explainer into standalone component | ⏳ **Pending** |
@@ -492,16 +498,16 @@ Derived:    wkData, doneCount
 - **Status:** ⏳ Pending
 
 ### Implementation Strategy
-- **v17.0:** Priorities 1-3 (component extraction + dedup + unified menus) — biggest structural change
-- **v17.1:** Priorities 4-6 (polish, smoothness, cleanup) — refinement pass
+- **v16.x (current):** Priorities 1-3 (component extraction + dedup + unified menus) — biggest structural change, versioned incrementally as v16.1, v16.2, v16.3, etc.
+- **v16.x (next):** Priorities 4-6 (polish, smoothness, cleanup) — refinement pass
 - Use incremental edits, verify all 55 tests pass after each step
-- Version stays at v16.1-Alpha until refactor is complete, then bumps to v17
+- Each refactoring step increments the minor version (v16.1 → v16.2 → v16.3 → ...)
 
 ### Summary Table
 
 | # | Change | Lines Saved | UI Impact | Difficulty | Status |
 |---|--------|-------------|-----------|------------|--------|
-| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium | Steps 1-4 done, Steps 5-9 pending |
+| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium | Steps 1-5 done, Steps 6-9 pending |
 | 2 | CSS-only responsive (kill JSX duplication) | ~250 | High (smoother, consistent) | Medium | Pending |
 | 3 | Unified ContextMenu + ConfirmDialog | ~120 | Medium (consistency) | Easy | Pending |
 | 4 | StickyHeader + @apply classes | ~80 | Low (cleaner code) | Easy | Pending |

@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16-Alpha';
+const APP_VERSION = '16.3';
 
 // Icons - More visible with less transparency
 const I={
@@ -1208,7 +1208,7 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
   );
 },(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
 
-// useAppData — shared persisted data state and CRUD handlers (v17 refactor Step 1)
+// useAppData — shared persisted data state and CRUD handlers (v16.2 refactor Step 1)
 function useAppData(){
   // Data
   const[lists,setLists]=usePersistedState('lists',[]);
@@ -1357,7 +1357,7 @@ function useAppData(){
   };
 }
 
-// AppDataCtx — shared data context (v17 refactor Step 2)
+// AppDataCtx — shared data context (v16.2 refactor Step 2)
 const AppDataCtx=React.createContext(null);
 function AppDataProv({children}){
   const data=useAppData();
@@ -1365,7 +1365,7 @@ function AppDataProv({children}){
 }
 function useApp(){const ctx=useContext(AppDataCtx);if(!ctx)throw new Error('useApp must be inside AppDataProv');return ctx;}
 
-// CaptureSection — extracted from rNotes() (v17 refactor Step 3)
+// CaptureSection — extracted from rNotes() (v16.2 refactor Step 3)
 function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode}){
   const{notes,setNotes,todos,setTodos,showT}=useApp();
   const[newBullet,setNewBullet]=useState('');
@@ -1482,7 +1482,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
   );
 }
 
-// ClarifySection — extracted from rTodos() (v17 refactor Step 4)
+// ClarifySection — extracted from rTodos() (v16.2 refactor Step 4)
 function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSelMode,exitSelMode,setEdit,setLinkPicker}){
   const{todos,setTodos,doneTodo,undoneTodo,deleteTodo,addFocus,focus,openLinkedList,clearCompleted,doneCount,saveItem,showT}=useApp();
   const[expQ,setExpQ]=useState({ui:true,ni:true,un:true,nn:true});
@@ -1548,6 +1548,57 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
       <div className={desk?'md-grid':'space-y-3'}>{content}</div>
       <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
       {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
+    </div>
+  );
+}
+
+// FocusSection — extracted from rFocus() (v16.2 refactor Step 5)
+function FocusSection({wide,desk,onTimerTick}){
+  const{tSet,poms,met,focus,setFocus,activeF,setActiveF,handleTimerComplete,handleUpdatePoms,doneFocus}=useApp();
+  const[dragI,setDragI]=useState(null);
+  const[dragO,setDragO]=useState(null);
+  const handleDS=i=>setDragI(i);
+  const handleDO=(e,i)=>{e.preventDefault();setDragO(i);};
+  const handleDE=()=>{if(dragI!==null&&dragO!==null&&dragI!==dragO){const n=[...focus],[d]=n.splice(dragI,1);n.splice(dragO,0,d);setFocus(n);}setDragI(null);setDragO(null);};
+
+  const statsCards=[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}];
+
+  const renderQueue=(compact)=>(<>
+    <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
+    <div className="space-y-2">
+      {focus.map((t,i)=>(
+        <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard ${compact?'rounded-2xl px-3 py-2':'rounded-2xl p-4'} focus-item flex items-center gap-${compact?'2.5':'3 md:gap-4'} cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
+          <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
+          <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
+          <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
+          {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
+          <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
+        </div>
+      ))}
+      {focus.length===0&&<Empty.Focus/>}
+    </div>
+  </>);
+
+  return(
+    <div className="space-y-5">
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
+      </div>
+      {desk?(
+        <div className="flex gap-6 items-start">
+          <div className="flex-1 min-w-0 space-y-4">
+            <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+            <div className="grid grid-cols-3 gap-2">{statsCards.map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+          </div>
+          <div className="flex-1 min-w-0">{renderQueue(true)}</div>
+        </div>
+      ):(
+        <>
+          <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+          <div className="grid grid-cols-3 gap-3 md:gap-4">{statsCards.map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+          <div>{renderQueue(false)}</div>
+        </>
+      )}
     </div>
   );
 }
@@ -1624,8 +1675,8 @@ function App(){
   const[newList,setNewList]=useState('');
   const[showNew,setShowNew]=useState(false);
   const[listMenu,setListMenu]=useState(null);
-  // taskMenu state moved to ClarifySection (v17 refactor Step 4)
-  // noteMenu state moved to CaptureSection (v17 refactor Step 3)
+  // taskMenu state moved to ClarifySection (v16.2 refactor Step 4)
+  // noteMenu state moved to CaptureSection (v16.2 refactor Step 3)
   const[linkPicker,setLinkPicker]=useState(null); // {taskId}
   const[editListId,setEditListId]=useState(null);
   const[editListName,setEditListName]=useState('');
@@ -1634,9 +1685,8 @@ function App(){
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
   const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
-  // expQ state moved to ClarifySection (v17 refactor Step 4)
-  const[dragI,setDragI]=useState(null);
-  const[dragO,setDragO]=useState(null);
+  // expQ state moved to ClarifySection (v16.2 refactor Step 4)
+  // dragI/dragO state moved to FocusSection (v16.2 refactor Step 5)
 
   // PWA Install state
   const[pwaPrompt,setPwaPrompt]=useState(!!window.__pwaInstallPrompt);
@@ -1666,66 +1716,11 @@ function App(){
     }catch{}
   };
 
-  const handleDS=i=>setDragI(i);
-  const handleDO=(e,i)=>{e.preventDefault();setDragO(i);};
-  const handleDE=()=>{if(dragI!==null&&dragO!==null&&dragI!==dragO){const n=[...focus],[d]=n.splice(dragI,1);n.splice(dragO,0,d);setFocus(n);}setDragI(null);setDragO(null);};
-
   // UI wrappers for hook handlers that also need to clear local UI state
   const handleUpdateListName=(listId,newName)=>{updateListName(listId,newName);setEditListId(null);setEditListName('');};
   const handleDeleteList=(listId)=>{deleteList(listId);setDeleteConfirm(null);};
 
   // RENDERS
-  const rFocus=()=>(
-    <div className="space-y-5">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
-        <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
-      </div>
-      {desk?(
-        <div className="flex gap-6 items-start">
-          <div className="flex-1 min-w-0 space-y-4">
-      <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-<div className="grid grid-cols-3 gap-2">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
-          </div>
-          <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
-        <div className="space-y-2">
-          {focus.map((t,i)=>(
-            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl px-3 py-2 focus-item flex items-center gap-2.5 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
-              <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
-              <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
-              <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
-              {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
-              <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
-            </div>
-          ))}
-          {focus.length===0&&<Empty.Focus/>}
-        </div>
-          </div>
-        </div>
-      ):(
-        <>
-      <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-<div className="grid grid-cols-3 gap-3 md:gap-4">{[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
-      <div>
-        <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
-        <div className="space-y-2">
-          {focus.map((t,i)=>(
-            <div key={t.id} draggable={desk} onDragStart={()=>handleDS(i)} onDragOver={e=>handleDO(e,i)} onDragEnd={handleDE} onClick={()=>setActiveF(t.id===activeF?null:t.id)} className={`gcard rounded-2xl p-4 focus-item flex items-center gap-3 md:gap-4 cursor-grab active:cursor-grabbing transition-all ${activeF===t.id?'ring-2 ring-sage-400':''} ${dragI===i?'opacity-50':''} ${dragO===i?'ring-2 ring-sage-300':''}`}>
-              <div className="text-bark-400/30 dark:text-sand-300/30" aria-hidden="true"><I.Drag s={20}/></div>
-              <button onClick={e=>{e.stopPropagation();doneFocus(t.id);}} aria-label="Complete task" className="w-7 h-7 rounded-full border-2 border-sage-400 hover:bg-sage-400 flex items-center justify-center transition-colors flex-shrink-0 group"><span className="text-sage-400 group-hover:text-white text-sm">✓</span></button>
-              <div className="flex-1 min-w-0"><span className="block truncate text-bark-600 dark:text-sand-100 font-medium sel">{t.text}</span>{t.cat&&<span className="text-xs text-bark-400/60 dark:text-sand-300/60">{CATS.find(c=>c.id===t.cat)?.e} {CATS.find(c=>c.id===t.cat)?.l}</span>}</div>
-              {t.poms>0&&<span className="text-terracotta-400 text-sm font-semibold">🍅{t.poms}</span>}
-              <button onClick={e=>{e.stopPropagation();setFocus(focus.filter(x=>x.id!==t.id));if(activeF===t.id)setActiveF(null);}} aria-label="Remove from focus queue" className="text-bark-400/40 hover:text-terracotta-400 transition-colors">←</button>
-            </div>
-          ))}
-          {focus.length===0&&<Empty.Focus/>}
-        </div>
-      </div>
-        </>
-      )}
-    </div>
-  );
-
   const rListContent=(cl,isSecondary)=>{
     if(!cl)return null;
     const secs=[...new Set(cl.items.map(i=>i.section)||[])];
@@ -2105,7 +2100,7 @@ function App(){
           {/* Main content */}
           <div className="flex-1 overflow-y-auto">
             <div className="px-8 py-6 mx-auto">
-              {tab==='focus'&&rFocus()}
+              {tab==='focus'&&<FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/>}
               {tab==='lists'&&rLists()}
               {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
               {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
@@ -2124,7 +2119,7 @@ function App(){
         <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
       </div>
       <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
-        {tab==='focus'?<div className="max-w-2xl mx-auto">{rFocus()}</div>:null}
+        {tab==='focus'?<div className="max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>:null}
         {tab==='lists'&&rLists()}
         {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
         {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
