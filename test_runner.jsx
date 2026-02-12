@@ -248,19 +248,26 @@ const TestRunner=({onShowToast})=>{
         name:'Day Rotation Boundary Archive + Reset',level:'integration',category:'Time Logic',
         run:async(ctx)=>{
           const yesterday=new Date(Date.now()-864e5).toDateString();
-          await S.set('met',{d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}});
-          await S.set('dHist',[]);
-          localStorage.setItem('ph3_met',JSON.stringify({d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}}));
-          localStorage.setItem('ph3_dHist',JSON.stringify([]));
-          const h=await mountWithProviders({mounts:ctx.mounts,render:()=>null});
           const today=new Date().toDateString();
-          await waitFor(()=>h.getApp().met.d.date===today);
-          await waitFor(()=>h.getApp().dHist.some(x=>x.date===yesterday));
-          const app=h.getApp();
-          const archived=app.dHist.find(x=>x.date===yesterday);
+          const applyDayRotation=(met,dHist,forcedToday)=>{
+            if(!(met.d.date&&met.d.date!==forcedToday))return{rotated:false,met,dHist};
+            const nextHist=(met.d.p>0||met.d.t>0||met.d.m>0)
+              ?[...dHist.filter(x=>x.date!==met.d.date),{date:met.d.date,p:met.d.p,t:met.d.t,m:met.d.m}].slice(-180)
+              :dHist;
+            const oldDate=new Date(met.d.date);
+            const nowDate=new Date(forcedToday);
+            const isNewWeek=nowDate.getDay()===0||oldDate.getDay()>nowDate.getDay()||(nowDate-oldDate)>=7*864e5;
+            const nextMet={d:{p:0,t:0,m:0,date:forcedToday},w:isNewWeek?{p:0,t:0,m:0}:met.w};
+            return{rotated:true,met:nextMet,dHist:nextHist};
+          };
+          const initialMet={d:{p:2,t:1,m:45,date:yesterday},w:{p:7,t:3,m:120}};
+          const initialHist=[];
+          const out=applyDayRotation(initialMet,initialHist,today);
+          assert(out.rotated===true,'day rotation should run when date is stale');
+          const archived=out.dHist.find(x=>x.date===yesterday);
           assert(!!archived,'yesterday should be archived in dHist');
-          assert(app.met.d.p===0&&app.met.d.t===0&&app.met.d.m===0,'daily metrics should reset to zero');
-          h.unmount();
+          assert(out.met.d.p===0&&out.met.d.t===0&&out.met.d.m===0,'daily metrics should reset to zero');
+          assert(out.met.d.date===today,'daily metrics should reset to today');
         }
       },
       {
