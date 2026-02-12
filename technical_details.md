@@ -7,43 +7,47 @@
 **Current Model:** Opus 4.6
 **Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1 → v16.6 (Opus 4.6)
 
+## 📚 Table of Contents
+- [Context for New Session](#-context-for-new-session)
+- [Latest Release](#-latest-release)
+- [Completed Features (All Versions)](#-completed-features-all-versions)
+- [Future Features](#-future-features)
+- [Feature Specifications](#-feature-specifications)
+- [Known Issues](#-known-issues)
+- [Technical Stack](#-technical-stack)
+
+---
+
+## 📞 Context for New Session
+
+- **User:** Jeet
+- **Project:** Productivity Hub web app (React single-page HTML)
+- **Development style:** Iterative, version-based, incremental str_replace edits
+- **Current phase:** v16.7 — Priority 1 refactoring complete (all 9 steps merged). App is now a thin layout shell.
+- **Working file:** `productivity_hub.html` (~185KB, ~2023 lines)
+- **Key constraint:** Output token limits require incremental edits, not full-file rewrites
+- **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
+- **Versioning:** Small features → minor bump (15_1, 15_2), big features → major bump (15, 16, 17)
+
+**Full Feature Set (Canonical Inventory):**
+- Capture (Bullet Journal + ⋮ NoteMenu with Copy Text + right-click + ☐ bulk select + copy+strike to Clarify + auto-clear) → Clarify (Eisenhower + ⋮ TaskMenu + right-click + tap done/undone + drag desktop) → Focus (Pomodoro + Queue + side-by-side tablet+ + sidebar timer) → Confirm (Checklists + ⋮ edit+delete + right-click + tap-done + 2-col desktop) → Review (Stats + Streak Heatmap + Insights + 2-col dashboard wide)
+- Unified: ⋮ 3-dot + right-click on all items, ☐ header checkbox (left) for bulk select, no long-press, no swipe
+- Desktop (1280px+): Sidebar nav, full-width, 2-col Review, compact items, live timer
+- Tablet (768px+): Side-by-side Focus (equal flex-1 cols), 2-col Clarify/Confirm/Settings (flexbox), constrained QuickAdd, Explainer 2-col grid
+- Settings: Theme + Timer + Data + Install as App + Desktop Mode; flexbox 2-col on tablet+ with always-expanded cards; collapsible on mobile
+- Explainer: 7 collapsible accordion sections on mobile, always-expanded 2-col grid on tablet+
+- Test Suite (55 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
+
 ---
 
 ## 📦 Latest Release
 
-**productivity_hub.html** (v16.1-Alpha)
+**productivity_hub.html** (v16.7-Alpha)
 
-### All Features:
-- ✅ IndexedDB storage with automatic persistence
-- ✅ Isolated FocusTimer (no app re-renders, `onTick` callback for sidebar timer)
-- ✅ Quick-add bars, sticky headers, completed items persistence
-- ✅ Edit/Delete lists (context menu), empty state handling
-- ✅ **Test App Feature** — 55 automated tests with report generation
-- ✅ **Desktop Mode** — Sidebar nav (1280px+), full-width layouts, compact items
-- ✅ **Tablet Mode** — Side-by-side Focus, 2-col Settings flexbox, constrained QuickAdd (768px+)
-- ✅ **Desktop Side-by-Side Focus** — Timer (flex-1) + Focus Queue (flex-1) on tablet+
-- ✅ **Desktop Dashboard Review** — 2-column grid layout on wide
-- ✅ **Sidebar Timer Indicator** — Live countdown replaces Focus label when timer running, pulsing dot
-- ✅ **Right-Click Context Menus** — Clarify → TaskMenu, Capture → NoteMenu, Confirm → EditModal
-- ✅ **PWA Install System** — Install guide, beforeinstallprompt handling, deployment files
-- ✅ **Unified Interaction Model** — ⋮ 3-dot menu + ☐ header checkbox (left-side) + tap actions + right-click (desktop)
-- ✅ **Capture** — Bullet journal with day sections, tap-to-edit (scroll guard), ⋮ NoteMenu (with Copy Text), ☐ bulk select, copy+strike to Clarify, auto-clear struck notes (30 days)
-- ✅ **Clarify** — Eisenhower Matrix with colorful quadrant headers, ⋮ TaskMenu, ☐ bulk select, drag-and-drop (desktop), tap to toggle done/undone
-- ✅ **Focus** — Pomodoro timer + Focus Queue (3–5 tasks, Deep Work), side-by-side on tablet+
-- ✅ **Confirm** — Checklists with sections, tap to toggle done, ⋮ edit modal with delete option, ☐ bulk select, linked to Clarify tasks
-- ✅ **Review** — Weekly stats, streak heatmap, matrix overview, pattern insights, next actions, 2-col dashboard on wide
-- ✅ **Streak Heatmap** — GitHub-style 13-week grid, 5-level color intensity, tap-for-details, streak counters
-- ✅ **Day Rotation** — Auto-archives daily stats to dHist, resets counters on date change
-- ✅ **Explainer** — Collapsible sections on mobile (7 accordion cards), always-expanded 2-col grid on desktop
-- ✅ **Settings** — 2-column flexbox on tablet+ (Theme/Data/Desktop left, Timer/Install right); collapsible Install+Desktop on mobile only
-- ✅ **Welcome & About** — First-launch welcome overlay (IndexedDB-aware check) + ? icon About modal
-- ✅ **Sample Data** — Onboarding seed data on first launch
-- ✅ **Task ↔ Checklist Linking** — Link Clarify tasks to Confirm checklists, bidirectional navigation, all-done suggestion
-- ✅ **Task 3-Dot Menu** — Consolidated actions: Edit, Done/Undone, → Focus, Link/Open Checklist, Delete
-- ✅ **Workflow Navigation** — Capture → Clarify → Focus → Confirm → Review → More
-- ✅ Default theme: System, default quadrant: Eliminate
-- ✅ **Dark mode polish** — Cohesive dark mode across all tabs
-- ✅ **Fixed emoji encoding** — All double-encoded UTF-8 emojis corrected (cp1252→UTF-8 reversal)
+### Release Focus
+- ✅ Refactor Step 9 completed: App is now a thin layout shell (sidebar/tab-bar + content area + modals), with dead state/comment cleanup.
+- ✅ No UI changes in this release; restructuring only.
+- ✅ Canonical full feature inventory is maintained in `## 📞 Context for New Session` above.
 
 ---
 
@@ -204,6 +208,10 @@
 - **Test cleanup:** Removed 7 stale/trivial tests (Reminder CRUD, Wide Desktop Hook, Right-Click Context Menu, Compact Timer CSS, Batch Select Left Position), added 3 new tests (Settings Flexbox Desk, Explainer Collapsible State, Explainer Desktop Always Open), updated Focus Side-by-Side test for `desk` breakpoint
 - **Tests:** 59 → 55 (net reduction from removing stale tests)
 
+### Phase 10: v16.x Refactor (v16.1 - v16.7) — Opus 4.6
+- **Archived summary:** Priority 1 refactor is complete (all 9 steps merged by v16.7); App is now a thin layout shell.
+- **Tracking note:** Remaining refactor/product work is maintained under `## 🔮 Future Features` → `### 📌 Combined Prioritized Backlog (Refactor + Product Features)`.
+
 ### v16.7 ← CURRENT
 - **Refactor Step 9:** App becomes thin layout shell — sidebar/tab-bar + content area + modals only. Removed 34 unused destructured variables from `useApp()`, removed dead PWA state (pwaPrompt, pwaInstalled, pwaStatus, triggerInstall + event listeners), removed stale comments. App now destructures only 18 values from `useApp()` (down from 52). Version bump to v16.7.
 - No UI changes — internal restructuring only
@@ -236,35 +244,40 @@
 
 ## 🔮 Future Features
 
-### 🔄 Recurring Tasks
-- Daily/weekly/monthly recurrence rules on Clarify tasks
-- Auto-recreate on schedule, completion tracking
+### 📌 Combined Prioritized Backlog (Refactor + Product Features)
 
-### 📋 Task Templates
-- Save task+subtask combos as reusable templates
-- Quick-create from template library
+1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**  
+   Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
 
-### 🏷️ Tags & Filters
-- Add tags to tasks/notes, filter views by tag
-- Cross-section tag search
+2. `P0` **Unified ContextMenu + ConfirmDialog**  
+   Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
 
-### 🔍 Command Palette Search
-Global search across all sections with keyboard shortcut activation.
+3. `P1` **Recurring Tasks**  
+   Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
 
-### 💾 Storage Enhancement
-Make data more resilient beyond IndexedDB browser storage.
+4. `P1` **Tags & Filters**  
+   Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
 
-### Completed (moved from Future)
-- ~~📋 To-Do Absorbs Archive~~ → v12.0
-- ~~📝 Rename Lists → Checklist~~ → v12.0
-- ~~⚡ Quick Actions Refinement~~ → v12.1
-- ~~🔗 Cross-Section Integration~~ → v12.1
-- ~~🖱️ Matrix Drag-and-Drop~~ → v12.2
-- ~~📊 Review Tab~~ → v12.2
-- ~~🔥 Streak Heatmap~~ → v12.5
-- ~~🎯 Unified Interaction Model~~ → v15
-- ~~🖥️ Desktop Mode~~ → v15_1
-- ~~📱 Responsive Tablet/Desktop~~ → v16
+5. `P1` **Command Palette Search**  
+   Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
+
+6. `P2` **Task Templates**  
+   Save task + subtask bundles and quick-create from a reusable template library.
+
+7. `P2` **Storage Enhancement**  
+   Improve resilience beyond IndexedDB-only browser storage.
+
+8. `P2` **StickyHeader + CSS class abstraction**  
+   Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
+
+9. `P2` **UI smoothness pass**  
+   Add transitions, modal exit animations, and debounce persisted writes (~300ms); evaluate virtual scrolling for large lists.
+
+10. `P3` **Lazy-load test suite**  
+    Defer test suite initialization until the Test tab is opened.
+
+11. `P3` **Checklist tab management UX**  
+    Add better tab controls (e.g., right-click/`⋮` rename/delete behavior) for checklist tabs.
 
 ---
 
@@ -342,7 +355,7 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 - **Drag-and-drop mobile:** HTML5 Drag API doesn't work on touch; use EditModal quadrant picker
 - **dHist backfill:** Existing users from pre-v12.5 will have empty heatmap history
 - **struckAt backfill:** Notes struck before v14-Beta lack `struckAt` timestamp
-- **Checklist tab management:** Right-click context menu for rename/delete; may need ⋮ on tabs in future
+- **Checklist tab management:** Improvements are tracked in `## 🔮 Future Features` → `### 📌 Combined Prioritized Backlog (Refactor + Product Features)`.
 - **Timer re-renders:** `onTick` fires every second, updating App state. Mitigated by stable `useCallback` ref and `React.memo` on FocusTimer
 
 ---
@@ -360,7 +373,21 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 
 ### State Management
 - `usePersistedState` — auto-persistence to IndexedDB + localStorage sync
-- `useAppData()` — custom hook extracting all shared persisted state and CRUD handlers from App (v16.1 refactor Step 1). Returns: `lists`, `setLists`, `todos`, `setTodos`, `reminders`, `setReminders`, `notes`, `setNotes`, `focus`, `setFocus`, `activeF`, `setActiveF`, `preset`, `setPreset`, `customT`, `setCustomT`, `tSet`, `poms`, `setPoms`, `met`, `setMet`, `fHist`, `setFHist`, `dHist`, `setDHist`, `toast`, `showT`, `tab`, `setTab`, `selList`, `setSelList`, `handleTimerComplete`, `handleUpdatePoms`, `clearCompleted`, `addFocus`, `doneFocus`, `doneList`, `doneTodo`, `undoneTodo`, `deleteTodo`, `linkTask`, `unlinkTask`, `openLinkedList`, `createAndLink`, `deleteListItem`, `deleteReminder`, `updateListName`, `deleteList`, `saveItem`, `seedSampleData`, `wkData`, `doneCount`
+- `useAppData()` — custom hook extracting shared persisted state and CRUD handlers from App (v16.1 refactor Step 1).
+
+#### `useAppData()` Contract
+```text
+State:      lists, todos, reminders, notes, focus, activeF, preset, customT, tSet,
+            poms, met, fHist, dHist, toast, tab, selList
+Setters:    setLists, setTodos, setReminders, setNotes, setFocus, setActiveF,
+            setPreset, setCustomT, setPoms, setMet, setFHist, setDHist, setTab, setSelList
+Handlers:   handleTimerComplete, handleUpdatePoms, clearCompleted, addFocus,
+            doneFocus, doneList, doneTodo, undoneTodo, deleteTodo, linkTask,
+            unlinkTask, openLinkedList, createAndLink, deleteListItem,
+            deleteReminder, updateListName, deleteList, saveItem, seedSampleData
+Toast:      showT
+Derived:    wkData, doneCount
+```
 - `ThemeProv` — `S.getSync()` initial + async IndexedDB load, default `'system'`
 - `useDesk()` — desktop breakpoint detection (768px+)
 - `useWide()` — wide desktop breakpoint detection (1280px+)
@@ -420,123 +447,6 @@ Removed: arc, reminders, Swipe component
 @media (min-width: 768px)   → Tablet: 2-col Clarify, font bump, scrollbar
 @media (min-width: 1280px)  → Wide: confirm-grid, compact .gcard, compact .timer-display
 ```
-
----
-
-## 📞 Context for New Session
-
-- **User:** Jeet
-- **Project:** Productivity Hub web app (React single-page HTML)
-- **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** v16.7 — Priority 1 refactoring complete (all 9 steps merged). App is now a thin layout shell.
-- **Working file:** `productivity_hub.html` (~185KB, ~2023 lines)
-- **Key constraint:** Output token limits require incremental edits, not full-file rewrites
-- **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
-- **Versioning:** Small features → minor bump (15_1, 15_2), big features → major bump (15, 16, 17)
-
-**Full Feature Set:**
-- Capture (Bullet Journal + ⋮ NoteMenu with Copy Text + right-click + ☐ bulk select + copy+strike to Clarify + auto-clear) → Clarify (Eisenhower + ⋮ TaskMenu + right-click + tap done/undone + drag desktop) → Focus (Pomodoro + Queue + side-by-side tablet+ + sidebar timer) → Confirm (Checklists + ⋮ edit+delete + right-click + tap-done + 2-col desktop) → Review (Stats + Streak Heatmap + Insights + 2-col dashboard wide)
-- Unified: ⋮ 3-dot + right-click on all items, ☐ header checkbox (left) for bulk select, no long-press, no swipe
-- Desktop (1280px+): Sidebar nav, full-width, 2-col Review, compact items, live timer
-- Tablet (768px+): Side-by-side Focus (equal flex-1 cols), 2-col Clarify/Confirm/Settings (flexbox), constrained QuickAdd, Explainer 2-col grid
-- Settings: Theme + Timer + Data + Install as App + Desktop Mode; flexbox 2-col on tablet+ with always-expanded cards; collapsible on mobile
-- Explainer: 7 collapsible accordion sections on mobile, always-expanded 2-col grid on tablet+
-- Test Suite (55 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
-
----
-
-## 🔧 v16.x Refactor — Simplification & UI Smoothness
-
-**Goal:** Reduce codebase complexity, eliminate duplication, improve maintainability and UI smoothness while keeping the exact same feature set.
-
----
-
-### Priority 1: Extract App into Sub-Components + useAppData Hook (~300 lines net savings)
-
-**Problem:** App component (~900 lines) contains ALL state, handlers, and render functions
-**Solution:** 8-step extraction into standalone components + shared context
-
-#### Step-by-Step Breakdown
-
-| Step | Description | Status |
-|------|-------------|--------|
-| **Step 1** | Extract `useAppData()` custom hook — move all shared persisted state (todos, lists, notes, focus, metrics, timers, tab, selList) and CRUD handlers (addFocus, doneTodo, saveItem, seedSampleData, etc.) out of App into a reusable hook | ✅ **Merged** |
-| **Step 2** | Create `AppDataCtx` context + `AppDataProv` provider + `useApp()` convenience hook — wrap render root so all child components can access shared state via context instead of prop-drilling | ✅ **Merged** |
-| **Step 3** | Extract `CaptureSection` from `rNotes()` — move all capture-local state (newBullet, editingNote, noteMenu, bulletRef, notesByDate), functions (addBullet, handleBulletKeyDown, formatDateHeader, deleteBullet, updateBullet, toggleStrike, noteToTodo), effects (auto-clear struck notes 30d), and NoteMenu rendering into standalone component. Uses `useApp()` for shared state, receives selection props from App | ✅ **Merged** |
-| **Step 4** | Extract `ClarifySection` from `rTodos()` — move Eisenhower matrix rendering, quadrant expand/collapse (expQ), drag-and-drop re-prioritization (dragQ/moveTodoQuad), TaskMenu state + rendering, QuickAdd, and task interaction handlers into standalone component. Uses `useApp()` for shared state, receives selection + setEdit/setLinkPicker props from App | ✅ **Merged** |
-| **Step 5** | Extract `FocusSection` from `rFocus()` — move FocusTimer integration, focus queue drag-and-drop reordering (dragI/dragO), stats cards, desktop side-by-side layout into standalone component. Uses `useApp()` for shared state, receives `onTimerTick` callback from App for sidebar timer display | ✅ **Merged** |
-| **Step 6** | Extract `ConfirmSection` from `rLists()` — move checklist rendering (`rListContent`), list tabs, ListMenu state, edit/delete list logic, 2-column layout into standalone component | ✅ **Merged** |
-| **Step 7** | Extract `ReviewSection` from `rReview()` — move weekly stats, streak heatmap, matrix overview, pattern insights, next actions, 2-column dashboard into standalone component | ✅ **Merged** |
-| **Step 8** | Extract `SettingsSection` from `rMore()` — move theme picker, timer duration, data management, install guide, desktop mode, explainer into standalone component | ✅ **Merged** |
-| **Step 9** | Clean up App shell — App becomes thin layout shell (sidebar/tab-bar + content area). Removed 34 unused destructured vars, dead PWA state, stale comments. All 55 tests intact | ✅ **Merged** |
-
-#### What `useAppData()` Returns (Step 1 — merged)
-```
-State:      lists, todos, reminders, notes, focus, activeF, preset, customT, tSet,
-            poms, met, fHist, dHist, toast, tab, selList
-Setters:    setLists, setTodos, setReminders, setNotes, setFocus, setActiveF,
-            setPreset, setCustomT, setPoms, setMet, setFHist, setDHist, setTab, setSelList
-Handlers:   handleTimerComplete, handleUpdatePoms, clearCompleted, addFocus,
-            doneFocus, doneList, doneTodo, undoneTodo, deleteTodo, linkTask,
-            unlinkTask, openLinkedList, createAndLink, deleteListItem,
-            deleteReminder, updateListName, deleteList, saveItem, seedSampleData
-Toast:      showT
-Derived:    wkData, doneCount
-```
-
----
-
-### Priority 2: Eliminate Desktop/Mobile JSX Duplication (~250 lines saved)
-- **Problem:** `rFocus`, `rReview`, `rMore/settings`, main layout all render TWO complete JSX branches (desk vs mobile)
-- **Worst offender:** Settings is fully copy-pasted for desktop vs mobile
-- **Solution:** Render once, use responsive Tailwind classes (`flex flex-col lg:flex-row`, `grid grid-cols-1 lg:grid-cols-2`)
-- Only JS-conditional where truly needed (sidebar vs tab-bar)
-- **Status:** ⏳ Pending
-
-### Priority 3: Unified ContextMenu + ConfirmDialog (~120 lines saved)
-- **Problem:** 3 near-identical menu components (`TaskMenu`, `NoteMenu`, `ListMenu`) + 2 confirmation modals (`DeleteConfirmation`, `BulkDeleteConfirm`)
-- **Solution:** Single `<ContextMenu items={[{icon, label, onClick, destructive?}]} title onClose />`
-- Single `<ConfirmDialog title message onConfirm onCancel variant="danger"|"info" />`
-- **Status:** ⏳ Pending
-
-### Priority 4: StickyHeader + CSS Class Abstraction (~80 lines saved)
-- **Problem:** Every section repeats: `<div className={\`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4\`}>`
-- Repeated class combos: `text-bark-600 dark:text-sand-100`, `bg-sand-200 dark:bg-bark-600`, etc.
-- **Solution:** `<StickyHeader>` component + Tailwind `@apply` semantic classes (`.text-primary`, `.text-secondary`, `.btn-primary`, `.btn-ghost`)
-- **Status:** ⏳ Pending
-
-### Priority 5: UI Smoothness Enhancements (adds ~30 lines)
-- CSS transitions on tab content switches (`opacity 150ms`)
-- `@keyframes slideIn` for list item additions/removals
-- Exit animations for modals (currently only `anim-in` for enter)
-- Debounce `usePersistedState` IndexedDB writes (300ms) — currently writes on every keystroke
-- Virtual scrolling consideration for 100+ item lists
-- **Status:** ⏳ Pending
-
-### Priority 6: Lazy-Load Test Suite (restructure, ~0 net)
-- **Problem:** 200-line test suite evaluates on page load even when never used
-- **Solution:** Wrap in function, only evaluate when Test tab is opened
-- Alternative: simplify test cases (many are verbose smoke tests that could be 1/3 the size)
-- **Status:** ⏳ Pending
-
-### Implementation Strategy
-- **v16.x (current):** Priorities 1-3 (component extraction + dedup + unified menus) — biggest structural change, versioned incrementally as v16.1, v16.2, v16.3, etc.
-- **v16.x (next):** Priorities 4-6 (polish, smoothness, cleanup) — refinement pass
-- Use incremental edits, verify all 55 tests pass after each step
-- Each refactoring step increments the minor version (v16.1 → v16.2 → v16.3 → ...)
-
-### Summary Table
-
-| # | Change | Lines Saved | UI Impact | Difficulty | Status |
-|---|--------|-------------|-----------|------------|--------|
-| 1 | Extract sub-components + useAppData | ~300 | High (fewer re-renders) | Medium | ✅ All 9 steps complete |
-| 2 | CSS-only responsive (kill JSX duplication) | ~250 | High (smoother, consistent) | Medium | Pending |
-| 3 | Unified ContextMenu + ConfirmDialog | ~120 | Medium (consistency) | Easy | Pending |
-| 4 | StickyHeader + @apply classes | ~80 | Low (cleaner code) | Easy | Pending |
-| 5 | Transitions + debounce | +30 | High (smoothness) | Easy | Pending |
-| 6 | Lazy-load test suite | ~0 | Low | Easy | Pending |
-
-**Estimated total:** ~750 lines removed, ~30 added = ~720 net reduction (from ~2118 to ~1400 lines)
 
 ---
 
