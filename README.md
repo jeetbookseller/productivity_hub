@@ -1,4 +1,4 @@
-# productivity_hub v16-Alpha
+# productivity_hub v16.7-Alpha
 
 Copyright © 2026 Jeet Bookseller. All Rights Reserved. This code is for demonstration purposes only. It may not be used, modified, or distributed for commercial or non-commercial purposes without my explicit written permission.
 
@@ -6,7 +6,7 @@ Web app at: https://jeetbookseller.github.io/productivity_hub/productivity_hub.h
 
 Technical details of the App on: https://jeetbookseller.github.io/productivity_hub/technical_details.md
 
-### Full Feature Set:
+###Full Feature Set:
 - Capture (Bullet Journal + ⋮ NoteMenu with Copy Text + right-click + ☐ bulk select + copy+strike to Clarify + auto-clear) → Clarify (Eisenhower + ⋮ TaskMenu + right-click + tap done/undone + drag desktop) → Focus (Pomodoro + Queue + side-by-side tablet+ + sidebar timer) → Confirm (Checklists + ⋮ edit+delete + right-click + tap-done + 2-col desktop) → Review (Stats + Streak Heatmap + Insights + 2-col dashboard wide)
 - Unified: ⋮ 3-dot + right-click on all items, ☐ header checkbox (left) for bulk select, no long-press, no swipe
 - Desktop (1280px+): Sidebar nav, full-width, 2-col Review, compact items, live timer
