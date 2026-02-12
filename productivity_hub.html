@@ -1753,17 +1753,16 @@ function ReviewSection({wide}){
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className="space-y-4">
+        <div className="space-y-4 order-1 xl:order-1 xl:col-start-1 xl:row-start-1">
           {weekStats}
           <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
-          <div className="hidden xl:block">{matrixCard}</div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 order-2 xl:order-3 xl:col-start-2 xl:row-start-1">
           <Heatmap dHist={dHist} met={met}/>
-          <div className="xl:hidden">{matrixCard}</div>
           {insightsCard}
           {actionsCard}
         </div>
+        <div className="order-3 xl:order-2 xl:col-start-1 xl:row-start-2">{matrixCard}</div>
       </div>
     </div>
   );
@@ -1781,8 +1780,24 @@ function SettingsSection({desk}){
   const themeCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>;
   const timerCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>;
   const dataCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>;
-  const installCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>;
-  const deskModeCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">🖥️ Desktop Mode</h3><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></div>;
+  const installContent=<div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>;
+  const deskModeContent=<><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></>;
+
+  const responsiveInfoCard=(key,title,content)=>(
+    <>
+      <div className="hidden md:block gcard rounded-2xl p-4">
+        <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">{title}</h3>
+        {content}
+      </div>
+      <div className="md:hidden gcard rounded-2xl overflow-hidden">
+        <button onClick={()=>setSettExp(s=>({...s,[key]:!s[key]}))} className="w-full p-4 flex items-center justify-between">
+          <h3 className="font-bold text-bark-600 dark:text-sand-100">{title}</h3>
+          {settExp[key]?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}
+        </button>
+        {settExp[key]&&<div className="px-4 pb-4">{content}</div>}
+      </div>
+    </>
+  );
 
   const helpSection=(key,title,content)=>(
     <div className="gcard rounded-2xl overflow-hidden">
@@ -1803,13 +1818,11 @@ function SettingsSection({desk}){
             {themeCard}
             <div className="md:hidden">{timerCard}</div>
             {dataCard}
-            <div className="hidden md:block">{deskModeCard}</div>
-            <div className="md:hidden gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,desk:!s.desk}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">🖥️ Desktop Mode</h3>{settExp.desk?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.desk&&<div className="px-4 pb-4 space-y-2"><p className="text-sm text-bark-500 dark:text-sand-200 mb-1">At 1280px+, the app uses a desktop-optimized layout.</p><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div>}</div>
+            {responsiveInfoCard('desk','🖥️ Desktop Mode',deskModeContent)}
           </div>
           <div className="flex-1 min-w-0 space-y-4">
             <div className="hidden md:block">{timerCard}</div>
-            <div className="hidden md:block">{installCard}</div>
-            <div className="md:hidden gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>}</div>
+            {responsiveInfoCard('pwa','📲 Install as App',installContent)}
           </div>
         </div>
       )}
@@ -1945,6 +1958,32 @@ function App(){
   }; 
   const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
+  const onTabClick=(id)=>{setTab(id);if(selMode)exitSelMode();};
+  const renderTabButton=({id,Ic,l},variant)=>{
+    const isFR=id==='focus'&&timerInfo.run;
+    if(variant==='sidebar'){
+      return(
+        <button key={id} onClick={()=>onTabClick(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+          <Ic s={20}/><span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>{isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
+        </button>
+      );
+    }
+    return(
+      <button key={id} onClick={()=>onTabClick(id)} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
+        <div className="relative"><Ic s={28}/>{isFR&&<span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}</div>
+        <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{isFR?fmtSidebar(timerInfo.left):l}</span>
+      </button>
+    );
+  };
+  const renderActiveSection=()=>{
+    if(tab==='focus')return <div className="xl:max-w-none max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>;
+    if(tab==='lists')return <ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>;
+    if(tab==='todos')return <ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>;
+    if(tab==='notes')return <CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>;
+    if(tab==='review')return <ReviewSection wide={wide}/>;
+    if(tab==='more')return <SettingsSection desk={desk}/>;
+    return null;
+  };
 
   return(
     <div className="min-h-screen flex xl:h-screen xl:overflow-hidden">
@@ -1954,14 +1993,7 @@ function App(){
           <h1 className="text-lg font-extrabold text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-[10px] font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-1.5 py-0.5 rounded-full ml-1">α</span></h1>
         </div>
         <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
-          {tabs.map(({id,Ic,l})=>{
-            const isFR=id==='focus'&&timerInfo.run;
-            return(
-            <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
-              <Ic s={20}/><span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>{isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
-            </button>
-            );
-          })}
+          {tabs.map(t=>renderTabButton(t,'sidebar'))}
         </nav>
         <div className="px-3 py-3 border-t border-sand-200/30 dark:border-bark-500/20">
           <button onClick={()=>setShowHelp(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-bark-400 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50 transition-colors"><I.Help s={18}/><span>Help</span></button>
@@ -1978,12 +2010,7 @@ function App(){
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
       <div className="px-4 md:px-8 py-4 md:py-6 xl:py-6 pb-28 md:pb-32 xl:pb-6 mx-auto max-w-lg md:max-w-5xl xl:max-w-none">
-        {tab==='focus'?<div className="xl:max-w-none max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>:null}
-        {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
-        {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
-        {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
-        {tab==='review'&&<ReviewSection wide={wide}/>}
-        {tab==='more'&&<SettingsSection desk={desk}/>}
+        {renderActiveSection()}
       </div>
       </div>
 
@@ -1992,15 +2019,7 @@ function App(){
       {/* Bottom Bar (Mobile) */}
       <div className="xl:hidden fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
         <div className="flex justify-around max-w-lg md:max-w-5xl mx-auto py-2 tab-bar-inner">
-          {tabs.map(({id,Ic,l})=>{
-            const isFR=id==='focus'&&timerInfo.run;
-            return(
-            <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
-              <div className="relative"><Ic s={28}/>{isFR&&<span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}</div>
-              <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{isFR?fmtSidebar(timerInfo.left):l}</span>
-            </button>
-            );
-          })}
+          {tabs.map(t=>renderTabButton(t,'mobile'))}
         </div>
       </div>
 
