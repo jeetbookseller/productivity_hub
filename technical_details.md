@@ -48,7 +48,6 @@
 - ✅ Gemini P0 implementation: introduced unified `ActionMenu` and reusable `ConfirmDialog` primitives to replace duplicated menu/dialog patterns across sections.
 - ✅ Migrated Capture, Clarify, and Confirm list-level actions to shared menu infrastructure (`NoteMenu`/`TaskMenu`/`ListMenu` behavior unified under `ActionMenu`).
 - ✅ Added confirmation dialogs for single-item delete actions in Capture, Clarify, and Confirm checklist menu flows.
-- ✅ Completed P0 responsive JSX dedup pass: Settings uses shared responsive wrappers, Review matrix card render was deduplicated, and App sidebar/mobile tab rendering now shares common helpers.
 - ✅ Centralized checklist selection reconciliation in `useAppData()` and made `deleteList` pure (`setLists`-only updater).
 - ✅ Updated bulk note strikethrough logic to correctly set/clear `struckAt` metadata.
 - ✅ Expanded TestRunner coverage with new cases for delete-confirmation flows and global `selList` reconciliation.
@@ -220,7 +219,6 @@
 ### v16.8 ← CURRENT
 - **Gemini P0 implementation (shared interaction primitives):** Added unified `ActionMenu` and reusable `ConfirmDialog`, and migrated section-specific menu flows to shared action configuration patterns.
 - **P0 hardening pass:** Added confirm-gated single-item delete flows for note/task/checklist actions via `ConfirmDialog`, fixed bulk note strike metadata parity (`struckAt` set/clear), centralized global `selList` reconciliation in `useAppData()`, and made `deleteList` a pure list-state update path.
-- **P0 responsive dedup completion:** Completed desktop/mobile JSX dedup for remaining targets by using shared responsive wrappers in Settings, a single responsive matrix-card render path in Review, and shared tab/render helpers in App for sidebar + bottom-tab layouts.
 - **TestRunner expansion:** Added new tests — `Global selList Reconciliation`, `Note Delete Confirmation Flow`, `Task Delete Confirmation Flow`, `Checklist Delete Confirmation Flow`; and updated `Note Bulk Strikethrough` to validate `struckAt`.
 - **Tests:** 55 → 59
 
@@ -258,31 +256,37 @@
 
 ### 📌 Combined Prioritized Backlog (Refactor + Product Features)
 
-1. `P1` **Recurring Tasks**  
+1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**  
+   Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
+
+2. `P0` **Unified ContextMenu + ConfirmDialog** — ✅ **Completed in v16.8**  
+   Replaced TaskMenu/NoteMenu/ListMenu and delete-confirm variants with shared `ActionMenu` + `ConfirmDialog` patterns.
+
+3. `P1` **Recurring Tasks**  
    Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
 
-2. `P1` **Tags & Filters**  
+4. `P1` **Tags & Filters**  
    Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
 
-3. `P1` **Command Palette Search**  
+5. `P1` **Command Palette Search**  
    Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
 
-4. `P2` **Task Templates**  
+6. `P2` **Task Templates**  
    Save task + subtask bundles and quick-create from a reusable template library.
 
-5. `P2` **Storage Enhancement**  
+7. `P2` **Storage Enhancement**  
    Improve resilience beyond IndexedDB-only browser storage.
 
-6. `P2` **StickyHeader + CSS class abstraction**  
+8. `P2` **StickyHeader + CSS class abstraction**  
    Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
 
-7. `P2` **UI smoothness pass**  
+9. `P2` **UI smoothness pass**  
    Add transitions, modal exit animations, and debounce persisted writes (~300ms); evaluate virtual scrolling for large lists.
 
-8. `P3` **Lazy-load test suite**  
+10. `P3` **Lazy-load test suite**  
     Defer test suite initialization until the Test tab is opened.
 
-9. `P3` **Checklist tab management UX**  
+11. `P3` **Checklist tab management UX**  
     Add better tab controls (e.g., right-click/`⋮` rename/delete behavior) for checklist tabs.
 
 ---
