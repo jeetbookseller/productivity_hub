@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#7CB69D" id="theme-color-meta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,9 +18,7 @@
   <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{nunito:['Nunito','sans-serif']},colors:{cream:{50:'#FDFCFA',100:'#F7F5F0',200:'#EDE9E0'},sage:{100:'#E8F0EA',200:'#C5D9CA',300:'#9DC4A8',400:'#7CB69D',500:'#5A9E78'},terracotta:{100:'#FCEEE9',200:'#F5C9BA',300:'#E9A088',400:'#E07A5F',500:'#C45D42'},sand:{100:'#F5F0E6',200:'#E8DFD0',300:'#D4C5AD'},ocean:{100:'#E6F2F7',200:'#B8D9E8',300:'#83B5D1',400:'#5A9BBF'},lavender:{100:'#F0EDF5',200:'#D5CCE6',300:'#B8A9D4',400:'#9B8AA6'},bark:{300:'#9A8B7A',400:'#7A6B5A',500:'#5C4F43',600:'#3D352D',700:'#2D2720'}}}}}</script>
   <style>
     *{-webkit-tap-highlight-color:transparent;font-family:'Nunito',sans-serif}
-    html,body{width:100%;overflow-x:hidden}
     body{overscroll-behavior:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
-    #root{width:100%;overflow-x:hidden}
     .dark body{background:linear-gradient(180deg,#2D2720 0%,#1F1B17 100%)}
     .hide-sb::-webkit-scrollbar{display:none}.hide-sb{-ms-overflow-style:none;scrollbar-width:none}
     .glass{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.6)}
@@ -93,10 +91,6 @@
       
       /* Compact timer for side-by-side Focus layout */
       .timer-display{font-size:3.5rem;letter-spacing:0.03em}
-    }
-
-    @media(max-width:420px){
-      .timer-display{font-size:3.75rem}
     }
   </style>
 </head>
@@ -1748,9 +1742,9 @@ function App(){
       </div>
 
       {/* Header (Mobile) */}
-      <div className="xl:hidden glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between gap-2" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+      <div className="xl:hidden glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
         <div className="w-10 md:w-12"/>
-        <h1 className="flex-1 min-w-0 text-lg md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100 whitespace-nowrap overflow-hidden text-ellipsis">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
+        <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
         <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
       </div>
 
