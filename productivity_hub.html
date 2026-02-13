@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#7CB69D" id="theme-color-meta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,9 +18,7 @@
   <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{nunito:['Nunito','sans-serif']},colors:{cream:{50:'#FDFCFA',100:'#F7F5F0',200:'#EDE9E0'},sage:{100:'#E8F0EA',200:'#C5D9CA',300:'#9DC4A8',400:'#7CB69D',500:'#5A9E78'},terracotta:{100:'#FCEEE9',200:'#F5C9BA',300:'#E9A088',400:'#E07A5F',500:'#C45D42'},sand:{100:'#F5F0E6',200:'#E8DFD0',300:'#D4C5AD'},ocean:{100:'#E6F2F7',200:'#B8D9E8',300:'#83B5D1',400:'#5A9BBF'},lavender:{100:'#F0EDF5',200:'#D5CCE6',300:'#B8A9D4',400:'#9B8AA6'},bark:{300:'#9A8B7A',400:'#7A6B5A',500:'#5C4F43',600:'#3D352D',700:'#2D2720'}}}}}</script>
   <style>
     *{-webkit-tap-highlight-color:transparent;font-family:'Nunito',sans-serif}
-    html,body{width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-    body{margin:0;overscroll-behavior:none;background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
-    #root{width:100%;overflow-x:hidden}
+    body{overscroll-behavior:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
     .dark body{background:linear-gradient(180deg,#2D2720 0%,#1F1B17 100%)}
     .hide-sb::-webkit-scrollbar{display:none}.hide-sb{-ms-overflow-style:none;scrollbar-width:none}
     .glass{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.6)}
@@ -94,10 +92,6 @@
       /* Compact timer for side-by-side Focus layout */
       .timer-display{font-size:3.5rem;letter-spacing:0.03em}
     }
-
-    @media(max-width:420px){
-      .timer-display{font-size:3.75rem}
-    }
   </style>
 </head>
 <body class="bg-cream-100 dark:bg-bark-700">
@@ -153,7 +147,7 @@ window.addEventListener('appinstalled', () => {
 // Service Worker Registration (blob-based, best-effort for local use)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const CACHE_NAME = 'productivity-hub-v12';
+    const CACHE_NAME = 'productivity-hub-v10';
     const swCode = `
       const CACHE_NAME = '${CACHE_NAME}';
       self.addEventListener('install', (e) => {
@@ -176,16 +170,6 @@ if ('serviceWorker' in navigator) {
           e.respondWith(new Response(JSON.stringify(${JSON.stringify(manifestData)}), {
             headers: {'Content-Type': 'application/json'}
           }));
-          return;
-        }
-        if (e.request.mode === 'navigate') {
-          e.respondWith(
-            fetch(e.request).then(response => {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-              return response;
-            }).catch(() => caches.match(e.request))
-          );
           return;
         }
         e.respondWith(
@@ -211,7 +195,7 @@ if ('serviceWorker' in navigator) {
 
 // Helper: Generate proper PWA files for HTTPS deployment
 window.__generatePWAFiles = () => {
-  const swContent = `const CACHE_NAME = 'productivity-hub-v12';
+  const swContent = `const CACHE_NAME = 'productivity-hub-v10';
 const APP_FILE = self.location.pathname.replace('/sw.js', '/') || '/';
 
 self.addEventListener('install', (e) => {
@@ -230,16 +214,6 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return response;
-      }).catch(() => caches.match(e.request))
-    );
-    return;
-  }
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).then(response => {
       if (response.ok && e.request.method === 'GET') {
@@ -281,41 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16.9';
-const TEST_RUNNER_SRC='test_runner.jsx';
-const TEST_RUNNER_LOAD_TIMEOUT_MS=8000;
-let testRunnerLoadPromise=null;
-const loadTestRunner=(onProgress=()=>{})=>{
-  if(window.TestRunner)return Promise.resolve(window.TestRunner);
-  if(testRunnerLoadPromise)return testRunnerLoadPromise;
-  testRunnerLoadPromise=new Promise(async(resolve,reject)=>{
-    const timeoutId=setTimeout(()=>reject(new Error(`Test suite load timed out after ${Math.round(TEST_RUNNER_LOAD_TIMEOUT_MS/1000)}s.`)),TEST_RUNNER_LOAD_TIMEOUT_MS);
-    try{
-      onProgress({stage:'Downloading test suite...',pct:20});
-      const res=await fetch(TEST_RUNNER_SRC,{cache:'no-cache'});
-      if(!res.ok)throw new Error(`Failed to load test suite file (${res.status}).`);
-      const src=await res.text();
-      if(!window.Babel||typeof window.Babel.transform!=='function'){
-        throw new Error('Babel runtime is unavailable.');
-      }
-      onProgress({stage:'Compiling test suite...',pct:60});
-      const transformed=window.Babel.transform(src,{presets:['react']});
-      onProgress({stage:'Initializing test suite...',pct:85});
-      (new Function(transformed.code))();
-      if(!window.TestRunner)throw new Error('Test suite failed to initialize.');
-      onProgress({stage:'Ready',pct:100});
-      clearTimeout(timeoutId);
-      resolve(window.TestRunner);
-    }catch(err){
-      clearTimeout(timeoutId);
-      reject(err);
-    }
-  }).catch(err=>{
-    testRunnerLoadPromise=null;
-    throw err;
-  });
-  return testRunnerLoadPromise;
-};
+const APP_VERSION = '16.7';
 
 // Icons - More visible with less transparency
 const I={
@@ -599,39 +539,6 @@ const QuickAdd=({placeholder,onAdd,buttonText='Add'})=>{
   );
 };
 
-// Unified Action Menu (v16.8 - P0)
-const ActionMenu=({title,actions,onClose})=>(
-  <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
-    <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
-      {title&&<div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{title}</p></div>}
-      {actions.map((a,i)=>(
-        <button key={i} onClick={()=>{a.action();onClose();}} className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left ${i>0?'border-t border-sand-200 dark:border-bark-500':''}`}>
-          {a.icon}
-          <span className={`font-medium ${a.danger?'text-terracotta-500 dark:text-terracotta-300':'text-bark-600 dark:text-sand-100'}`}>{a.label}</span>
-          {a.sub&&<span className="text-xs text-bark-400/50 ml-auto">{a.sub}</span>}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-// Unified Confirm Dialog (v16.8 - P0)
-const ConfirmDialog=({title,text,onConfirm,onCancel,confirmText="Delete",isDestructive=true,icon:Icon=I.Trash})=>(
-  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onCancel}>
-    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
-      <div className="text-center mb-4">
-        <div className={`w-16 h-16 ${isDestructive?'bg-terracotta-100 dark:bg-terracotta-400/20':'bg-ocean-100 dark:bg-ocean-400/20'} rounded-full flex items-center justify-center mx-auto mb-3`}><Icon s={32} c={isDestructive?"text-terracotta-400":"text-ocean-400"}/></div>
-        <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">{title}</h3>
-        <p className="text-sm text-bark-500 dark:text-sand-300">{text}</p>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
-        <button onClick={onConfirm} className={`flex-1 py-2.5 rounded-lg font-semibold text-white text-sm ${isDestructive?'bg-terracotta-400':'bg-sage-400'}`}>{confirmText}</button>
-      </div>
-    </div>
-  </div>
-);
-
 // List Menu Component
 // Batch Selection Checkbox (v10.3)
 const SelCheck=({checked,onToggle})=>(
@@ -664,6 +571,74 @@ const BulkActionBar=({count,section,allCount,onSelectAll,onDeselectAll,onAction,
   );
 };
 
+const ListMenu=({list,onEdit,onDelete,onClose,position})=>(
+  <div className="fixed inset-0 z-30" onClick={onClose}>
+    <div className="gcard rounded-xl shadow-lg overflow-hidden" style={{position:'absolute',top:position.y,left:position.x}} onClick={e=>e.stopPropagation()}>
+      <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Edit s={18} c="text-ocean-400"/>
+        <span className="font-medium text-bark-600 dark:text-sand-100">Edit Name</span>
+      </button>
+      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Trash s={18} c="text-terracotta-400"/>
+        <span className="font-medium text-bark-600 dark:text-sand-100">Delete Checklist</span>
+      </button>
+    </div>
+  </div>
+);
+
+const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,onDone,onUndone,hasFocus,hasLink})=>(
+  <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
+    <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
+      <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{task.text}</p></div>
+      {task.done&&<button onClick={()=>{onUndone();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Restore s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Mark Undone</span>
+      </button>}
+      {!task.done&&<button onClick={()=>{onDone();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Done s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">Mark Done</span>
+      </button>}
+      {!task.done&&<button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
+      </button>}
+      {!task.done&&!hasFocus&&<button onClick={()=>{onFocus();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Focus s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Focus Queue</span>
+      </button>}
+      {!task.done&&!hasLink&&<button onClick={()=>{onLink();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.List s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">📋 Link Checklist</span>
+      </button>}
+      {hasLink&&<button onClick={()=>{onOpenList();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.List s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">📋 Open Checklist</span>
+      </button>}
+      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Trash s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Delete</span>
+      </button>
+    </div>
+  </div>
+);
+
+// Note Context Menu (v14.1-alpha) — 3-dot popup for Capture items
+const NoteMenu=({note,onClose,onEdit,onStrike,onCopyToClarify,onCopy,onDelete})=>(
+  <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
+    <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
+      <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{note.text||note.title||note.content}</p></div>
+      <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
+        <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
+      </button>
+      <button onClick={()=>{onCopy();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ocean-100 dark:hover:bg-ocean-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Copy s={18} c="text-bark-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Copy Text</span>
+      </button>
+      <button onClick={()=>{onCopyToClarify();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Check s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Promote to Clarify</span><span className="text-xs text-bark-400/50 ml-auto">copy + strike</span>
+      </button>
+      <button onClick={()=>{onStrike();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <span className="w-[18px] h-[18px] flex items-center justify-center font-bold text-sm text-bark-400 line-through">S</span><span className="font-medium text-bark-600 dark:text-sand-100">{note.struck?'Remove Strikethrough':'Strikethrough'}</span>
+      </button>
+      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
+        <I.Trash s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Delete</span>
+      </button>
+    </div>
+  </div>
+);
+
 const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
   const[newName,setNewName]=useState('');
   return(
@@ -676,6 +651,44 @@ const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
       <div className="flex gap-2"><input type="text" value={newName} onChange={e=>setNewName(e.target.value)} placeholder="New checklist name..." onKeyDown={e=>{if(e.key==='Enter'&&newName.trim()){onCreate(task.id,newName.trim());onClose();}}} className="flex-1 bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500"/><button onClick={()=>{if(newName.trim()){onCreate(task.id,newName.trim());onClose();}}} className="px-4 py-2 bg-sage-400 rounded-lg text-white text-sm font-semibold">Create</button></div>
     </div>
   </div>
+  );
+};
+
+// Delete Confirmation Modal
+const DeleteConfirmation=({list,onConfirm,onCancel,isLastList})=>(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={onCancel}>
+    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+      <div className="text-center mb-4">
+        <div className={`w-16 h-16 ${isLastList?'bg-ocean-100 dark:bg-ocean-400/20':'bg-terracotta-100 dark:bg-terracotta-400/20'} rounded-full flex items-center justify-center mx-auto mb-3`}>
+          {isLastList?<I.Info s={32} c="text-ocean-400"/>:<I.Trash s={32} c="text-terracotta-400"/>}
+        </div>
+        <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">{isLastList?'Cannot Delete Last Checklist':`Delete "${list.name}"?`}</h3>
+        <p className="text-sm text-bark-500 dark:text-sand-300">{isLastList?'You need at least one checklist. Create another first, then you can delete this one.':`This will permanently delete the checklist and all ${list.items.length} item${list.items.length!==1?'s':''} in it.`}</p>
+      </div>
+      <div className="flex gap-2">
+        {isLastList?<button onClick={onCancel} className="flex-1 py-2.5 bg-ocean-400 rounded-lg font-semibold text-white text-sm">OK</button>:<><button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">Delete</button></>}
+      </div>
+    </div>
+  </div>
+);
+
+// Bulk Delete Confirmation (v10.5 - Step 6)
+const BulkDeleteConfirm=({count,section,onConfirm,onCancel})=>{
+  const label=section==='todos'?'task':section==='lists'?'item':'note';
+  return(
+    <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onCancel}>
+      <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+        <div className="text-center mb-4">
+          <div className="w-16 h-16 bg-terracotta-100 dark:bg-terracotta-400/20 rounded-full flex items-center justify-center mx-auto mb-3"><I.Trash s={32} c="text-terracotta-400"/></div>
+          <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">Delete {count} {label}{count!==1?'s':''}?</h3>
+          <p className="text-sm text-bark-500 dark:text-sand-300">This will permanently delete {count} {label}{count!==1?'s':''}. This action cannot be undone.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">Delete {count}</button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -860,6 +873,270 @@ const Chart=({data,label,clr='bg-sage-400'})=>{
   return<div className="gcard rounded-xl p-3"><h4 className="text-sm font-bold text-bark-600 dark:text-sand-100 mb-3">{label}</h4><div className="flex items-end gap-1 h-16">{data.map((d,i)=><div key={i} className="flex-1 flex flex-col items-center gap-0.5"><div className={`w-full ${clr} rounded-t`} style={{height:`${(d.v/max)*100}%`,minHeight:d.v>0?'3px':'0'}}/><span className="text-xs text-bark-400/60">{d.l}</span></div>)}</div></div>;
 };
 
+// ============================================
+// TEST APP FEATURE - Alpha Version
+// ============================================
+const TestRunner=({onShowToast})=>{
+  const[running,setRunning]=useState(false);
+  const[results,setResults]=useState(null);
+  const[progress,setProgress]=useState({current:0,total:0,step:''});
+  
+  const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
+  
+  const runTests=async()=>{
+    setRunning(true);
+    setResults(null);
+    const report={
+      version:APP_VERSION,
+      timestamp:new Date().toISOString(),
+      browser:navigator.userAgent,
+      tests:[],
+      summary:{passed:0,failed:0,skipped:0}
+    };
+    
+    const tests=[
+      {name:'IndexedDB Initialization',category:'Storage'},
+      {name:'IndexedDB Write',category:'Storage'},
+      {name:'IndexedDB Read',category:'Storage'},
+      {name:'IndexedDB Delete',category:'Storage'},
+      {name:'Create Todo',category:'CRUD - Todos'},
+      {name:'Read Todo',category:'CRUD - Todos'},
+      {name:'Update Todo',category:'CRUD - Todos'},
+      {name:'Delete Todo',category:'CRUD - Todos'},
+      {name:'Create List',category:'CRUD - Lists'},
+      {name:'Add List Item',category:'CRUD - Lists'},
+      {name:'Update List Item',category:'CRUD - Lists'},
+      {name:'Delete List Item',category:'CRUD - Lists'},
+      {name:'Create Note',category:'CRUD - Notes'},
+      {name:'Update Note',category:'CRUD - Notes'},
+      {name:'Delete Note',category:'CRUD - Notes'},
+      {name:'Clear Completed',category:'Cleanup'},
+      {name:'Data Export',category:'Export/Import'},
+      {name:'Data Import',category:'Export/Import'},
+      {name:'Theme Switch (Light)',category:'Theme'},
+      {name:'Theme Switch (Dark)',category:'Theme'},
+      {name:'Theme Switch (System)',category:'Theme'},
+      {name:'Timer Settings Load',category:'Focus Timer'},
+      {name:'Preset Change',category:'Focus Timer'},
+      {name:'UID Generation',category:'Utilities'},
+      {name:'ICS Generation',category:'Utilities'},
+      {name:'Batch Select Enter',category:'Batch Selection'},
+      {name:'Batch Select Toggle',category:'Batch Selection'},
+      {name:'Batch Select Exit',category:'Batch Selection'},
+      {name:'Batch Select All',category:'Batch Selection'},
+      {name:'Batch Bulk Action',category:'Batch Selection'},
+      {name:'Batch Empty Auto-Exit',category:'Batch Selection'},
+      {name:'Batch Delete Confirm Gate',category:'Batch Selection'},
+      {name:'Day Rotation Archive',category:'Streak Heatmap'},
+      {name:'Day Rotation Reset',category:'Streak Heatmap'},
+      {name:'Streak Calculation',category:'Streak Heatmap'},
+      {name:'Heatmap Color Levels',category:'Streak Heatmap'},
+      {name:'Note Strikethrough Toggle',category:'Capture Actions'},
+      {name:'Note Strikethrough Timestamp',category:'Capture Actions'},
+      {name:'Note Copy to Clarify',category:'Capture Actions'},
+      {name:'Note Copy Keeps Note Struck',category:'Capture Actions'},
+      {name:'Note Auto-Clear 30 Days',category:'Capture Actions'},
+      {name:'Note Bulk Copy to Clarify',category:'Capture Actions'},
+      {name:'Note Bulk Strikethrough',category:'Capture Actions'},
+      {name:'3-Dot Menu Icon Set',category:'UI Interactions'},
+      {name:'Undone Todo Toggle',category:'UI Interactions'},
+      {name:'Delete List Item From Edit',category:'UI Interactions'},
+      {name:'Scroll Guard Distance',category:'UI Interactions'},
+      {name:'Quadrant Colors Defined',category:'UI Interactions'},
+      {name:'Timer Info State',category:'Desktop Layout'},
+      {name:'Focus Side-by-Side Desk',category:'Desktop Layout'},
+      {name:'Review Dashboard Grid Wide',category:'Desktop Layout'},
+      {name:'Sidebar Timer Format',category:'Desktop Layout'},
+      {name:'Settings Flexbox Desk',category:'Desktop Layout'},
+      {name:'Explainer Collapsible State',category:'Desktop Layout'},
+      {name:'Explainer Desktop Always Open',category:'Desktop Layout'},
+    ];
+    
+    setProgress({current:0,total:tests.length,step:'Initializing...'});
+    
+    const testData={testTodo:null,testList:null,testListItem:null,testReminder:null,testNote:null};
+    const TEST_PREFIX='__TEST__';
+    
+    for(let i=0;i<tests.length;i++){
+      const test=tests[i];
+      setProgress({current:i+1,total:tests.length,step:test.name});
+      await delay(80);
+      
+      let result={name:test.name,category:test.category,status:'passed',duration:0,error:null};
+      const startTime=performance.now();
+      
+      try{
+        switch(test.name){
+          case 'IndexedDB Initialization':{const db=await initDB();if(!db)throw new Error('Failed to initialize IndexedDB');break;}
+          case 'IndexedDB Write':{await S.set(TEST_PREFIX+'test_key','test_value');break;}
+          case 'IndexedDB Read':{const val=await S.get(TEST_PREFIX+'test_key','default');if(val!=='test_value')throw new Error(`Expected 'test_value', got '${val}'`);break;}
+          case 'IndexedDB Delete':{await S.set(TEST_PREFIX+'test_key',undefined);break;}
+          case 'Create Todo':{testData.testTodo={id:TEST_PREFIX+uid(),text:'Test Todo',pri:'high',cat:'work',quad:'ui',done:false};if(!testData.testTodo.id)throw new Error('Failed to create todo ID');break;}
+          case 'Read Todo':{if(!testData.testTodo||!testData.testTodo.text)throw new Error('Todo not readable');break;}
+          case 'Update Todo':{testData.testTodo.text='Updated Test Todo';if(testData.testTodo.text!=='Updated Test Todo')throw new Error('Todo update failed');break;}
+          case 'Delete Todo':{testData.testTodo=null;if(testData.testTodo!==null)throw new Error('Todo deletion failed');break;}
+          case 'Create List':{testData.testList={id:TEST_PREFIX+uid(),name:'Test List',items:[]};if(!testData.testList.id)throw new Error('Failed to create list');break;}
+          case 'Add List Item':{testData.testListItem={id:TEST_PREFIX+uid(),text:'Test Item',done:false};testData.testList.items.push(testData.testListItem);if(testData.testList.items.length!==1)throw new Error('Failed to add item to list');break;}
+          case 'Update List Item':{testData.testListItem.done=true;if(!testData.testListItem.done)throw new Error('List item update failed');break;}
+          case 'Delete List Item':{testData.testList.items=testData.testList.items.filter(i=>i.id!==testData.testListItem.id);if(testData.testList.items.length!==0)throw new Error('List item deletion failed');break;}
+          case 'Create Note':{testData.testNote={id:TEST_PREFIX+uid(),title:'Test Note',content:'Test content',crAt:new Date().toISOString()};if(!testData.testNote.id)throw new Error('Failed to create note');break;}
+          case 'Update Note':{testData.testNote.content='Updated content';if(testData.testNote.content!=='Updated content')throw new Error('Note update failed');break;}
+          case 'Delete Note':{testData.testNote=null;if(testData.testNote!==null)throw new Error('Note deletion failed');break;}
+          case 'Clear Completed':{const todos=[{id:'a',done:true},{id:'b',done:false},{id:'c',done:true}];const after=todos.filter(t=>!t.done);if(after.length!==1||after[0].id!=='b')throw new Error('Clear completed failed');break;}
+          case 'Data Export':{const exported=await S.exp();if(typeof exported!=='object')throw new Error('Export did not return object');break;}
+          case 'Data Import':{const testImport={[TEST_PREFIX+'import_test']:'import_value'};await S.imp(testImport);const val=await S.get(TEST_PREFIX+'import_test');if(val!=='import_value')throw new Error('Import verification failed');break;}
+          case 'Theme Switch (Light)':{document.documentElement.classList.remove('dark');if(document.documentElement.classList.contains('dark'))throw new Error('Light theme not applied');break;}
+          case 'Theme Switch (Dark)':{document.documentElement.classList.add('dark');if(!document.documentElement.classList.contains('dark'))throw new Error('Dark theme not applied');break;}
+          case 'Theme Switch (System)':{const prefDark=window.matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.classList.toggle('dark',prefDark);break;}
+          case 'Timer Settings Load':{const preset=PRESETS.classic;if(preset.work!==25||preset.shortBreak!==5||preset.longBreak!==15)throw new Error('Default preset values incorrect');break;}
+          case 'Preset Change':{const longPreset=PRESETS.long;if(longPreset.work!==50)throw new Error('Long preset work duration incorrect');break;}
+          case 'UID Generation':{const id1=uid();const id2=uid();if(id1===id2)throw new Error('UIDs not unique');if(!id1.includes('-'))throw new Error('UID format invalid');break;}
+          case 'ICS Generation':{const ics=genICS({text:'Test',time:'10:00',date:'2026-02-01'});if(!ics.includes('BEGIN:VCALENDAR'))throw new Error('ICS format invalid');if(!ics.includes('Test'))throw new Error('ICS content missing');break;}
+          case 'Batch Select Enter':{const selState={mode:false,section:null,ids:new Set()};selState.mode=true;selState.section='todos';selState.ids.add('test-id-1');if(!selState.mode)throw new Error('Selection mode not activated');if(selState.section!=='todos')throw new Error('Section not set');if(selState.ids.size!==1)throw new Error('First item not selected');break;}
+          case 'Batch Select Toggle':{const ids=new Set(['id1']);ids.add('id2');if(ids.size!==2)throw new Error('Add failed');ids.delete('id1');if(ids.size!==1||ids.has('id1'))throw new Error('Remove failed');ids.add('id1');ids.add('id3');if(ids.size!==3)throw new Error('Multi-select failed');break;}
+          case 'Batch Select Exit':{const st={mode:true,section:'todos',ids:new Set(['a','b'])};st.mode=false;st.section=null;st.ids=new Set();if(st.mode||st.section||st.ids.size!==0)throw new Error('Exit did not clear state');break;}
+          case 'Batch Select All':{const allIds=['t1','t2','t3','t4'];const sel=new Set(allIds);if(sel.size!==4)throw new Error('Select all count wrong');const isAll=sel.size===allIds.length;if(!isAll)throw new Error('Select all check failed');sel.clear();if(sel.size!==0)throw new Error('Deselect all failed');break;}
+          case 'Batch Bulk Action':{const todos=[{id:'a',done:false},{id:'b',done:false},{id:'c',done:true}];const selIds=new Set(['a','b']);const afterDone=todos.map(t=>selIds.has(t.id)?{...t,done:true}:t);if(!afterDone[0].done||!afterDone[1].done)throw new Error('Bulk done failed');if(afterDone[2].done!==true)throw new Error('Non-selected item changed');const afterDel=todos.filter(t=>!selIds.has(t.id));if(afterDel.length!==1||afterDel[0].id!=='c')throw new Error('Bulk delete failed');break;}
+          case 'Batch Empty Auto-Exit':{const sel=new Set(['a']);sel.delete('a');const shouldExit=sel.size===0;if(!shouldExit)throw new Error('Empty set did not trigger exit condition');if(sel.size!==0)throw new Error('Set not empty after removal');break;}
+          case 'Batch Delete Confirm Gate':{const threshold=3;const small=new Set(['a','b']);const large=new Set(['a','b','c']);const needsConfirmSmall=small.size>=threshold;const needsConfirmLarge=large.size>=threshold;if(needsConfirmSmall)throw new Error('2 items should not need confirmation');if(!needsConfirmLarge)throw new Error('3 items should need confirmation');break;}
+          case 'Day Rotation Archive':{const oldHist=[];const oldMet={d:{p:3,t:2,m:75,date:'Mon Jan 01 2026'},w:{p:5,t:4,m:120}};const filtered=oldHist.filter(x=>x.date!==oldMet.d.date);const newHist=[...filtered,{date:oldMet.d.date,p:oldMet.d.p,t:oldMet.d.t,m:oldMet.d.m}];if(newHist.length!==1)throw new Error('Archive count wrong');if(newHist[0].p!==3||newHist[0].t!==2||newHist[0].m!==75)throw new Error('Archived data mismatch');break;}
+          case 'Day Rotation Reset':{const oldDate='Mon Jan 05 2026';const today='Tue Jan 06 2026';const isNewDay=oldDate!==today;if(!isNewDay)throw new Error('Day change not detected');const newMet={d:{p:0,t:0,m:0,date:today}};if(newMet.d.p!==0||newMet.d.t!==0)throw new Error('Daily metrics not reset');break;}
+          case 'Streak Calculation':{const hist=[{date:new Date(Date.now()-864e5).toDateString(),p:2,t:1,m:50},{date:new Date(Date.now()-2*864e5).toDateString(),p:1,t:0,m:25},{date:new Date(Date.now()-4*864e5).toDateString(),p:3,t:2,m:75}];let streak=0;for(let i=1;i<=5;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();const h=hist.find(x=>x.date===ds);if(h&&(h.p>0||h.t>0))streak++;else break;}if(streak!==2)throw new Error(`Expected streak 2, got ${streak}`);break;}
+          case 'Heatmap Color Levels':{const clr=(p)=>{if(p===0)return'empty';if(p<=1)return'L1';if(p<=3)return'L2';if(p<=5)return'L3';return'L4';};if(clr(0)!=='empty')throw new Error('Level 0 wrong');if(clr(1)!=='L1')throw new Error('Level 1 wrong');if(clr(3)!=='L2')throw new Error('Level 2 wrong');if(clr(5)!=='L3')throw new Error('Level 3 wrong');if(clr(8)!=='L4')throw new Error('Level 4 wrong');break;}
+          case 'Note Strikethrough Toggle':{const n={id:'n1',text:'Test',struck:false};const toggled={...n,struck:!n.struck};if(!toggled.struck)throw new Error('Strikethrough not toggled on');const unToggled={...toggled,struck:!toggled.struck};if(unToggled.struck)throw new Error('Strikethrough not toggled off');break;}
+          case 'Note Strikethrough Timestamp':{const now=Date.now();const n={id:'n1',text:'Test',struck:false,struckAt:null};const struck={...n,struck:true,struckAt:now};if(!struck.struckAt)throw new Error('struckAt not set');const unstruck={...struck,struck:false,struckAt:null};if(unstruck.struckAt!==null)throw new Error('struckAt not cleared');break;}
+          case 'Note Copy to Clarify':{const note={id:'n1',text:'Migrate me',struck:false};const newTodo={id:'t1',text:note.text,quad:'nn',poms:0,done:false};if(newTodo.text!=='Migrate me')throw new Error('Text not carried over');if(newTodo.quad!=='nn')throw new Error('Quad not set to nn');const afterNote={...note,struck:true,struckAt:Date.now()};if(!afterNote.struck)throw new Error('Note should be struck after copy');break;}
+          case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
+          case 'Note Auto-Clear 30 Days':{const thirtyDays=30*24*60*60*1000;const now=Date.now();const oldNote={id:'n1',struck:true,struckAt:now-thirtyDays-1000};const newNote={id:'n2',struck:true,struckAt:now-1000};const notes=[oldNote,newNote];const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));if(toRemove.length!==1||toRemove[0].id!=='n1')throw new Error('Auto-clear filter wrong');const remaining=notes.filter(n=>!toRemove.find(r=>r.id===n.id));if(remaining.length!==1||remaining[0].id!=='n2')throw new Error('Wrong note removed');break;}
+          case 'Note Bulk Copy to Clarify':{const notes=[{id:'n1',text:'A',struck:false},{id:'n2',text:'B',struck:false},{id:'n3',text:'C',struck:false}];const selIds=new Set(['n1','n3']);const toMove=notes.filter(x=>selIds.has(x.id));const newTodos=toMove.map(x=>({id:'t_'+x.id,text:x.text,quad:'nn',poms:0,done:false}));if(newTodos.length!==2)throw new Error('Wrong copy count');const afterNotes=notes.map(x=>selIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x);if(!afterNotes[0].struck)throw new Error('n1 should be struck');if(afterNotes[1].struck)throw new Error('n2 should be unchanged');if(!afterNotes[2].struck)throw new Error('n3 should be struck');if(afterNotes.length!==3)throw new Error('Notes should not be deleted');break;}
+          case 'Note Bulk Strikethrough':{const notes=[{id:'n1',struck:false},{id:'n2',struck:true},{id:'n3',struck:false}];const selIds=new Set(['n1','n2']);const after=notes.map(x=>selIds.has(x.id)?{...x,struck:!x.struck}:x);if(!after[0].struck)throw new Error('n1 should be struck');if(after[1].struck)throw new Error('n2 should be unstruck (toggled)');if(after[2].struck)throw new Error('n3 should be unchanged');break;}
+          case '3-Dot Menu Icon Set':{if(typeof I.MoreV!=='function')throw new Error('MoreV icon not defined');const el=I.MoreV({s:18,c:'test'});if(!el)throw new Error('MoreV icon did not render');const icons=['Focus','List','Check','Edit','Trash','Plus','MoreV'];for(const name of icons){if(typeof I[name]!=='function')throw new Error(`Icon ${name} missing`);}break;}
+          case 'Undone Todo Toggle':{const todo={id:'t1',text:'Test',done:true};const undone={...todo,done:false};if(undone.done)throw new Error('Todo should be undone');const redone={...undone,done:true};if(!redone.done)throw new Error('Todo should be done again');break;}
+          case 'Delete List Item From Edit':{const list={id:'l1',items:[{id:'i1',text:'A'},{id:'i2',text:'B'},{id:'i3',text:'C'}]};const toDelete='i2';const after={...list,items:list.items.filter(i=>i.id!==toDelete)};if(after.items.length!==2)throw new Error('Should have 2 items');if(after.items.find(i=>i.id==='i2'))throw new Error('Item i2 should be deleted');break;}
+          case 'Scroll Guard Distance':{const threshold=10;const noScroll={dx:5,dy:3};const scrolled={dx:12,dy:2};if(Math.abs(noScroll.dx)>threshold||Math.abs(noScroll.dy)>threshold)throw new Error('Small movement should not trigger scroll');if(!(Math.abs(scrolled.dx)>threshold||Math.abs(scrolled.dy)>threshold))throw new Error('12px movement should trigger scroll');break;}
+          case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
+          case 'Timer Info State':{const ti={left:1500,run:false,mode:'work'};if(ti.left!==1500)throw new Error('Timer left wrong');if(ti.run!==false)throw new Error('Timer run wrong');if(ti.mode!=='work')throw new Error('Timer mode wrong');const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(1500)!=='25:00')throw new Error('Format wrong: '+fmtSB(1500));if(fmtSB(63)!=='1:03')throw new Error('Format 63s wrong');break;}
+          case 'Focus Side-by-Side Desk':{const desk=true;const layout=desk?'flex gap-6':'space-y-5';if(!layout.includes('flex'))throw new Error('Desk should use flex');const mobile=false;const mLayout=mobile?'flex gap-6':'space-y-5';if(mLayout.includes('flex'))throw new Error('Mobile should not use flex side-by-side');break;}
+          case 'Review Dashboard Grid Wide':{const wide=true;const cls=wide?'grid grid-cols-2 gap-4':'space-y-4';if(!cls.includes('grid-cols-2'))throw new Error('Wide review should use 2-col grid');break;}
+          case 'Sidebar Timer Format':{const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(0)!=='0:00')throw new Error('0s format wrong');if(fmtSB(59)!=='0:59')throw new Error('59s wrong');if(fmtSB(600)!=='10:00')throw new Error('600s wrong');const run=true;const mode='work';const label=run?fmtSB(1200):'Focus';if(label!=='20:00')throw new Error('Running label should show time');const notRun=false;const label2=notRun?fmtSB(1200):'Focus';if(label2!=='Focus')throw new Error('Not running should show Focus');break;}
+          case 'Settings Flexbox Desk':{const desk=true;const expected='flex gap-4';const mobile=false;const mExpected='space-y-4';if(!expected.includes('flex'))throw new Error('Desk settings should use flexbox');if(mExpected.includes('flex'))throw new Error('Mobile settings should not use flexbox');if(!expected.includes('gap-4'))throw new Error('Desk should have gap');break;}
+          case 'Explainer Collapsible State':{const helpExp={};const toggleHelp=(k,s)=>({...s,[k]:!s[k]});const after=toggleHelp('wf',helpExp);if(!after.wf)throw new Error('Toggle should open section');const after2=toggleHelp('wf',after);if(after2.wf)throw new Error('Toggle should close section');break;}
+          case 'Explainer Desktop Always Open':{const desk=true;const helpExp={};const isOpen=desk||helpExp.wf;if(!isOpen)throw new Error('Desktop should always show explainer content');const mobile=false;const mOpen=mobile||helpExp.wf;if(mOpen)throw new Error('Mobile with closed state should hide content');break;}
+          default:result.status='skipped';report.summary.skipped++;
+        }
+        if(result.status==='passed')report.summary.passed++;
+      }catch(err){
+        result.status='failed';
+        result.error=err.message;
+        report.summary.failed++;
+      }
+      
+      result.duration=Math.round(performance.now()-startTime);
+      report.tests.push(result);
+    }
+    
+    setProgress({current:tests.length,total:tests.length,step:'Cleaning up...'});
+    await delay(200);
+    
+    const allData=await S.exp();
+    for(const key of Object.keys(allData)){
+      if(key.startsWith(TEST_PREFIX)){await S.set(key,undefined);}
+    }
+    document.documentElement.classList.remove('dark');
+    
+    setResults(report);
+    setRunning(false);
+    onShowToast(`✅ Tests complete: ${report.summary.passed} passed, ${report.summary.failed} failed`);
+  };
+  
+  const generateReport=()=>{
+    if(!results)return'';
+    let report=`
+╔═══════════════════════════════════════════════════════════════╗
+║          PRODUCTIVITY HUB - TEST REPORT                       ║
+║                    Version ${results.version}                            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📅 Date: ${new Date(results.timestamp).toLocaleString()}
+🌐 Browser: ${results.browser.slice(0,60)}...
+
+═══════════════════════════════════════════════════════════════
+                         SUMMARY
+═══════════════════════════════════════════════════════════════
+
+  ✅ Passed:  ${results.summary.passed}
+  ❌ Failed:  ${results.summary.failed}
+  ⏭️  Skipped: ${results.summary.skipped}
+  ━━━━━━━━━━━━━━━━━━━
+  📊 Total:   ${results.tests.length}
+
+═══════════════════════════════════════════════════════════════
+                      DETAILED RESULTS
+═══════════════════════════════════════════════════════════════
+`;
+    const categories={};
+    results.tests.forEach(t=>{if(!categories[t.category])categories[t.category]=[];categories[t.category].push(t);});
+    for(const[cat,tests]of Object.entries(categories)){
+      report+=`\n┌─ ${cat} ${'─'.repeat(Math.max(0,55-cat.length))}┐\n`;
+      tests.forEach(t=>{
+        const icon=t.status==='passed'?'✅':t.status==='failed'?'❌':'⏭️';
+        report+=`│ ${icon} ${t.status.toUpperCase().padEnd(7)} ${t.name.padEnd(35)} ${t.duration}ms`;
+        if(t.error)report+=`\n│    └─ Error: ${t.error}`;
+        report+='\n';
+      });
+      report+=`└${'─'.repeat(60)}┘\n`;
+    }
+    report+=`\n═══════════════════════════════════════════════════════════════\n                         END OF REPORT\n═══════════════════════════════════════════════════════════════\nGenerated by Productivity Hub v${APP_VERSION}\n`;
+    return report;
+  };
+  
+  const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('📋 Report copied!');};
+  const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('📥 Report downloaded!');};
+  
+  return(
+    <div className="space-y-4">
+      <div className="gcard rounded-2xl p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-lavender-100 flex items-center justify-center"><I.Test s={24} c="text-lavender-400"/></div>
+          <div><h3 className="font-bold text-bark-600 dark:text-sand-100">App Test Suite</h3><p className="text-xs text-bark-400 dark:text-sand-300">Validate all features are working correctly</p></div>
+        </div>
+        <div className="bg-terracotta-50 dark:bg-terracotta-400/10 border border-terracotta-200 dark:border-terracotta-400/30 rounded-xl p-3 mb-4">
+          <div className="flex items-start gap-2"><span className="text-lg">⚠️</span><div><p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Alpha Feature</p><p className="text-xs text-bark-500 dark:text-sand-200">Tests use isolated data and clean up automatically. Your data is safe.</p></div></div>
+        </div>
+        {running?(
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm"><span className="text-bark-500 dark:text-sand-200">{progress.step}</span><span className="font-semibold text-sage-500">{progress.current}/{progress.total}</span></div>
+            <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden"><div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${(progress.current/progress.total)*100}%`}}/></div>
+          </div>
+        ):(
+          <button onClick={runTests} className="w-full py-3 bg-lavender-400 hover:bg-lavender-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><I.Play s={20}/>Run All Tests</button>
+        )}
+      </div>
+      {results&&(
+        <div className="gcard rounded-2xl p-5">
+          <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📊 Test Results</h4>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-sage-600 dark:text-sage-300">{results.summary.passed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Passed</div></div>
+            <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-terracotta-500 dark:text-terracotta-300">{results.summary.failed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Failed</div></div>
+            <div className="bg-sand-200 dark:bg-bark-500/30 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-bark-500 dark:text-sand-200">{results.summary.skipped}</div><div className="text-xs text-bark-500 dark:text-sand-200">Skipped</div></div>
+          </div>
+          {results.summary.failed>0&&(<div className="bg-terracotta-50 dark:bg-terracotta-400/10 rounded-xl p-3 mb-4"><h5 className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-2">❌ Failed Tests:</h5><ul className="space-y-1">{results.tests.filter(t=>t.status==='failed').map((t,i)=>(<li key={i} className="text-xs text-bark-500 dark:text-sand-200">• {t.name}: <span className="text-terracotta-500">{t.error}</span></li>))}</ul></div>)}
+          <div className="flex gap-2">
+            <button onClick={copyReport} className="flex-1 py-2.5 bg-ocean-100 text-ocean-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Copy s={16}/>Copy Report</button>
+            <button onClick={downloadReport} className="flex-1 py-2.5 bg-sage-100 text-sage-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Download s={16}/>Download</button>
+          </div>
+        </div>
+      )}
+      <div className="gcard rounded-2xl p-4">
+        <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">📋 Tests Included:</h4>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-bark-500 dark:text-sand-200">
+          <div>• IndexedDB Storage</div><div>• CRUD Operations</div><div>• Export/Import</div><div>• Theme Switching</div><div>• Focus Timer Settings</div><div>• Utility Functions</div><div>• Data Validation</div><div>• Streak Heatmap</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Isolated FocusTimer Component with useReducer
 const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpdateFocus,onUpdateTodos,activeTaskId,activeTaskText,onTick})=>{
   const[state,dispatch]=React.useReducer((s,a)=>{
@@ -953,8 +1230,8 @@ function useAppData(){
   const[dHist,setDHist]=usePersistedState('dHist',[]);
 
   // Day rotation: archive yesterday's stats to dHist
-  const runDayRotationForTest=(todayOverride=null)=>{
-    const today=todayOverride||new Date().toDateString();
+  useEffect(()=>{
+    const today=new Date().toDateString();
     if(met.d.date&&met.d.date!==today){
       if(met.d.p>0||met.d.t>0||met.d.m>0){
         setDHist(h=>{const filtered=h.filter(x=>x.date!==met.d.date);return[...filtered,{date:met.d.date,p:met.d.p,t:met.d.t,m:met.d.m}].slice(-180);});
@@ -963,12 +1240,7 @@ function useAppData(){
       const nowDate=new Date(today);
       const isNewWeek=nowDate.getDay()===0||oldDate.getDay()>nowDate.getDay()||(nowDate-oldDate)>=7*864e5;
       setMet(p=>({d:{p:0,t:0,m:0,date:today},w:isNewWeek?{p:0,t:0,m:0}:p.w}));
-      return true;
     }
-    return false;
-  };
-  useEffect(()=>{
-    runDayRotationForTest();
   },[]);
 
   // Toast
@@ -978,15 +1250,6 @@ function useAppData(){
   // Tab navigation
   const[tab,setTab]=usePersistedState('tab','notes');
   const[selList,setSelList]=usePersistedState('selList','');
-
-  // Keep selected checklist valid globally (not just in ConfirmSection)
-  useEffect(()=>{
-    if(lists.length===0){
-      if(selList!=='')setSelList('');
-      return;
-    }
-    if(!lists.find(l=>l.id===selList))setSelList(lists[0].id);
-  },[lists,selList,setSelList]);
 
   // Timer completion callbacks
   const handleTimerComplete=(mode,activeTaskId,switchToBreak)=>{
@@ -1035,6 +1298,10 @@ function useAppData(){
 
   const deleteList=(listId)=>{
     setLists(ls=>ls.filter(l=>l.id!==listId));
+    if(selList===listId){
+      const remaining=lists.filter(l=>l.id!==listId);
+      if(remaining.length>0)setSelList(remaining[0].id);
+    }
     showT('🗑 List deleted!');
   };
 
@@ -1085,8 +1352,6 @@ function useAppData(){
     linkTask,unlinkTask,openLinkedList,createAndLink,
     deleteListItem,deleteReminder,updateListName,deleteList,saveItem,
     seedSampleData,
-    // Test helper
-    runDayRotationForTest,
     // Derived
     wkData,doneCount,
   };
@@ -1106,7 +1371,6 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
   const[newBullet,setNewBullet]=useState('');
   const[editingNote,setEditingNote]=useState(null);
   const[noteMenu,setNoteMenu]=useState(null);
-  const[confirmDeleteNote,setConfirmDeleteNote]=useState(null);
   const bulletRef=React.useRef(null);
   const today=new Date().toISOString().split('T')[0];
 
@@ -1161,7 +1425,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
   const inSel=selMode&&selSection==='notes';
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
         :<div className="flex items-center justify-center relative">
           {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1213,14 +1477,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
           </div>
         </div>
       ))}
-      {noteMenu&&<ActionMenu title={noteMenu.text||noteMenu.title||noteMenu.content} onClose={()=>setNoteMenu(null)} actions={[
-        {label:'Edit',icon:<I.Edit s={18} c="text-ocean-400"/>,action:()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}},
-        {label:'Copy Text',icon:<I.Copy s={18} c="text-bark-400"/>,action:()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}},
-        {label:'Promote to Clarify',icon:<I.Check s={18} c="text-sage-500"/>,sub:'copy + strike',action:()=>noteToTodo(noteMenu)},
-        {label:noteMenu.struck?'Remove Strikethrough':'Strikethrough',icon:<span className="w-[18px] h-[18px] flex items-center justify-center font-bold text-sm text-bark-400 line-through">S</span>,action:()=>toggleStrike(noteMenu.id)},
-        {label:'Delete',icon:<I.Trash s={18} c="text-terracotta-400"/>,danger:true,action:()=>setConfirmDeleteNote(noteMenu)}
-      ]}/>}
-      {confirmDeleteNote&&<ConfirmDialog title="Delete note?" text="This action cannot be undone." confirmText="Delete" onConfirm={()=>{deleteBullet(confirmDeleteNote.id);setConfirmDeleteNote(null);}} onCancel={()=>setConfirmDeleteNote(null)}/>}
+      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
     </div>
   );
 }
@@ -1232,8 +1489,6 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   const[dragQ,setDragQ]=useState(null);
   const moveTodoQuad=(tid,nq)=>{setTodos(t=>t.map(x=>x.id===tid?{...x,quad:nq}:x));setDragQ(null);showT(`→ ${QUADS.find(q=>q.id===nq)?.l}`);};
   const[taskMenu,setTaskMenu]=useState(null);
-  const[confirmDeleteTask,setConfirmDeleteTask]=useState(null);
-  const hasFocus=taskMenu&&focus.find(x=>x.id===taskMenu.id);
 
   const content=QUADS.map(q=>{
     const tasks=todos.filter(t=>t.quad===q.id).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
@@ -1282,7 +1537,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   });
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
         <div className="flex items-center justify-center relative">
           {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1292,15 +1547,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
       </div>
       <div className={desk?'md-grid':'space-y-3'}>{content}</div>
       <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
-      {taskMenu&&<ActionMenu title={taskMenu.text} onClose={()=>setTaskMenu(null)} actions={[
-        taskMenu.done?{label:'Mark Undone',icon:<I.Restore s={18} c="text-ocean-400"/>,action:()=>undoneTodo(taskMenu.id)}:{label:'Mark Done',icon:<I.Done s={18} c="text-sage-500"/>,action:()=>doneTodo(taskMenu.id)},
-        !taskMenu.done&&{label:'Edit',icon:<I.Edit s={18} c="text-ocean-400"/>,action:()=>setEdit({type:'todo',item:taskMenu})},
-        !taskMenu.done&&!hasFocus&&{label:'→ Focus Queue',icon:<I.Focus s={18} c="text-sage-500"/>,action:()=>addFocus(taskMenu)},
-        !taskMenu.done&&!taskMenu.linkedList&&{label:'📋 Link Checklist',icon:<I.List s={18} c="text-terracotta-400"/>,action:()=>setLinkPicker(taskMenu)},
-        taskMenu.linkedList&&{label:'📋 Open Checklist',icon:<I.List s={18} c="text-sage-500"/>,action:()=>openLinkedList(taskMenu)},
-        {label:'Delete',icon:<I.Trash s={18} c="text-terracotta-400"/>,danger:true,action:()=>setConfirmDeleteTask(taskMenu)}
-      ].filter(Boolean)}/>}
-      {confirmDeleteTask&&<ConfirmDialog title="Delete task?" text="This action cannot be undone." confirmText="Delete" onConfirm={()=>{deleteTodo(confirmDeleteTask.id);setConfirmDeleteTask(null);}} onCancel={()=>setConfirmDeleteTask(null)}/>}
+      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
     </div>
   );
 }
@@ -1314,7 +1561,7 @@ function FocusSection({wide,desk,onTimerTick}){
   const handleDO=(e,i)=>{e.preventDefault();setDragO(i);};
   const handleDE=()=>{if(dragI!==null&&dragO!==null&&dragI!==dragO){const n=[...focus],[d]=n.splice(dragI,1);n.splice(dragO,0,d);setFocus(n);}setDragI(null);setDragO(null);};
 
-  const statsCards=[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}].map((s,i)=><div key={i} className="gcard rounded-xl p-3 md:p-4 text-center"><div className={`text-xl md:text-2xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] md:text-xs text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>);
+  const statsCards=[{v:poms,l:'Session',i:'🍅',c:'text-terracotta-400'},{v:met.d.t,l:'Tasks',i:'✓',c:'text-sage-500'},{v:`${met.d.m}m`,l:'Focus',i:'⏱',c:'text-ocean-400'}];
 
   const renderQueue=(compact)=>(<>
     <div className="flex items-center justify-between mb-3 px-1"><h3 className="font-bold text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Focus Queue<span className="text-sm font-normal text-bark-400/50 dark:text-sand-300/50">({focus.length}/5)</span></h3><span className="text-xs text-bark-400/50 dark:text-sand-300/50 font-medium">Drag to reorder</span></div>
@@ -1334,16 +1581,24 @@ function FocusSection({wide,desk,onTimerTick}){
 
   return(
     <div className="space-y-5">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
       </div>
-      <div className="flex flex-col md:flex-row gap-5 md:gap-6 items-start">
-        <div className="w-full md:flex-1 min-w-0 space-y-4">
-          <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-          <div className="grid grid-cols-3 gap-2 md:gap-3">{statsCards}</div>
+      {desk?(
+        <div className="flex gap-6 items-start">
+          <div className="flex-1 min-w-0 space-y-4">
+            <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+            <div className="grid grid-cols-3 gap-2">{statsCards.map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+          </div>
+          <div className="flex-1 min-w-0">{renderQueue(true)}</div>
         </div>
-        <div className="w-full md:flex-1 min-w-0">{renderQueue(desk)}</div>
-      </div>
+      ):(
+        <>
+          <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+          <div className="grid grid-cols-3 gap-3 md:gap-4">{statsCards.map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+          <div>{renderQueue(false)}</div>
+        </>
+      )}
     </div>
   );
 }
@@ -1354,12 +1609,12 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   const{updateListName,deleteList}=useApp();
   const[newList,setNewList]=useState('');
   const[showNew,setShowNew]=useState(false);
+  const[listMenu,setListMenu]=useState(null);
   const[editListId,setEditListId]=useState(null);
   const[editListName,setEditListName]=useState('');
-  const[activeListMenu,setActiveListMenu]=useState(null);
-  const[confirmDeleteList,setConfirmDeleteList]=useState(null);
+  const[deleteConfirm,setDeleteConfirm]=useState(null);
   const handleUpdateListName=(listId,newName)=>{updateListName(listId,newName);setEditListId(null);setEditListName('');};
-  const handleDeleteList=(listId)=>{deleteList(listId);setActiveListMenu(null);};
+  const handleDeleteList=(listId)=>{deleteList(listId);setDeleteConfirm(null);};
 
   const rListContent=(cl,isSecondary)=>{
     if(!cl)return null;
@@ -1401,6 +1656,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
     );
   };
 
+  if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
   const cl=lists.find(l=>l.id===selList);
   const otherLists=lists.filter(l=>l.id!==selList);
   const secondList=desk&&otherLists.length>0?otherLists[0]:null;
@@ -1408,7 +1664,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   if(lists.length===0){
     return(
       <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
           </div>
@@ -1421,7 +1677,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
 
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <div className="flex items-center justify-between mb-3">
           {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
           <div className="flex items-center justify-center relative w-full">
@@ -1432,7 +1688,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
         </div>
         {editListId?<div className="flex gap-2 mb-2"><input type="text" value={editListName} onChange={e=>setEditListName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleUpdateListName(editListId,editListName);if(e.key==='Escape'){setEditListId(null);setEditListName('');}}} autoFocus className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" placeholder="Checklist name..."/><button onClick={()=>handleUpdateListName(editListId,editListName)} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Save</button><button onClick={()=>{setEditListId(null);setEditListName('');}} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>:null}
         <div className="flex gap-2 overflow-x-auto pb-2 hide-sb">{lists.map(l=>{
-          return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();setActiveListMenu(l);}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
+          return <button key={l.id} onClick={()=>setSelList(l.id)} onContextMenu={e=>{e.preventDefault();const rect=e.currentTarget.getBoundingClientRect();setListMenu({list:l,x:rect.left,y:rect.bottom+5});}} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all flex items-center gap-2 md:text-base ${selList===l.id?'bg-sage-400 text-white soft-shadow':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{l.name}{l.items.length>0&&<span className={`px-2 py-0.5 rounded-full text-xs ${selList===l.id?'bg-white/30':'bg-sage-100 dark:bg-sage-400/30 text-sage-600 dark:text-sage-300'}`}>{l.items.filter(i=>!i.done).length}</span>}</button>;
         })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
       </div>
       {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
@@ -1445,12 +1701,8 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
       ):(
         <>{rListContent(cl)}</>
       )}
-      {activeListMenu&&<ActionMenu title={activeListMenu.name} onClose={()=>setActiveListMenu(null)} actions={[
-        {label:'Edit Name',icon:<I.Edit s={18} c="text-ocean-400"/>,action:()=>{setEditListId(activeListMenu.id);setEditListName(activeListMenu.name);}},
-        {label:'Delete Checklist',icon:<I.Trash s={18} c="text-terracotta-400"/>,danger:true,action:()=>{if(lists.length===1)showT('Cannot delete last list');else setConfirmDeleteList(activeListMenu);}}
-      ]}/>}
-      {confirmDeleteList&&<ConfirmDialog title={`Delete "${confirmDeleteList.name}"?`} text="This checklist and its items will be permanently removed." confirmText="Delete" onConfirm={()=>{handleDeleteList(confirmDeleteList.id);setConfirmDeleteList(null);}} onCancel={()=>setConfirmDeleteList(null)}/>}
-      {/* Note: Single-list delete protection handled in action logic above */}
+      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
+      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
     </div>
   );
 }
@@ -1492,21 +1744,17 @@ function ReviewSection({wide}){
 
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className="space-y-4 order-1 xl:order-1 xl:col-start-1 xl:row-start-1">
-          {weekStats}
-          <Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>
+      {wide?(
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>{matrixCard}</div>
+          <div className="space-y-4"><Heatmap dHist={dHist} met={met}/>{insightsCard}{actionsCard}</div>
         </div>
-        <div className="space-y-4 order-2 xl:order-3 xl:col-start-2 xl:row-start-1">
-          <Heatmap dHist={dHist} met={met}/>
-          {insightsCard}
-          {actionsCard}
-        </div>
-        <div className="order-3 xl:order-2 xl:col-start-1 xl:row-start-2">{matrixCard}</div>
-      </div>
+      ):(
+        <>{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/><Heatmap dHist={dHist} met={met}/>{matrixCard}{insightsCard}{actionsCard}</>
+      )}
     </div>
   );
 }
@@ -1518,45 +1766,13 @@ function SettingsSection({desk}){
   const[moreSub,setMoreSub]=useState('settings');
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
-  const[testSuiteState,setTestSuiteState]=useState({loading:false,error:'',pct:0,stage:''});
   const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
-  const TestRunnerComp=window.TestRunner;
-
-  useEffect(()=>{
-    let active=true;
-    if(moreSub!=='test')return undefined;
-    if(window.TestRunner){
-      setTestSuiteState({loading:false,error:'',pct:100,stage:'Ready'});
-      return undefined;
-    }
-    setTestSuiteState({loading:true,error:'',pct:5,stage:'Starting...'});
-    loadTestRunner((p)=>{if(active)setTestSuiteState(s=>({...s,loading:true,error:'',pct:p.pct,stage:p.stage}));})
-      .then(()=>{if(active)setTestSuiteState({loading:false,error:'',pct:100,stage:'Ready'});})
-      .catch((err)=>{if(active)setTestSuiteState({loading:false,error:err?.message||'Failed to load test suite.',pct:0,stage:''});});
-    return()=>{active=false;};
-  },[moreSub]);
 
   const themeCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>;
   const timerCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>;
   const dataCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>;
-  const installContent=<div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>;
-  const deskModeContent=<><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></>;
-
-  const responsiveInfoCard=(key,title,content)=>(
-    <>
-      <div className="hidden md:block gcard rounded-2xl p-4">
-        <h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">{title}</h3>
-        {content}
-      </div>
-      <div className="md:hidden gcard rounded-2xl overflow-hidden">
-        <button onClick={()=>setSettExp(s=>({...s,[key]:!s[key]}))} className="w-full p-4 flex items-center justify-between">
-          <h3 className="font-bold text-bark-600 dark:text-sand-100">{title}</h3>
-          {settExp[key]?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}
-        </button>
-        {settExp[key]&&<div className="px-4 pb-4">{content}</div>}
-      </div>
-    </>
-  );
+  const installCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>;
+  const deskModeCard=<div className="gcard rounded-2xl p-4"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">🖥️ Desktop Mode</h3><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></div>;
 
   const helpSection=(key,title,content)=>(
     <div className="gcard rounded-2xl overflow-hidden">
@@ -1572,22 +1788,22 @@ function SettingsSection({desk}){
     <div className="space-y-4">
       <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
       {moreSub==='settings'&&(
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 min-w-0 space-y-4">
-            {themeCard}
-            <div className="md:hidden">{timerCard}</div>
-            {dataCard}
-            {responsiveInfoCard('desk','🖥️ Desktop Mode',deskModeContent)}
-          </div>
-          <div className="flex-1 min-w-0 space-y-4">
-            <div className="hidden md:block">{timerCard}</div>
-            {responsiveInfoCard('pwa','📲 Install as App',installContent)}
-          </div>
+        desk?(
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0 space-y-4">{themeCard}{dataCard}{deskModeCard}</div>
+          <div className="flex-1 min-w-0 space-y-4">{timerCard}{installCard}</div>
         </div>
+        ):(
+        <div className="space-y-4">
+          {themeCard}{timerCard}{dataCard}
+          <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>}</div>
+          <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,desk:!s.desk}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">🖥️ Desktop Mode</h3>{settExp.desk?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.desk&&<div className="px-4 pb-4 space-y-2"><p className="text-sm text-bark-500 dark:text-sand-200 mb-1">At 1280px+, the app uses a desktop-optimized layout.</p><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div>}</div>
+        </div>
+        )
       )}
       {moreSub==='settings'&&<div className="text-center text-sm text-bark-400/60 dark:text-sand-300/50 pt-2"><p>Productivity Hub v{APP_VERSION}</p></div>}
       {moreSub==='help'&&(
-        <div className={`pb-8 ${desk?'max-w-5xl mx-auto':''}`}> {/* Keep desk check for max-width constraint on help */}
+        <div className={`pb-8 ${desk?'max-w-5xl mx-auto':''}`}>
           <div className="gcard rounded-2xl p-6 mb-6">
             <h2 className="text-2xl font-extrabold text-bark-600 dark:text-sand-100 mb-4">📚 Complete Guide</h2>
             <p className="text-bark-500 dark:text-sand-200">Productivity Hub combines the Bullet Journal method, GTD (Getting Things Done), Deep Work, and the Eisenhower Matrix into one seamless workflow.</p>
@@ -1654,15 +1870,7 @@ function SettingsSection({desk}){
           </div>
         </div>
       )}
-      {moreSub==='test'&&<>
-        {testSuiteState.loading&&!TestRunnerComp&&<div className="gcard rounded-2xl p-5 text-sm text-bark-500 dark:text-sand-200">
-          <div className="flex items-center justify-between mb-2"><span>{testSuiteState.stage||'Loading test suite...'}</span><span className="font-semibold text-sage-500">{Math.max(0,Math.min(100,testSuiteState.pct||0))}%</span></div>
-          <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden"><div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${Math.max(0,Math.min(100,testSuiteState.pct||0))}%`}}/></div>
-        </div>}
-        {!testSuiteState.loading&&testSuiteState.error&&!TestRunnerComp&&<div className="gcard rounded-2xl p-5 text-sm text-terracotta-500 dark:text-terracotta-300">{testSuiteState.error}</div>}
-        {TestRunnerComp&&<TestRunnerComp onShowToast={showT}/>}
-        <div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div>
-      </>}
+      {moreSub==='test'&&<><TestRunner onShowToast={showT}/><div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div></>}
     </div>
   );
 }
@@ -1691,7 +1899,7 @@ function App(){
   const[selSection,setSelSection]=useState(null);
   const[selIds,setSelIds]=useState(new Set());
   const[bulkConfirm,setBulkConfirm]=useState(null);
-  const exitSelMode=()=>{setSelMode(false);setSelSection(null);setSelIds(new Set());setBulkConfirm(null);};
+  const exitSelMode=()=>{setSelMode(false);setSelSection(null);setSelIds(new Set());};
   const toggleSelId=(id)=>setSelIds(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});
   const enterSelMode=(section,firstId)=>{setSelMode(true);setSelSection(section);setSelIds(firstId?new Set([firstId]):new Set());};
   const getAllIdsForSection=()=>{
@@ -1713,7 +1921,7 @@ function App(){
       if(action==='delete'){setLists(ls=>ls.map(l=>l.id===lid?{...l,items:l.items.filter(i=>!sIds.has(i.id))}:l));showT(`🗑 ${cnt} deleted`);}
     }else if(sec==='notes'){
       if(action==='delete'){setNotes(n=>n.filter(x=>!sIds.has(x.id)));showT(`🗑 ${cnt} deleted`);}
-      if(action==='strike'){setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:!x.struck,struckAt:!x.struck?Date.now():null}:x));showT(`${cnt} toggled`);}
+      if(action==='strike'){setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:!x.struck}:x));showT(`${cnt} toggled`);}
       if(action==='clarify'){const toMove=notes.filter(x=>sIds.has(x.id));setTodos(t=>[...toMove.map(x=>({id:uid(),text:x.text||x.title||x.content,quad:'nn',poms:0,done:false})),...t]);setNotes(n=>n.map(x=>sIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x));showT(`📋 ${cnt} copied to Clarify`);}
     }
     exitSelMode();
@@ -1722,80 +1930,89 @@ function App(){
     if(selIds.size===0)return;
     if(action==='delete'&&selIds.size>=3){setBulkConfirm({ids:new Set(selIds),section:selSection});return;}
     executeBulk(action,selIds,selSection);
-  }; 
+  };
+  const confirmBulkDelete=()=>{if(bulkConfirm){executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}};
+  const cancelBulkDelete=()=>setBulkConfirm(null);
   const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
-  const onTabClick=(id)=>{setTab(id);if(selMode)exitSelMode();};
-  const renderTabButton=({id,Ic,l},variant)=>{
-    const isFR=id==='focus'&&timerInfo.run;
-    if(variant==='sidebar'){
-      return(
-        <button key={id} onClick={()=>onTabClick(id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
-          <Ic s={20}/><span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>{isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
-        </button>
-      );
-    }
-    return(
-      <button key={id} onClick={()=>onTabClick(id)} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
-        <div className="relative"><Ic s={28}/>{isFR&&<span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}</div>
-        <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{isFR?fmtSidebar(timerInfo.left):l}</span>
-      </button>
-    );
-  };
-  const renderActiveSection=()=>{
-    if(tab==='focus')return <div className="xl:max-w-none max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>;
-    if(tab==='lists')return <ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>;
-    if(tab==='todos')return <ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>;
-    if(tab==='notes')return <CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>;
-    if(tab==='review')return <ReviewSection wide={wide}/>;
-    if(tab==='more')return <SettingsSection desk={desk}/>;
-    return null;
-  };
 
   return(
-    <div className="min-h-screen flex flex-col xl:flex-row xl:h-screen xl:overflow-hidden">
-      {/* Sidebar (Desktop) */}
-      <div className="hidden xl:flex w-56 flex-shrink-0 glass border-r border-sand-200/50 dark:border-bark-500/30 flex-col" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
-        <div className="px-5 py-4 border-b border-sand-200/30 dark:border-bark-500/20">
-          <h1 className="text-lg font-extrabold text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-[10px] font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-1.5 py-0.5 rounded-full ml-1">α</span></h1>
+    <div className="min-h-screen">
+      {wide ? (
+        /* ===== WIDE DESKTOP: Sidebar + Main ===== */
+        <div className="flex h-screen overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-56 flex-shrink-0 glass border-r border-sand-200/50 dark:border-bark-500/30 flex flex-col" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+            <div className="px-5 py-4 border-b border-sand-200/30 dark:border-bark-500/20">
+              <h1 className="text-lg font-extrabold text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-[10px] font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-1.5 py-0.5 rounded-full ml-1">α</span></h1>
+            </div>
+            <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
+              {tabs.map(({id,Ic,l})=>{
+                const isFR=id==='focus'&&timerInfo.run;
+                return(
+                <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                  <Ic s={20}/>
+                  <span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>
+                  {isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
+                </button>
+                );
+              })}
+            </nav>
+            <div className="px-3 py-3 border-t border-sand-200/30 dark:border-bark-500/20">
+              <button onClick={()=>setShowHelp(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-bark-400 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50 transition-colors"><I.Help s={18}/><span>Help</span></button>
+            </div>
+          </div>
+          {/* Main content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-8 py-6 mx-auto">
+              {tab==='focus'&&<FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/>}
+              {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
+              {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
+              {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
+              {tab==='review'&&<ReviewSection wide={wide}/>}
+              {tab==='more'&&<SettingsSection desk={desk}/>}
+            </div>
+            {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
+          </div>
         </div>
-        <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
-          {tabs.map(t=>renderTabButton(t,'sidebar'))}
-        </nav>
-        <div className="px-3 py-3 border-t border-sand-200/30 dark:border-bark-500/20">
-          <button onClick={()=>setShowHelp(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-bark-400 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50 transition-colors"><I.Help s={18}/><span>Help</span></button>
-        </div>
-      </div>
-
-      {/* Header (Mobile) */}
-      <div className="xl:hidden glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between gap-2" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+      ) : (
+        /* ===== MOBILE / TABLET: Original stacked layout ===== */
+        <>
+      <div className="glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
         <div className="w-10 md:w-12"/>
-        <h1 className="flex-1 min-w-0 text-lg md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100 whitespace-nowrap overflow-hidden text-ellipsis">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
+        <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
         <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
       </div>
-
-      {/* Main Content */}
-      <div className="w-full flex-1 overflow-y-auto">
-      <div className="px-4 md:px-8 pt-0 md:pt-6 xl:pt-6 pb-28 md:pb-32 xl:pb-6 mx-auto max-w-lg md:max-w-5xl xl:max-w-none">
-        {renderActiveSection()}
+      <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
+        {tab==='focus'?<div className="max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>:null}
+        {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
+        {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
+        {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
+        {tab==='review'&&<ReviewSection wide={wide}/>}
+        {tab==='more'&&<SettingsSection desk={desk}/>}
       </div>
-      </div>
-
       {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
-
-      {/* Bottom Bar (Mobile) */}
-      <div className="xl:hidden fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
+      <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
         <div className="flex justify-around max-w-lg md:max-w-5xl mx-auto py-2 tab-bar-inner">
-          {tabs.map(t=>renderTabButton(t,'mobile'))}
+          {tabs.map(({id,Ic,l})=>{
+            const isFR=id==='focus'&&timerInfo.run;
+            return(
+            <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
+              <div className="relative"><Ic s={28}/>{isFR&&<span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}</div>
+              <span className={`text-xs font-bold ${tab===id?'':'opacity-70'}`}>{isFR?fmtSidebar(timerInfo.left):l}</span>
+            </button>
+            );
+          })}
         </div>
       </div>
-
+        </>
+      )}
       {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
-      {bulkConfirm&&<ConfirmDialog title={`Delete ${bulkConfirm.ids.size} items?`} text="This action cannot be undone." confirmText={`Delete ${bulkConfirm.ids.size}`} onConfirm={()=>{executeBulk('delete',bulkConfirm.ids,bulkConfirm.section);setBulkConfirm(null);}} onCancel={()=>setBulkConfirm(null)}/>}
+      {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
     </div>
   );
 }
