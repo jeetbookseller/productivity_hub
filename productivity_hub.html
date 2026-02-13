@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#7CB69D" id="theme-color-meta">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,7 +18,7 @@
   <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{nunito:['Nunito','sans-serif']},colors:{cream:{50:'#FDFCFA',100:'#F7F5F0',200:'#EDE9E0'},sage:{100:'#E8F0EA',200:'#C5D9CA',300:'#9DC4A8',400:'#7CB69D',500:'#5A9E78'},terracotta:{100:'#FCEEE9',200:'#F5C9BA',300:'#E9A088',400:'#E07A5F',500:'#C45D42'},sand:{100:'#F5F0E6',200:'#E8DFD0',300:'#D4C5AD'},ocean:{100:'#E6F2F7',200:'#B8D9E8',300:'#83B5D1',400:'#5A9BBF'},lavender:{100:'#F0EDF5',200:'#D5CCE6',300:'#B8A9D4',400:'#9B8AA6'},bark:{300:'#9A8B7A',400:'#7A6B5A',500:'#5C4F43',600:'#3D352D',700:'#2D2720'}}}}}</script>
   <style>
     *{-webkit-tap-highlight-color:transparent;font-family:'Nunito',sans-serif}
-    html,body{width:100%;overflow-x:hidden}
+    html,body{width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
     body{margin:0;overscroll-behavior:none;background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
     #root{width:100%;overflow-x:hidden}
     .dark body{background:linear-gradient(180deg,#2D2720 0%,#1F1B17 100%)}
@@ -153,7 +153,7 @@ window.addEventListener('appinstalled', () => {
 // Service Worker Registration (blob-based, best-effort for local use)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const CACHE_NAME = 'productivity-hub-v11';
+    const CACHE_NAME = 'productivity-hub-v12';
     const swCode = `
       const CACHE_NAME = '${CACHE_NAME}';
       self.addEventListener('install', (e) => {
@@ -211,7 +211,7 @@ if ('serviceWorker' in navigator) {
 
 // Helper: Generate proper PWA files for HTTPS deployment
 window.__generatePWAFiles = () => {
-  const swContent = `const CACHE_NAME = 'productivity-hub-v11';
+  const swContent = `const CACHE_NAME = 'productivity-hub-v12';
 const APP_FILE = self.location.pathname.replace('/sw.js', '/') || '/';
 
 self.addEventListener('install', (e) => {
@@ -1161,7 +1161,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
   const inSel=selMode&&selSection==='notes';
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
         :<div className="flex items-center justify-center relative">
           {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1282,7 +1282,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   });
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
         <div className="flex items-center justify-center relative">
           {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1334,7 +1334,7 @@ function FocusSection({wide,desk,onTimerTick}){
 
   return(
     <div className="space-y-5">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
       </div>
       <div className="flex flex-col md:flex-row gap-5 md:gap-6 items-start">
@@ -1408,7 +1408,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   if(lists.length===0){
     return(
       <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
           </div>
@@ -1421,7 +1421,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
 
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <div className="flex items-center justify-between mb-3">
           {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
           <div className="flex items-center justify-center relative w-full">
@@ -1492,7 +1492,7 @@ function ReviewSection({wide}){
 
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky ${wide?"top-0 -mx-8":"top-0 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
