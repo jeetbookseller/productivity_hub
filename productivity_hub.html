@@ -927,8 +927,8 @@ function useAppData(){
   const[dHist,setDHist]=usePersistedState('dHist',[]);
 
   // Day rotation: archive yesterday's stats to dHist
-  const runDayRotationForTest=(todayOverride=null)=>{
-    const today=todayOverride||new Date().toDateString();
+  useEffect(()=>{
+    const today=new Date().toDateString();
     if(met.d.date&&met.d.date!==today){
       if(met.d.p>0||met.d.t>0||met.d.m>0){
         setDHist(h=>{const filtered=h.filter(x=>x.date!==met.d.date);return[...filtered,{date:met.d.date,p:met.d.p,t:met.d.t,m:met.d.m}].slice(-180);});
@@ -937,12 +937,7 @@ function useAppData(){
       const nowDate=new Date(today);
       const isNewWeek=nowDate.getDay()===0||oldDate.getDay()>nowDate.getDay()||(nowDate-oldDate)>=7*864e5;
       setMet(p=>({d:{p:0,t:0,m:0,date:today},w:isNewWeek?{p:0,t:0,m:0}:p.w}));
-      return true;
     }
-    return false;
-  };
-  useEffect(()=>{
-    runDayRotationForTest();
   },[]);
 
   // Toast
@@ -1059,8 +1054,6 @@ function useAppData(){
     linkTask,unlinkTask,openLinkedList,createAndLink,
     deleteListItem,deleteReminder,updateListName,deleteList,saveItem,
     seedSampleData,
-    // Test helper
-    runDayRotationForTest,
     // Derived
     wkData,doneCount,
   };
