@@ -1753,7 +1753,7 @@ function App(){
   };
 
   return(
-    <div className="min-h-screen flex flex-col xl:flex-row xl:h-screen xl:overflow-hidden">
+    <div className="min-h-screen flex xl:h-screen xl:overflow-hidden">
       {/* Sidebar (Desktop) */}
       <div className="hidden xl:flex w-56 flex-shrink-0 glass border-r border-sand-200/50 dark:border-bark-500/30 flex-col" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
         <div className="px-5 py-4 border-b border-sand-200/30 dark:border-bark-500/20">
@@ -1775,7 +1775,7 @@ function App(){
       </div>
 
       {/* Main Content */}
-      <div className="w-full flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
       <div className="px-4 md:px-8 py-4 md:py-6 xl:py-6 pb-28 md:pb-32 xl:pb-6 mx-auto max-w-lg md:max-w-5xl xl:max-w-none">
         {renderActiveSection()}
       </div>
