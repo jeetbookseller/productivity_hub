@@ -150,30 +150,23 @@ const TestRunner=({onShowToast})=>{
       {
         name:'Storage Roundtrip Export Clear Import Equality',level:'integration',category:'Storage',
         run:async()=>{
-          const K='__TEST_RTR__';
           const sample={
-            [`${K}todos`]:[{id:'t1',text:'A',quad:'nn',done:false,poms:0}],
-            [`${K}lists`]:[{id:'l1',name:'List',items:[{id:'i1',text:'Item',done:false}]}],
-            [`${K}notes`]:[{id:'n1',text:'N',crAt:new Date().toISOString()}],
-            [`${K}selList`]:'l1',
-            [`${K}preset`]:'classic'
+            todos:[{id:'t1',text:'A',quad:'nn',done:false,poms:0}],
+            lists:[{id:'l1',name:'List',items:[{id:'i1',text:'Item',done:false}]}],
+            notes:[{id:'n1',text:'N',crAt:new Date().toISOString()}],
+            selList:'l1',
+            preset:'classic'
           };
           await S.clr();
           await S.imp(sample);
           const exported=await S.exp();
-          const exportedSubset=Object.fromEntries(
-            Object.entries(exported).filter(([k])=>k.startsWith(K))
-          );
-          assert(deepEqual(exportedSubset,sample),'exported data should match imported sample (content equality)');
+          assert(deepEqual(exported,sample),'exported data should match imported sample (content equality)');
           await S.clr();
           const afterClear=await S.exp();
           assert(Object.keys(afterClear).length===0,'store should be empty after clear');
           await S.imp(sample);
           const afterRestore=await S.exp();
-          const restoredSubset=Object.fromEntries(
-            Object.entries(afterRestore).filter(([k])=>k.startsWith(K))
-          );
-          assert(deepEqual(restoredSubset,sample),'restored sample should match exactly');
+          assert(deepEqual(afterRestore,sample),'restored sample should match exactly');
         }
       },
       {
@@ -255,7 +248,6 @@ const TestRunner=({onShowToast})=>{
           const h=await mountWithProviders({mounts:ctx.mounts,render:()=>null});
           const today=new Date().toDateString();
           await waitFor(()=>h.getApp().met.d.date===today);
-          await waitFor(()=>h.getApp().dHist.some(x=>x.date===yesterday));
           const app=h.getApp();
           const archived=app.dHist.find(x=>x.date===yesterday);
           assert(!!archived,'yesterday should be archived in dHist');
