@@ -1,7 +1,7 @@
 {
   "name": "Productivity Hub",
   "short_name": "Productivity",
-  "description": "Capture, Clarify, Focus, Confirm, and Review in one productivity app",
+  "description": "Focus timer, tasks, lists, reminders & notes - all in one place",
   "id": "productivity-hub-pwa",
   "start_url": "./",
   "scope": "./",
