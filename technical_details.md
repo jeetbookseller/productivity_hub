@@ -246,37 +246,64 @@
 
 ### 📌 Combined Prioritized Backlog (Refactor + Product Features)
 
-1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**  
+1. `P0` **Day-rotation reliability after async persisted-state load** *(Stability)*
+   Ensure daily metrics rotation re-checks when `met` finishes loading from IndexedDB so stale-day archive/reset cannot be skipped.
+
+2. `P0` **Backup import restore mode (replace semantics)** *(Stability)*
+   Add explicit restore path (`clear + import`) so backup import can fully replace store state rather than merge-only behavior.
+
+3. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**
    Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
 
-2. `P0` **Unified ContextMenu + ConfirmDialog**  
+4. `P0` **Unified ContextMenu + ConfirmDialog**
    Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
 
-3. `P1` **Recurring Tasks**  
-   Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
+5. `P1` **Storage fallback parse hardening** *(Stability)*
+   Guard per-key `localStorage` JSON parsing in fallback export/read paths to prevent one malformed key from breaking recovery/export flows.
 
-4. `P1` **Tags & Filters**  
-   Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
+6. `P1` **Test suite loading hardening (precompiled path + stricter runtime policy)** *(Stability)*
+   Reduce reliance on runtime `Babel + new Function` for test loading to improve CSP/security posture while keeping lazy-load behavior.
 
-5. `P1` **Command Palette Search**  
-   Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
+7. `P1` **Desktop truncation override cleanup** *(Stability)*
+   Replace broad `.truncate !important` behavior with scoped truncation utilities/layout fixes to avoid unintended desktop text behavior.
 
-6. `P2` **Task Templates**  
-   Save task + subtask bundles and quick-create from a reusable template library.
-
-7. `P2` **Storage Enhancement**  
-   Improve resilience beyond IndexedDB-only browser storage.
-
-8. `P2` **StickyHeader + CSS class abstraction**  
+8. `P1` **StickyHeader + CSS class abstraction** *(Refactor)*
    Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
 
-9. `P2` **UI smoothness pass**  
+9. `P1` **UI smoothness pass** *(Refactor)*
    Add transitions, modal exit animations, and debounce persisted writes (~300ms); evaluate virtual scrolling for large lists.
 
-10. `P3` **Lazy-load test suite**  
+10. `P2` **Timer render-pressure reduction** *(Performance/Stability)*
+    Further isolate timer-driven updates (`onTick`) to reduce app-shell re-render pressure under continuous second-by-second updates.
+
+11. `P2` **Mobile drag-and-drop alternative for matrix tasks** *(UX/Stability)*
+    Add touch-friendly task re-prioritization path (e.g., explicit move action) so Clarify reprioritization is parity-safe on non-HTML5-drag platforms.
+
+12. `P2` **`dHist` legacy backfill/migration strategy** *(Data Integrity)*
+    Add migration and/or UI annotation for pre-v12.5 users with missing historical heatmap data.
+
+13. `P2` **`struckAt` legacy backfill/migration strategy** *(Data Integrity)*
+    Add migration and/or fallback behavior for notes struck before v14-Beta that lack `struckAt`.
+
+14. `P2` **Tags & Filters**
+    Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
+
+15. `P2` **Command Palette Search**
+    Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
+
+16. `P2` **Task Templates**
+    Save task + subtask bundles and quick-create from a reusable template library.
+
+17. `P2` **Storage Enhancement**
+    Improve resilience beyond IndexedDB-only browser storage.
+
+18. `P3` **Recurring Tasks**
+    Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
+
+19. `P3` **Lazy-load test suite**
     Defer test suite initialization until the Test tab is opened.
 
-11. `P3` **Checklist tab management UX**  
+20. `P3` **Checklist tab management UX**
     Add better tab controls (e.g., right-click/`⋮` rename/delete behavior) for checklist tabs.
 
 ---
@@ -355,6 +382,9 @@ Capture → Clarify → Focus → Confirm → Review → Repeat
 - **Drag-and-drop mobile:** HTML5 Drag API doesn't work on touch; use EditModal quadrant picker
 - **dHist backfill:** Existing users from pre-v12.5 will have empty heatmap history
 - **struckAt backfill:** Notes struck before v14-Beta lack `struckAt` timestamp
+- **Day rotation async-load edge case:** Day rollover can be missed when persisted `met` arrives after initial mount pass; tracked as `P0` backlog item.
+- **Import merge semantics:** Backup import currently merges into existing store unless explicitly cleared first; tracked as `P0` backlog item.
+- **Storage fallback parse fragility:** Fallback `localStorage` export/read paths can fail on malformed JSON entries; tracked as `P1` backlog item.
 - **Checklist tab management:** Improvements are tracked in `## 🔮 Future Features` → `### 📌 Combined Prioritized Backlog (Refactor + Product Features)`.
 - **Timer re-renders:** `onTick` fires every second, updating App state. Mitigated by stable `useCallback` ref and `React.memo` on FocusTimer
 
