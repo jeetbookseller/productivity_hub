@@ -252,31 +252,31 @@
 2. `P0` **Unified ContextMenu + ConfirmDialog**  
    Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
 
-3. `P1` **Recurring Tasks**  
-   Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
-
-4. `P1` **Tags & Filters**  
-   Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
-
-5. `P1` **Command Palette Search**  
-   Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
-
-6. `P2` **Task Templates**  
-   Save task + subtask bundles and quick-create from a reusable template library.
-
-7. `P2` **Storage Enhancement**  
-   Improve resilience beyond IndexedDB-only browser storage.
-
-8. `P2` **StickyHeader + CSS class abstraction**  
+3. `P1` **StickyHeader + CSS class abstraction**  
    Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
 
-9. `P2` **UI smoothness pass**  
+4. `P1` **UI smoothness pass**  
    Add transitions, modal exit animations, and debounce persisted writes (~300ms); evaluate virtual scrolling for large lists.
 
-10. `P3` **Lazy-load test suite**  
+5. `P1` **Lazy-load test suite**  
     Defer test suite initialization until the Test tab is opened.
 
-11. `P3` **Checklist tab management UX**  
+6. `P2` **Recurring Tasks**  
+   Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
+
+7. `P2` **Tags & Filters**  
+   Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
+
+8. `P2` **Command Palette Search**  
+   Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
+
+9. `P3` **Task Templates**  
+   Save task + subtask bundles and quick-create from a reusable template library.
+
+10. `P4` **Storage Enhancement**  
+   Improve resilience beyond IndexedDB-only browser storage.
+
+11. `P5` **Checklist tab management UX**  
     Add better tab controls (e.g., right-click/`⋮` rename/delete behavior) for checklist tabs.
 
 ---
