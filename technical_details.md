@@ -246,20 +246,138 @@
 
 ### 📌 Combined Prioritized Backlog (Refactor + Product Features)
 
-1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**  
+1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**
    Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
 
-2. `P0` **Unified ContextMenu + ConfirmDialog**  
+   **Implementation:**
+   - **App layout** (current `wide ? (...) : (...)` ternary): Render a single JSX tree. Sidebar uses `hidden xl:flex xl:flex-col` (hidden below 1280px, visible above). Bottom tab bar uses `xl:hidden` (visible below 1280px, hidden above). Main content adjusts via responsive Tailwind (`xl:pl-56 xl:pt-0` vs `pt-14 pb-28`). Eliminates the entire wide ternary.
+   - **ReviewSection** (current `wide?(grid):(stack)`): Replace with single container `<div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">`. Already uses shared card variables (`weekStats`, `matrixCard`, etc.) — layout becomes CSS-only.
+   - **FocusSection** (current `desk?(flex):(stack)`): Replace with `<div className="md:flex md:gap-6">` + responsive classes on children. Use `renderQueue(compact)` with CSS-driven compact sizing.
+   - **ConfirmSection** (current `desk?(grid):(single)`): Replace with `md:grid md:grid-cols-2 md:gap-6`, conditionally render `secondList` based on data (not layout branch).
+   - Keep `useDesk()`/`useWide()` hooks for JS-only logic (drag-and-drop, right-click context menus) — they stop driving JSX layout branching.
+
+   **TDD — Write these tests first:**
+   - `App renders sidebar nav on wide viewport` — verify sidebar element visible at 1280px+
+   - `App renders bottom tab bar on mobile viewport` — verify tab bar visible below 1280px
+   - `App hides sidebar on mobile` — verify sidebar hidden below 1280px
+   - `App hides bottom tab bar on wide` — verify tab bar hidden at 1280px+
+   - `ReviewSection renders 2-col grid on wide` — verify grid layout class applied at xl breakpoint
+   - `FocusSection renders side-by-side on tablet+` — verify flex layout active at md breakpoint
+
+2. `P0` **Unified ContextMenu + ConfirmDialog**
    Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
 
-3. `P1` **StickyHeader + CSS class abstraction**  
+   **Implementation:**
+   - Create `ContextMenu({title, items, onClose, position})` component:
+     - `items` array: `[{icon: <Component/>, label: 'Edit', onClick: fn, variant: 'default'|'danger', borderTop: bool}]`
+     - If `position` prop provided → render positioned popup (like current `ListMenu`): absolute positioning, no backdrop blur
+     - If no `position` → render centered fullscreen modal (like current `TaskMenu`/`NoteMenu`): `fixed inset-0 bg-bark-700/40 backdrop-blur-sm` overlay
+     - Shared button class defined once: `w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left`
+     - `variant: 'danger'` → uses `hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20` instead
+     - Preserve `anim-in` entrance animation and `gcard` styling
+   - Create `ConfirmDialog({icon, iconBg, title, message, confirmLabel, onConfirm, onCancel, variant})` component:
+     - Replaces both `DeleteConfirmation` and `BulkDeleteConfirm`
+     - Renders: icon circle + title + message + Cancel/Confirm buttons
+     - `variant: 'danger'` → terracotta confirm button; `variant: 'info'` → single OK button (for "cannot delete last list")
+   - Replace callers in `CaptureSection` (NoteMenu), `ClarifySection` (TaskMenu), `ConfirmSection` (ListMenu, DeleteConfirmation), and `App` (BulkDeleteConfirm) — each passes its own items array
+
+   **TDD — Write these tests first:**
+   - `ContextMenu renders all items` — pass 3 items, assert 3 buttons rendered
+   - `ContextMenu calls onClose on backdrop click` — simulate backdrop click, verify onClose called
+   - `ContextMenu item click fires callback and closes` — click item, verify onClick + onClose called
+   - `ContextMenu positioned mode renders at coordinates` — pass position, verify absolute positioning
+   - `ConfirmDialog renders title and message` — pass title/message, verify text present in DOM
+   - `ConfirmDialog confirm button fires onConfirm` — click confirm, verify callback
+   - `ConfirmDialog cancel button fires onCancel` — click cancel, verify callback
+
+3. `P1` **StickyHeader + CSS class abstraction**
    Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
 
-4. `P1` **UI smoothness pass**  
+   **Implementation:**
+   - Create `StickyHeader({wide, children})` component:
+     - Renders: `<div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>{children}</div>`
+     - Replace all 5+ identical sticky header blocks in: `FocusSection`, `ConfirmSection` (×2), `ReviewSection`, `CaptureSection`, `ClarifySection`
+   - Add `@apply` CSS abstractions in the `<style>` block for the most repeated Tailwind utility strings:
+     - `.menu-btn` — shared context menu button: `@apply w-full px-4 py-3 flex items-center gap-3 transition-colors text-left`
+     - `.section-card` — shared card pattern: `@apply gcard rounded-2xl p-4`
+     - `.menu-btn-border` — border-top separator: `@apply border-t border-sand-200 dark:border-bark-500`
+   - Update all usages of these repeated patterns to use the new CSS classes
+
+   **TDD — Write these tests first:**
+   - `StickyHeader applies wide classes when wide=true` — verify `top-0` and `-mx-8` in className
+   - `StickyHeader applies mobile classes when wide=false` — verify `top-14` in className
+   - `StickyHeader renders children` — pass children, verify they appear in DOM
+   - `CSS class .section-card applies gcard styles` — verify computed styles match expected
+
+4. `P1` **UI smoothness pass**
    Add transitions, modal exit animations, and debounce persisted writes (~300ms); evaluate virtual scrolling for large lists.
 
-5. `P1` **Lazy-load test suite**  
+   **Implementation:**
+   - **Debounce persisted writes:** Modify `usePersistedState` to debounce `S.set()` calls by ~300ms using a `useRef` timer. Pattern:
+     ```
+     const timerRef = useRef(null);
+     useEffect(() => {
+       if (loaded) {
+         clearTimeout(timerRef.current);
+         timerRef.current = setTimeout(() => S.set(key, state), 300);
+       }
+       return () => clearTimeout(timerRef.current);
+     }, [key, state, loaded]);
+     ```
+     Reads remain instant; writes are batched. Flush on unmount via cleanup.
+   - **Modal exit animations:** Add CSS `@keyframes fadeOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}` and `.anim-out{animation:fadeOut 0.2s ease-in forwards}`. Create a `useAnimatedClose(onClose)` hook that returns `{closing, triggerClose}` — sets `closing=true`, listens for `animationend`, then calls actual `onClose`. Apply to: ContextMenu, ConfirmDialog, EditModal, LinkPicker, AboutModal.
+   - **Tab content transitions:** Wrap tab content in `<div key={tab} className="anim-in">` so each tab switch triggers a fresh fade-in animation.
+   - **Toast auto-fade:** Add timed opacity transition — toast fades out over last 500ms of its display duration.
+   - **List item transitions:** Add `transition-all duration-200` to item containers in Capture, Clarify, Confirm for smooth height/opacity changes on add/remove/complete.
+
+   **TDD — Write these tests first:**
+   - `usePersistedState debounces writes` — rapidly set state 5 times in <300ms, verify S.set called only once after settling
+   - `usePersistedState flushes on unmount` — set state then unmount, verify final value persisted
+   - `Modal applies anim-out class when closing` — trigger close, verify `.anim-out` class present before actual unmount
+   - `Tab switch applies anim-in to new content` — change tab, verify `anim-in` class on content container
+   - `Toast fades out before removal` — verify opacity transition applied in final phase
+
+5. `P1` **Lazy-load test suite**
     Defer test suite initialization until the Test tab is opened.
+
+   **Implementation:**
+   - Wrap the entire `TestRunner` component definition (~250 lines) in a factory function:
+     ```
+     const getTestRunner = () => {
+       // ... existing TestRunner code ...
+       return TestRunner;
+     };
+     ```
+   - In `SettingsSection`, lazy-load on first Test tab click:
+     ```
+     const [TR, setTR] = useState(null);
+     // On Test tab click:
+     if (!TR) setTR(() => getTestRunner());
+     ```
+   - Render: `{moreSub==='test' && TR ? <TR onShowToast={showT}/> : moreSub==='test' && <div className="text-center py-8 text-bark-400">Loading tests...</div>}`
+   - Factory body stays in the HTML but wrapped in a function that isn't invoked until needed, deferring component creation cost
+
+   **TDD — Write these tests first:**
+   - `TestRunner not initialized on app startup` — verify factory function not called at mount time
+   - `TestRunner loads on first Test tab click` — click Test tab, verify component mounts and renders
+   - `TestRunner persists after tab switch` — open Test, switch to Settings, switch back to Test, verify no re-initialization
+
+### 📋 Implementation Order (TDD Approach)
+
+For each step below: **(1)** write the TDD tests first, **(2)** run tests (expect failures), **(3)** implement the feature, **(4)** verify all tests pass, **(5)** run full test suite (55+ tests).
+
+| Order | Item | Rationale |
+|-------|------|-----------|
+| 1st | Unified ContextMenu + ConfirmDialog (P0 #2) | Foundation — creates shared components used by later steps |
+| 2nd | StickyHeader + CSS class abstraction (P1 #3) | Creates shared `StickyHeader` component + CSS classes used everywhere |
+| 3rd | Eliminate desktop/mobile JSX duplication (P0 #1) | Biggest structural change — benefits from shared components already in place |
+| 4th | UI smoothness pass (P1 #4) | Polish layer — adds animations/debounce on top of clean structure |
+| 5th | Lazy-load test suite (P1 #5) | Independent, low-risk — can be done last |
+
+**Versioning:**
+- Steps 1 + 2 → **v16.8** (shared components + CSS abstraction)
+- Step 3 → **v16.9** (CSS-only responsive layout — biggest structural change)
+- Steps 4 + 5 → **v17.0** (smoothness + lazy-load = user-facing polish, major version bump)
 
 6. `P2` **Recurring Tasks**  
    Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
