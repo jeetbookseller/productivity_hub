@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16.7';
+const APP_VERSION = '16.8';
 
 // Icons - More visible with less transparency
 const I={
@@ -950,6 +950,12 @@ const TestRunner=({onShowToast})=>{
       {name:'Settings Flexbox Desk',category:'Desktop Layout'},
       {name:'Explainer Collapsible State',category:'Desktop Layout'},
       {name:'Explainer Desktop Always Open',category:'Desktop Layout'},
+      {name:'App Sidebar Nav Wide CSS',category:'CSS Responsive'},
+      {name:'App Tab Bar Mobile CSS',category:'CSS Responsive'},
+      {name:'App Sidebar Hidden Mobile CSS',category:'CSS Responsive'},
+      {name:'App Tab Bar Hidden Wide CSS',category:'CSS Responsive'},
+      {name:'Review 2-Col Grid CSS',category:'CSS Responsive'},
+      {name:'Focus Side-by-Side CSS',category:'CSS Responsive'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -1016,12 +1022,18 @@ const TestRunner=({onShowToast})=>{
           case 'Scroll Guard Distance':{const threshold=10;const noScroll={dx:5,dy:3};const scrolled={dx:12,dy:2};if(Math.abs(noScroll.dx)>threshold||Math.abs(noScroll.dy)>threshold)throw new Error('Small movement should not trigger scroll');if(!(Math.abs(scrolled.dx)>threshold||Math.abs(scrolled.dy)>threshold))throw new Error('12px movement should trigger scroll');break;}
           case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
           case 'Timer Info State':{const ti={left:1500,run:false,mode:'work'};if(ti.left!==1500)throw new Error('Timer left wrong');if(ti.run!==false)throw new Error('Timer run wrong');if(ti.mode!=='work')throw new Error('Timer mode wrong');const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(1500)!=='25:00')throw new Error('Format wrong: '+fmtSB(1500));if(fmtSB(63)!=='1:03')throw new Error('Format 63s wrong');break;}
-          case 'Focus Side-by-Side Desk':{const desk=true;const layout=desk?'flex gap-6':'space-y-5';if(!layout.includes('flex'))throw new Error('Desk should use flex');const mobile=false;const mLayout=mobile?'flex gap-6':'space-y-5';if(mLayout.includes('flex'))throw new Error('Mobile should not use flex side-by-side');break;}
-          case 'Review Dashboard Grid Wide':{const wide=true;const cls=wide?'grid grid-cols-2 gap-4':'space-y-4';if(!cls.includes('grid-cols-2'))throw new Error('Wide review should use 2-col grid');break;}
+          case 'Focus Side-by-Side Desk':{const cls='md:flex md:gap-6 md:items-start';if(!cls.includes('md:flex'))throw new Error('Focus should use md:flex for CSS responsive');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6');break;}
+          case 'Review Dashboard Grid Wide':{const cls='space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0';if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should use xl:grid-cols-2 for CSS responsive');if(!cls.includes('space-y-4'))throw new Error('Review should stack on mobile with space-y-4');break;}
           case 'Sidebar Timer Format':{const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(0)!=='0:00')throw new Error('0s format wrong');if(fmtSB(59)!=='0:59')throw new Error('59s wrong');if(fmtSB(600)!=='10:00')throw new Error('600s wrong');const run=true;const mode='work';const label=run?fmtSB(1200):'Focus';if(label!=='20:00')throw new Error('Running label should show time');const notRun=false;const label2=notRun?fmtSB(1200):'Focus';if(label2!=='Focus')throw new Error('Not running should show Focus');break;}
           case 'Settings Flexbox Desk':{const desk=true;const expected='flex gap-4';const mobile=false;const mExpected='space-y-4';if(!expected.includes('flex'))throw new Error('Desk settings should use flexbox');if(mExpected.includes('flex'))throw new Error('Mobile settings should not use flexbox');if(!expected.includes('gap-4'))throw new Error('Desk should have gap');break;}
           case 'Explainer Collapsible State':{const helpExp={};const toggleHelp=(k,s)=>({...s,[k]:!s[k]});const after=toggleHelp('wf',helpExp);if(!after.wf)throw new Error('Toggle should open section');const after2=toggleHelp('wf',after);if(after2.wf)throw new Error('Toggle should close section');break;}
           case 'Explainer Desktop Always Open':{const desk=true;const helpExp={};const isOpen=desk||helpExp.wf;if(!isOpen)throw new Error('Desktop should always show explainer content');const mobile=false;const mOpen=mobile||helpExp.wf;if(mOpen)throw new Error('Mobile with closed state should hide content');break;}
+          case 'App Sidebar Nav Wide CSS':{const sidebar=document.querySelector('[data-testid="sidebar-nav"]');if(!sidebar)throw new Error('Sidebar nav element not found');const cls=sidebar.className;if(!cls.includes('xl:flex'))throw new Error('Sidebar should have xl:flex class');if(!cls.includes('xl:flex-col'))throw new Error('Sidebar should have xl:flex-col class');break;}
+          case 'App Tab Bar Mobile CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden class to hide on wide');break;}
+          case 'App Sidebar Hidden Mobile CSS':{const sidebar=document.querySelector('[data-testid="sidebar-nav"]');if(!sidebar)throw new Error('Sidebar nav element not found');const cls=sidebar.className;if(!cls.includes('hidden'))throw new Error('Sidebar should have hidden class for mobile');break;}
+          case 'App Tab Bar Hidden Wide CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden to hide at 1280px+');break;}
+          case 'Review 2-Col Grid CSS':{const el=document.querySelector('[data-testid="review-content"]');if(!el)throw new Error('Review content element not found');const cls=el.className;if(!cls.includes('xl:grid'))throw new Error('Review should have xl:grid class');if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should have xl:grid-cols-2 class');if(!cls.includes('xl:space-y-0'))throw new Error('Review should have xl:space-y-0 to reset stack on wide');break;}
+          case 'Focus Side-by-Side CSS':{const el=document.querySelector('[data-testid="focus-content"]');if(!el)throw new Error('Focus content element not found');const cls=el.className;if(!cls.includes('md:flex'))throw new Error('Focus should have md:flex class for tablet+');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6 class');break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1425,7 +1437,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
   const inSel=selMode&&selSection==='notes';
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {inSel?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>
         :<div className="flex items-center justify-center relative">
           {notes.length>0&&<button onClick={()=>enterSelMode('notes',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1433,7 +1445,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
         </div>}
       </div>
 
-      <div className={`gcard rounded-2xl p-4 ${wide?'capture-input':''}`}>
+      <div className="gcard rounded-2xl p-4 capture-input">
         <div className="flex items-start gap-3">
           <span className="text-sage-400 mt-1 text-lg">•</span>
           <textarea
@@ -1537,7 +1549,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   });
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         {selMode&&selSection==='todos'?<div className="flex items-center justify-center relative"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:
         <div className="flex items-center justify-center relative">
           {todos.length>0&&<button onClick={()=>enterSelMode('todos',null)} className="absolute left-0 w-7 h-7 rounded-md border-2 border-bark-300 dark:border-sand-300 flex items-center justify-center hover:border-sage-400 transition-colors" aria-label="Select items"><span className="sr-only">Select</span></button>}
@@ -1545,8 +1557,8 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
           <div className="absolute right-0 flex items-center gap-2">{doneCount>0&&<button onClick={()=>clearCompleted('todos')} className="px-3 py-1.5 rounded-lg bg-sand-200 dark:bg-bark-600 text-bark-500 dark:text-sand-200 text-xs font-semibold hover:bg-terracotta-100 hover:text-terracotta-500 transition-colors" aria-label="Clear completed tasks">🧹 {doneCount}</button>}<button onClick={()=>setEdit({type:'todo',item:{}})} aria-label="Add new task" className="p-2 rounded-xl bg-sage-400 text-white shadow-sm hover:bg-sage-500 transition-colors"><I.Plus s={20}/></button></div>
         </div>}
       </div>
-      <div className={desk?'md-grid':'space-y-3'}>{content}</div>
-      <div className={desk?'max-w-[calc(50%-0.5rem)]':''}><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
+      <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">{content}</div>
+      <div className="md:max-w-[calc(50%-0.5rem)]"><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
       {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
     </div>
   );
@@ -1581,24 +1593,16 @@ function FocusSection({wide,desk,onTimerTick}){
 
   return(
     <div className="space-y-5">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">🎯 Focus</h2>
       </div>
-      {desk?(
-        <div className="flex gap-6 items-start">
-          <div className="flex-1 min-w-0 space-y-4">
-            <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-            <div className="grid grid-cols-3 gap-2">{statsCards.map((s,i)=><div key={i} className="gcard rounded-xl p-3 text-center"><div className={`text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
-          </div>
-          <div className="flex-1 min-w-0">{renderQueue(true)}</div>
-        </div>
-      ):(
-        <>
+      <div data-testid="focus-content" className="md:flex md:gap-6 md:items-start">
+        <div className="flex-1 min-w-0 space-y-4 md:space-y-4">
           <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
-          <div className="grid grid-cols-3 gap-3 md:gap-4">{statsCards.map((s,i)=><div key={i} className="gcard rounded-2xl p-4 md:p-5 text-center"><div className={`text-2xl md:text-3xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-sm text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
-          <div>{renderQueue(false)}</div>
-        </>
-      )}
+          <div className="grid grid-cols-3 gap-3 md:gap-2">{statsCards.map((s,i)=><div key={i} className="gcard rounded-2xl md:rounded-xl p-4 md:p-3 text-center"><div className={`text-2xl md:text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
+        </div>
+        <div className="flex-1 min-w-0 mt-5 md:mt-0">{renderQueue(desk)}</div>
+      </div>
     </div>
   );
 }
@@ -1659,12 +1663,12 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
   if(lists.length>0&&!lists.find(l=>l.id===selList))setSelList(lists[0].id);
   const cl=lists.find(l=>l.id===selList);
   const otherLists=lists.filter(l=>l.id!==selList);
-  const secondList=desk&&otherLists.length>0?otherLists[0]:null;
+  const secondList=otherLists.length>0?otherLists[0]:null;
 
   if(lists.length===0){
     return(
       <div className="space-y-4">
-        <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+        <div className={`sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100">✅ Confirm</h2>
           </div>
@@ -1677,7 +1681,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
 
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <div className="flex items-center justify-between mb-3">
           {selMode&&selSection==='lists'?<div className="flex items-center justify-center relative w-full"><button onClick={exitSelMode} className="absolute left-0 px-3 py-1.5 bg-sand-200 dark:bg-bark-600 rounded-lg text-bark-600 dark:text-sand-100 text-sm font-semibold">✕ Cancel</button><h2 className="text-lg md:text-xl font-bold text-sage-500">{selIds.size} selected</h2></div>:<>
           <div className="flex items-center justify-center relative w-full">
@@ -1692,15 +1696,11 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
         })}<button onClick={()=>setShowNew(true)} aria-label="Create new list" className="px-4 py-2 rounded-2xl bg-sand-100 dark:bg-bark-600 whitespace-nowrap text-bark-600 dark:text-sand-100 font-semibold"><I.Plus s={18} c="inline"/></button></div>
       </div>
       {showNew&&<div className="flex gap-2 mb-4"><input type="text" value={newList} onChange={e=>setNewList(e.target.value)} placeholder="Checklist name..." className="flex-1 gcard rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100" onKeyDown={e=>{if(e.key==='Enter'&&newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}}/><button onClick={()=>{if(newList.trim()){const id=uid();setLists([...lists,{id,name:newList,items:[]}]);setSelList(id);setNewList('');setShowNew(false);}}} className="px-4 py-2 bg-sage-400 rounded-xl text-white font-semibold">Add</button><button onClick={()=>setShowNew(false)} className="px-3 py-2 gcard rounded-xl text-bark-500" aria-label="Cancel">✕</button></div>}
-      {cl&&!desk&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4"><I.Share s={18}/>Share "{cl.name}"</button>}
-      {desk?(
-        <div className="grid grid-cols-2 gap-6 items-start">
-          <div className="gcard rounded-2xl p-4">{rListContent(cl)}</div>
-          {secondList?<div className="gcard rounded-2xl p-4">{rListContent(secondList,true)}</div>:<div/>}
-        </div>
-      ):(
-        <>{rListContent(cl)}</>
-      )}
+      {cl&&<button onClick={()=>{let t=`📋 ${cl.name}\n${'─'.repeat(20)}\n\n`;[...new Set(cl.items.map(i=>i.section))].forEach(s=>{t+=`【${s}】\n`;cl.items.filter(i=>i.section===s).forEach(i=>{t+=`${i.done?'✅':'☐'} ${i.text}\n`;});t+='\n';});if(navigator.share)navigator.share({title:cl.name,text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);showT('📋 Copied!');}}} className="w-full py-2.5 gcard rounded-2xl text-ocean-400 text-sm font-semibold flex items-center justify-center gap-2 mb-4 md:hidden"><I.Share s={18}/>Share "{cl.name}"</button>}
+      <div className="md:grid md:grid-cols-2 md:gap-6 md:items-start">
+        <div>{rListContent(cl)}</div>
+        {secondList&&<div className="hidden md:block">{rListContent(secondList,true)}</div>}
+      </div>
       {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
       {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
     </div>
@@ -1744,17 +1744,13 @@ function ReviewSection({wide}){
 
   return(
     <div className="space-y-4">
-      <div className={`sticky ${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"} z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
+      <div className={`sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4`}>
         <h2 className="text-lg md:text-xl font-bold text-bark-600 dark:text-sand-100 text-center">📊 Review</h2>
       </div>
-      {wide?(
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-4">{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>{matrixCard}</div>
-          <div className="space-y-4"><Heatmap dHist={dHist} met={met}/>{insightsCard}{actionsCard}</div>
-        </div>
-      ):(
-        <>{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/><Heatmap dHist={dHist} met={met}/>{matrixCard}{insightsCard}{actionsCard}</>
-      )}
+      <div data-testid="review-content" className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">
+        <div className="space-y-4">{weekStats}<Chart data={wkData} label="Weekly Pomodoros 🍅" clr="bg-terracotta-400"/>{matrixCard}</div>
+        <div className="space-y-4"><Heatmap dHist={dHist} met={met}/>{insightsCard}{actionsCard}</div>
+      </div>
     </div>
   );
 }
@@ -1937,62 +1933,48 @@ function App(){
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
 
   return(
-    <div className="min-h-screen">
-      {wide ? (
-        /* ===== WIDE DESKTOP: Sidebar + Main ===== */
-        <div className="flex h-screen overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-56 flex-shrink-0 glass border-r border-sand-200/50 dark:border-bark-500/30 flex flex-col" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
-            <div className="px-5 py-4 border-b border-sand-200/30 dark:border-bark-500/20">
-              <h1 className="text-lg font-extrabold text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-[10px] font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-1.5 py-0.5 rounded-full ml-1">α</span></h1>
-            </div>
-            <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
-              {tabs.map(({id,Ic,l})=>{
-                const isFR=id==='focus'&&timerInfo.run;
-                return(
-                <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
-                  <Ic s={20}/>
-                  <span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>
-                  {isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
-                </button>
-                );
-              })}
-            </nav>
-            <div className="px-3 py-3 border-t border-sand-200/30 dark:border-bark-500/20">
-              <button onClick={()=>setShowHelp(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-bark-400 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50 transition-colors"><I.Help s={18}/><span>Help</span></button>
-            </div>
-          </div>
-          {/* Main content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-8 py-6 mx-auto">
-              {tab==='focus'&&<FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/>}
-              {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
-              {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
-              {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
-              {tab==='review'&&<ReviewSection wide={wide}/>}
-              {tab==='more'&&<SettingsSection desk={desk}/>}
-            </div>
-            {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
-          </div>
+    <div className="min-h-screen xl:flex xl:h-screen xl:overflow-hidden">
+      {/* ===== Sidebar (hidden below 1280px, visible above) ===== */}
+      <div data-testid="sidebar-nav" className="hidden xl:flex xl:flex-col w-56 flex-shrink-0 glass border-r border-sand-200/50 dark:border-bark-500/30" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+        <div className="px-5 py-4 border-b border-sand-200/30 dark:border-bark-500/20">
+          <h1 className="text-lg font-extrabold text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-[10px] font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-1.5 py-0.5 rounded-full ml-1">α</span></h1>
         </div>
-      ) : (
-        /* ===== MOBILE / TABLET: Original stacked layout ===== */
-        <>
-      <div className="glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
-        <div className="w-10 md:w-12"/>
-        <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
-        <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
+        <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
+          {tabs.map(({id,Ic,l})=>{
+            const isFR=id==='focus'&&timerInfo.run;
+            return(
+            <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+              <Ic s={20}/>
+              <span className="flex-1 text-left">{isFR?fmtSidebar(timerInfo.left):l}</span>
+              {isFR&&<span className={`w-2 h-2 rounded-full flex-shrink-0 ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}
+            </button>
+            );
+          })}
+        </nav>
+        <div className="px-3 py-3 border-t border-sand-200/30 dark:border-bark-500/20">
+          <button onClick={()=>setShowHelp(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-bark-400 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50 transition-colors"><I.Help s={18}/><span>Help</span></button>
+        </div>
       </div>
-      <div className="px-4 md:px-8 py-4 md:py-6 pb-28 md:pb-32 max-w-lg md:max-w-5xl mx-auto">
-        {tab==='focus'?<div className="max-w-2xl mx-auto"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>:null}
-        {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
-        {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
-        {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
-        {tab==='review'&&<ReviewSection wide={wide}/>}
-        {tab==='more'&&<SettingsSection desk={desk}/>}
+      {/* ===== Main content area ===== */}
+      <div className="flex-1 xl:overflow-y-auto">
+        {/* Mobile/Tablet header (hidden at 1280px+) */}
+        <div className="glass px-4 md:px-8 py-3 md:py-4 sticky top-0 z-20 flex items-center justify-between xl:hidden" style={{paddingTop:'max(12px, env(safe-area-inset-top))'}}>
+          <div className="w-10 md:w-12"/>
+          <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
+          <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
+        </div>
+        <div className="px-4 md:px-8 xl:px-8 py-4 md:py-6 xl:py-6 pb-28 md:pb-32 xl:pb-6 max-w-lg md:max-w-5xl xl:max-w-none mx-auto">
+          {tab==='focus'&&<div className="max-w-2xl mx-auto xl:max-w-none"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>}
+          {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
+          {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
+          {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
+          {tab==='review'&&<ReviewSection wide={wide}/>}
+          {tab==='more'&&<SettingsSection desk={desk}/>}
+        </div>
+        {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
       </div>
-      {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
-      <div className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
+      {/* ===== Bottom tab bar (hidden at 1280px+) ===== */}
+      <div data-testid="bottom-tab-bar" className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30 xl:hidden" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
         <div className="flex justify-around max-w-lg md:max-w-5xl mx-auto py-2 tab-bar-inner">
           {tabs.map(({id,Ic,l})=>{
             const isFR=id==='focus'&&timerInfo.run;
@@ -2005,8 +1987,6 @@ function App(){
           })}
         </div>
       </div>
-        </>
-      )}
       {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}

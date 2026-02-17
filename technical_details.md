@@ -2,10 +2,10 @@
 
 ## Development Progress Summary
 
-**Last Updated:** February 12, 2026
-**Current Version:** v16.7-Alpha
+**Last Updated:** February 17, 2026
+**Current Version:** v16.8-Alpha
 **Current Model:** Opus 4.6
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1 → v16.6 (Opus 4.6)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1 → v16.7 (Opus 4.6)
 
 ## 📚 Table of Contents
 - [Context for New Session](#-context-for-new-session)
@@ -23,7 +23,7 @@
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** v16.7 — Priority 1 refactoring complete (all 9 steps merged). App is now a thin layout shell.
+- **Current phase:** v16.8 — CSS-only responsive layout complete. All desktop/mobile JSX duplication eliminated.
 - **Working file:** `productivity_hub.html` (~185KB, ~2023 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 - **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
@@ -36,18 +36,21 @@
 - Tablet (768px+): Side-by-side Focus (equal flex-1 cols), 2-col Clarify/Confirm/Settings (flexbox), constrained QuickAdd, Explainer 2-col grid
 - Settings: Theme + Timer + Data + Install as App + Desktop Mode; flexbox 2-col on tablet+ with always-expanded cards; collapsible on mobile
 - Explainer: 7 collapsible accordion sections on mobile, always-expanded 2-col grid on tablet+
-- Test Suite (55 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
+- Test Suite (61 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
 
 ---
 
 ## 📦 Latest Release
 
-**productivity_hub.html** (v16.7-Alpha)
+**productivity_hub.html** (v16.8-Alpha)
 
 ### Release Focus
-- ✅ Refactor Step 9 completed: App is now a thin layout shell (sidebar/tab-bar + content area + modals), with dead state/comment cleanup.
-- ✅ No UI changes in this release; restructuring only.
-- ✅ Canonical full feature inventory is maintained in `## 📞 Context for New Session` above.
+- ✅ **CSS-only responsive layout:** Eliminated all desktop/mobile JSX duplication in App layout, ReviewSection, FocusSection, ConfirmSection, and ClarifySection.
+- ✅ Single JSX tree per component — layout adapts via Tailwind responsive classes (`xl:`, `md:`) instead of JS ternaries.
+- ✅ Sidebar uses `hidden xl:flex`, bottom tab bar uses `xl:hidden`, sticky headers use `xl:top-0`.
+- ✅ `useDesk()`/`useWide()` hooks retained for JS-only logic (drag-and-drop, right-click, compact rendering).
+- ✅ 6 new CSS responsive tests added, 2 existing layout tests updated. **Tests:** 55 → 61.
+- ✅ No visual changes — layout behavior is identical, driven by CSS instead of JS.
 
 ---
 
@@ -208,11 +211,25 @@
 - **Test cleanup:** Removed 7 stale/trivial tests (Reminder CRUD, Wide Desktop Hook, Right-Click Context Menu, Compact Timer CSS, Batch Select Left Position), added 3 new tests (Settings Flexbox Desk, Explainer Collapsible State, Explainer Desktop Always Open), updated Focus Side-by-Side test for `desk` breakpoint
 - **Tests:** 59 → 55 (net reduction from removing stale tests)
 
-### Phase 10: v16.x Refactor (v16.1 - v16.7) — Opus 4.6
-- **Archived summary:** Priority 1 refactor is complete (all 9 steps merged by v16.7); App is now a thin layout shell.
+### Phase 10: v16.x Refactor (v16.1 - v16.8) — Opus 4.6
+- **Archived summary:** Priority 1 refactor complete (v16.1–v16.7). CSS-only responsive layout complete (v16.8).
 - **Tracking note:** Remaining refactor/product work is maintained under `## 🔮 Future Features` → `### 📌 Combined Prioritized Backlog (Refactor + Product Features)`.
 
-### v16.7 ← CURRENT
+### v16.8 ← CURRENT
+- **CSS-only responsive layout:** Eliminated all desktop/mobile JSX duplication. Replaced JS-driven `wide?`/`desk?` layout ternaries with single JSX trees using responsive Tailwind classes.
+  - **App layout:** Single tree — sidebar `hidden xl:flex xl:flex-col`, mobile header `xl:hidden`, bottom tab bar `xl:hidden`, content area with responsive padding/max-width (`xl:px-8 xl:pb-6 xl:max-w-none`)
+  - **ReviewSection:** `space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0` (was `wide?(grid):(stack)`)
+  - **FocusSection:** `md:flex md:gap-6 md:items-start` with responsive stats sizing (was `desk?(flex):(stack)`)
+  - **ConfirmSection:** `md:grid md:grid-cols-2 md:gap-6`, second list `hidden md:block`, share button `md:hidden` (was `desk?(grid):(single)`)
+  - **ClarifySection:** `space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0` for quadrants, `md:max-w-[calc(50%-0.5rem)]` for QuickAdd (was `desk?'md-grid':'space-y-3'`)
+  - **Sticky headers:** All 6 instances changed from `${wide?"top-0 -mx-8":"top-14 md:top-16 -mx-4 md:-mx-8"}` to `top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8`
+  - **CaptureSection:** `capture-input` class always applied (CSS media query scoped to 1280px+)
+- `useDesk()`/`useWide()` hooks retained for JS-only logic: `draggable={desk}`, `renderQueue(desk)`, right-click context menus
+- Added `data-testid` attributes: `sidebar-nav`, `bottom-tab-bar`, `review-content`, `focus-content`
+- **Tests:** 55 → 61 (6 new CSS responsive tests, 2 updated layout tests)
+- No visual changes — layout behavior is identical, now CSS-driven
+
+### v16.7
 - **Refactor Step 9:** App becomes thin layout shell — sidebar/tab-bar + content area + modals only. Removed 34 unused destructured variables from `useApp()`, removed dead PWA state (pwaPrompt, pwaInstalled, pwaStatus, triggerInstall + event listeners), removed stale comments. App now destructures only 18 values from `useApp()` (down from 52). Version bump to v16.7.
 - No UI changes — internal restructuring only
 
@@ -246,23 +263,7 @@
 
 ### 📌 Combined Prioritized Backlog (Refactor + Product Features)
 
-1. `P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**
-   Refactor duplicated branches in Focus, Review, Settings, and main layout into single responsive JSX.
-
-   **Implementation:**
-   - **App layout** (current `wide ? (...) : (...)` ternary): Render a single JSX tree. Sidebar uses `hidden xl:flex xl:flex-col` (hidden below 1280px, visible above). Bottom tab bar uses `xl:hidden` (visible below 1280px, hidden above). Main content adjusts via responsive Tailwind (`xl:pl-56 xl:pt-0` vs `pt-14 pb-28`). Eliminates the entire wide ternary.
-   - **ReviewSection** (current `wide?(grid):(stack)`): Replace with single container `<div className="space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0">`. Already uses shared card variables (`weekStats`, `matrixCard`, etc.) — layout becomes CSS-only.
-   - **FocusSection** (current `desk?(flex):(stack)`): Replace with `<div className="md:flex md:gap-6">` + responsive classes on children. Use `renderQueue(compact)` with CSS-driven compact sizing.
-   - **ConfirmSection** (current `desk?(grid):(single)`): Replace with `md:grid md:grid-cols-2 md:gap-6`, conditionally render `secondList` based on data (not layout branch).
-   - Keep `useDesk()`/`useWide()` hooks for JS-only logic (drag-and-drop, right-click context menus) — they stop driving JSX layout branching.
-
-   **TDD — Write these tests first:**
-   - `App renders sidebar nav on wide viewport` — verify sidebar element visible at 1280px+
-   - `App renders bottom tab bar on mobile viewport` — verify tab bar visible below 1280px
-   - `App hides sidebar on mobile` — verify sidebar hidden below 1280px
-   - `App hides bottom tab bar on wide` — verify tab bar hidden at 1280px+
-   - `ReviewSection renders 2-col grid on wide` — verify grid layout class applied at xl breakpoint
-   - `FocusSection renders side-by-side on tablet+` — verify flex layout active at md breakpoint
+1. ~~`P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**~~ ✅ **COMPLETED in v16.8**
 
 2. `P0` **Unified ContextMenu + ConfirmDialog**
    Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
@@ -364,19 +365,19 @@
 
 ### 📋 Implementation Order (TDD Approach)
 
-For each step below: **(1)** write the TDD tests first, **(2)** run tests (expect failures), **(3)** implement the feature, **(4)** verify all tests pass, **(5)** run full test suite (55+ tests).
+For each step below: **(1)** write the TDD tests first, **(2)** run tests (expect failures), **(3)** implement the feature, **(4)** verify all tests pass, **(5)** run full test suite (61+ tests).
 
-| Order | Item | Rationale |
-|-------|------|-----------|
-| 1st | Unified ContextMenu + ConfirmDialog (P0 #2) | Foundation — creates shared components used by later steps |
-| 2nd | StickyHeader + CSS class abstraction (P1 #3) | Creates shared `StickyHeader` component + CSS classes used everywhere |
-| 3rd | Eliminate desktop/mobile JSX duplication (P0 #1) | Biggest structural change — benefits from shared components already in place |
-| 4th | UI smoothness pass (P1 #4) | Polish layer — adds animations/debounce on top of clean structure |
-| 5th | Lazy-load test suite (P1 #5) | Independent, low-risk — can be done last |
+| Order | Item | Status |
+|-------|------|--------|
+| 1st | ~~Eliminate desktop/mobile JSX duplication (P0 #1)~~ | ✅ **Done — v16.8** |
+| 2nd | Unified ContextMenu + ConfirmDialog (P0 #2) | Pending |
+| 3rd | StickyHeader + CSS class abstraction (P1 #3) | Pending |
+| 4th | UI smoothness pass (P1 #4) | Pending |
+| 5th | Lazy-load test suite (P1 #5) | Pending |
 
 **Versioning:**
-- Steps 1 + 2 → **v16.8** (shared components + CSS abstraction)
-- Step 3 → **v16.9** (CSS-only responsive layout — biggest structural change)
+- ~~Step 1 → **v16.8**~~ ✅ (CSS-only responsive layout — completed)
+- Steps 2 + 3 → **v16.9** (shared components + CSS abstraction)
 - Steps 4 + 5 → **v17.0** (smoothness + lazy-load = user-facing polish, major version bump)
 
 6. `P2` **Recurring Tasks**  
@@ -405,7 +406,7 @@ For each step below: **(1)** write the TDD tests first, **(2)** run tests (expec
 - **Rule:** Small features increment minor (15_1 → 15_2), big features increment major (15 → 16)
 - **Format:** `v16-Alpha`, `v15_1-Alpha`, etc.
 - **Alpha tag:** Current release stage
-- **Current:** v16.7 (Priority 1 refactoring complete — all 9 steps merged)
+- **Current:** v16.8 (CSS-only responsive layout — all desktop/mobile JSX duplication eliminated)
 
 ### UI Patterns Established (v15+)
 - **⋮ 3-dot menu:** Always-visible vertical dots on every item (Capture notes, Clarify tasks, Confirm checklist items)
@@ -419,7 +420,7 @@ For each step below: **(1)** write the TDD tests first, **(2)** run tests (expec
 - **Glass effect:** Backdrop blur for headers/modals
 - **Empty states:** Illustrated SVG + helpful message
 - **Quick-add bars:** Bottom input with auto-focus
-- **Sticky headers:** `top-0` on wide (no fixed header), `top-14/16` on mobile
+- **Sticky headers:** CSS-only responsive — `top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8` (no JS branching)
 - **Batch selection:** Header checkbox → checkboxes + bulk action bar
 - **Bullet journal notes:** Day sections + Enter-to-add + tap-to-edit + ⋮ NoteMenu (Edit, Copy Text, Promote, Strikethrough, Delete) + auto-clear
 - **Matrix drag-and-drop:** HTML5 Drag API (desktop only) for quadrant re-prioritization
@@ -555,7 +556,7 @@ Removed: arc, reminders, Swipe component
 | `TaskMenu` | 3-dot task menu in Clarify (Edit, Done/Undone, Focus, Link, Delete) |
 | `NoteMenu` | 3-dot note menu in Capture (Edit, Copy Text, Promote to Clarify, Strikethrough, Delete) |
 | `LinkPicker` | Modal to link/unlink/create checklists for tasks |
-| `TestRunner` | Test suite (55 tests, 9 categories) |
+| `TestRunner` | Test suite (61 tests, 10 categories) |
 | `QuickAdd` / `Chart` | Input, visualization |
 | `ListMenu` / `DeleteConfirmation` / `Subtasks` | List management |
 | `Empty.*` / `ThemeProv` / `I.*` | Empty states, theme, icons (includes MoreV) |
