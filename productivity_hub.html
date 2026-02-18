@@ -1262,6 +1262,7 @@ const TestRunner=({onShowToast})=>{
   const runTests=async()=>{
     setRunning(true);
     setResults(null);
+    window.__PH_TEST_MODE=true;
 
     const tests=getTestCases();
     const invalidTierTests=tests.filter(t=>!TIER_ORDER.includes(t.tier));
@@ -1394,9 +1395,10 @@ const TestRunner=({onShowToast})=>{
         await S.clr();
         await S.imp(originalData);
       }catch{}
+    }finally{
+      window.__PH_TEST_MODE=false;
+      setRunning(false);
     }
-
-    setRunning(false);
   };
 
   const generateReport=()=>results?buildReportText(results):'';
@@ -1517,14 +1519,17 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
   }).current;
   
   const timerDone=useRef(()=>{
+    const isTestMode=!!window.__PH_TEST_MODE;
     dispatch({type:'SET_RUN',run:false});
-    if('vibrate'in navigator)navigator.vibrate([200,100,200]);
-    try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=700;o.start();o.stop(c.currentTime+0.4);}catch{}
+    if(!isTestMode){
+      if('vibrate'in navigator)navigator.vibrate([200,100,200]);
+      try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=700;o.start();o.stop(c.currentTime+0.4);}catch{}
+    }
     if(mode==='work'){
       onComplete(mode,activeTaskId,()=>switchMode(onUpdatePoms()%4===0?'longBreak':'shortBreak'));
     }else{
       switchMode('work');
-      notify('☀️ Break Complete!','Ready to focus again?');
+      if(!isTestMode)notify('☀️ Break Complete!','Ready to focus again?');
     }
   }).current;
   
