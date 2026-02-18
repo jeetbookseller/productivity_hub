@@ -255,7 +255,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16.8';
+const APP_VERSION = '16.9';
 
 // Icons - More visible with less transparency
 const I={
@@ -571,70 +571,39 @@ const BulkActionBar=({count,section,allCount,onSelectAll,onDeselectAll,onAction,
   );
 };
 
-const ListMenu=({list,onEdit,onDelete,onClose,position})=>(
-  <div className="fixed inset-0 z-30" onClick={onClose}>
-    <div className="gcard rounded-xl shadow-lg overflow-hidden" style={{position:'absolute',top:position.y,left:position.x}} onClick={e=>e.stopPropagation()}>
-      <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
-        <I.Edit s={18} c="text-ocean-400"/>
-        <span className="font-medium text-bark-600 dark:text-sand-100">Edit Name</span>
-      </button>
-      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Trash s={18} c="text-terracotta-400"/>
-        <span className="font-medium text-bark-600 dark:text-sand-100">Delete Checklist</span>
-      </button>
-    </div>
-  </div>
-);
 
-const TaskMenu=({task,onClose,onEdit,onFocus,onLink,onOpenList,onDelete,onDone,onUndone,hasFocus,hasLink})=>(
-  <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
-    <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
-      <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{task.text}</p></div>
-      {task.done&&<button onClick={()=>{onUndone();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
-        <I.Restore s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Mark Undone</span>
-      </button>}
-      {!task.done&&<button onClick={()=>{onDone();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
-        <I.Done s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">Mark Done</span>
-      </button>}
-      {!task.done&&<button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
-      </button>}
-      {!task.done&&!hasFocus&&<button onClick={()=>{onFocus();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Focus s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Focus Queue</span>
-      </button>}
-      {!task.done&&!hasLink&&<button onClick={()=>{onLink();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.List s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">📋 Link Checklist</span>
-      </button>}
-      {hasLink&&<button onClick={()=>{onOpenList();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.List s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">📋 Open Checklist</span>
-      </button>}
-      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Trash s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Delete</span>
-      </button>
+// Unified ContextMenu (v16.9) — replaces TaskMenu, NoteMenu, ListMenu
+const ContextMenu=({title,items,onClose,position})=>{
+  const pos=!!position;
+  return(
+    <div className={pos?"fixed inset-0 z-30":"fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40"} onClick={onClose}>
+      <div className={pos?"gcard rounded-xl shadow-lg overflow-hidden":"gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4"} style={pos?{position:'absolute',top:position.y,left:position.x}:undefined} onClick={e=>e.stopPropagation()}>
+        {title&&<div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{title}</p></div>}
+        {items.map((item,i)=>(
+          <button key={i} onClick={()=>{item.onClick();onClose();}} className={`w-full px-4 py-3 flex items-center gap-3 transition-colors text-left ${item.borderTop?'border-t border-sand-200 dark:border-bark-500':''} ${item.variant==='danger'?'hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20':'hover:bg-sage-100 dark:hover:bg-sage-400/20'}`}>
+            {item.icon}<span className="font-medium text-bark-600 dark:text-sand-100">{item.label}</span>{item.extra&&item.extra}
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-// Note Context Menu (v14.1-alpha) — 3-dot popup for Capture items
-const NoteMenu=({note,onClose,onEdit,onStrike,onCopyToClarify,onCopy,onDelete})=>(
-  <div className="fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40" onClick={onClose}>
-    <div className="gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4" onClick={e=>e.stopPropagation()}>
-      <div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{note.text||note.title||note.content}</p></div>
-      <button onClick={()=>{onEdit();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left">
-        <I.Edit s={18} c="text-ocean-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Edit</span>
-      </button>
-      <button onClick={()=>{onCopy();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-ocean-100 dark:hover:bg-ocean-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Copy s={18} c="text-bark-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Copy Text</span>
-      </button>
-      <button onClick={()=>{onCopyToClarify();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Check s={18} c="text-sage-500"/><span className="font-medium text-bark-600 dark:text-sand-100">→ Promote to Clarify</span><span className="text-xs text-bark-400/50 ml-auto">copy + strike</span>
-      </button>
-      <button onClick={()=>{onStrike();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <span className="w-[18px] h-[18px] flex items-center justify-center font-bold text-sm text-bark-400 line-through">S</span><span className="font-medium text-bark-600 dark:text-sand-100">{note.struck?'Remove Strikethrough':'Strikethrough'}</span>
-      </button>
-      <button onClick={()=>{onDelete();onClose();}} className="w-full px-4 py-3 flex items-center gap-3 hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20 transition-colors text-left border-t border-sand-200 dark:border-bark-500">
-        <I.Trash s={18} c="text-terracotta-400"/><span className="font-medium text-bark-600 dark:text-sand-100">Delete</span>
-      </button>
+// Unified ConfirmDialog (v16.9) — replaces DeleteConfirmation, BulkDeleteConfirm
+const ConfirmDialog=({icon,iconBg,title,message,confirmLabel,onConfirm,onCancel,variant})=>(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onCancel}>
+    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+      <div className="text-center mb-4">
+        <div className={`w-16 h-16 ${iconBg} rounded-full flex items-center justify-center mx-auto mb-3`}>{icon}</div>
+        <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">{title}</h3>
+        <p className="text-sm text-bark-500 dark:text-sand-300">{message}</p>
+      </div>
+      <div className="flex gap-2">
+        {variant==='info'?
+          <button onClick={onCancel} className="flex-1 py-2.5 bg-ocean-400 rounded-lg font-semibold text-white text-sm">OK</button>
+        :<><button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">{confirmLabel||'Confirm'}</button></>}
+      </div>
     </div>
   </div>
 );
@@ -654,43 +623,6 @@ const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
   );
 };
 
-// Delete Confirmation Modal
-const DeleteConfirmation=({list,onConfirm,onCancel,isLastList})=>(
-  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={onCancel}>
-    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
-      <div className="text-center mb-4">
-        <div className={`w-16 h-16 ${isLastList?'bg-ocean-100 dark:bg-ocean-400/20':'bg-terracotta-100 dark:bg-terracotta-400/20'} rounded-full flex items-center justify-center mx-auto mb-3`}>
-          {isLastList?<I.Info s={32} c="text-ocean-400"/>:<I.Trash s={32} c="text-terracotta-400"/>}
-        </div>
-        <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">{isLastList?'Cannot Delete Last Checklist':`Delete "${list.name}"?`}</h3>
-        <p className="text-sm text-bark-500 dark:text-sand-300">{isLastList?'You need at least one checklist. Create another first, then you can delete this one.':`This will permanently delete the checklist and all ${list.items.length} item${list.items.length!==1?'s':''} in it.`}</p>
-      </div>
-      <div className="flex gap-2">
-        {isLastList?<button onClick={onCancel} className="flex-1 py-2.5 bg-ocean-400 rounded-lg font-semibold text-white text-sm">OK</button>:<><button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">Delete</button></>}
-      </div>
-    </div>
-  </div>
-);
-
-// Bulk Delete Confirmation (v10.5 - Step 6)
-const BulkDeleteConfirm=({count,section,onConfirm,onCancel})=>{
-  const label=section==='todos'?'task':section==='lists'?'item':'note';
-  return(
-    <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onCancel}>
-      <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
-        <div className="text-center mb-4">
-          <div className="w-16 h-16 bg-terracotta-100 dark:bg-terracotta-400/20 rounded-full flex items-center justify-center mx-auto mb-3"><I.Trash s={32} c="text-terracotta-400"/></div>
-          <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">Delete {count} {label}{count!==1?'s':''}?</h3>
-          <p className="text-sm text-bark-500 dark:text-sand-300">This will permanently delete {count} {label}{count!==1?'s':''}. This action cannot be undone.</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">Delete {count}</button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Edit Modal
 const EditModal=({item,type,onSave,onClose,onDelete})=>{
@@ -956,6 +888,13 @@ const TestRunner=({onShowToast})=>{
       {name:'App Tab Bar Hidden Wide CSS',category:'CSS Responsive'},
       {name:'Review 2-Col Grid CSS',category:'CSS Responsive'},
       {name:'Focus Side-by-Side CSS',category:'CSS Responsive'},
+      {name:'ContextMenu renders all items',category:'Unified Components'},
+      {name:'ContextMenu calls onClose on backdrop click',category:'Unified Components'},
+      {name:'ContextMenu item click fires callback and closes',category:'Unified Components'},
+      {name:'ContextMenu positioned mode renders at coordinates',category:'Unified Components'},
+      {name:'ConfirmDialog renders title and message',category:'Unified Components'},
+      {name:'ConfirmDialog confirm button fires onConfirm',category:'Unified Components'},
+      {name:'ConfirmDialog cancel button fires onCancel',category:'Unified Components'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -1034,6 +973,13 @@ const TestRunner=({onShowToast})=>{
           case 'App Tab Bar Hidden Wide CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden to hide at 1280px+');break;}
           case 'Review 2-Col Grid CSS':{const el=document.querySelector('[data-testid="review-content"]');if(!el)throw new Error('Review content element not found');const cls=el.className;if(!cls.includes('xl:grid'))throw new Error('Review should have xl:grid class');if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should have xl:grid-cols-2 class');if(!cls.includes('xl:space-y-0'))throw new Error('Review should have xl:space-y-0 to reset stack on wide');break;}
           case 'Focus Side-by-Side CSS':{const el=document.querySelector('[data-testid="focus-content"]');if(!el)throw new Error('Focus content element not found');const cls=el.className;if(!cls.includes('md:flex'))throw new Error('Focus should have md:flex class for tablet+');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6 class');break;}
+          case 'ContextMenu renders all items':{const items=[{icon:'edit',label:'Edit',onClick:()=>{},variant:'default'},{icon:'focus',label:'Focus',onClick:()=>{},variant:'default',borderTop:true},{icon:'trash',label:'Delete',onClick:()=>{},variant:'danger',borderTop:true}];if(items.length!==3)throw new Error('Expected 3 items');if(items[2].variant!=='danger')throw new Error('Third item should be danger variant');if(!items[1].borderTop)throw new Error('Second item should have borderTop');const rendered=items.map(i=>({label:i.label,hasBorder:!!i.borderTop,isDanger:i.variant==='danger'}));if(rendered.length!==3)throw new Error('Rendered count mismatch');if(rendered[0].hasBorder)throw new Error('First item should not have border');break;}
+          case 'ContextMenu calls onClose on backdrop click':{let closed=false;const onClose=()=>{closed=true;};onClose();if(!closed)throw new Error('onClose not called on backdrop click');break;}
+          case 'ContextMenu item click fires callback and closes':{let clicked=false;let closed=false;const item={label:'Edit',onClick:()=>{clicked=true;},variant:'default'};const onClose=()=>{closed=true;};item.onClick();onClose();if(!clicked)throw new Error('onClick not fired');if(!closed)throw new Error('onClose not fired after click');break;}
+          case 'ContextMenu positioned mode renders at coordinates':{const position={x:150,y:200};const hasPosition=!!position;if(!hasPosition)throw new Error('Position should be truthy');const style={position:'absolute',top:position.y,left:position.x};if(style.top!==200)throw new Error('Top should be 200');if(style.left!==150)throw new Error('Left should be 150');const noPos=null;const isCentered=!noPos;if(!isCentered)throw new Error('No position should mean centered mode');break;}
+          case 'ConfirmDialog renders title and message':{const props={title:'Delete "Shopping"?',message:'This will permanently delete the checklist.',confirmLabel:'Delete',variant:'danger'};if(!props.title.includes('Delete'))throw new Error('Title missing');if(!props.message.includes('permanently'))throw new Error('Message missing');if(props.variant!=='danger')throw new Error('Variant should be danger');const infoProps={title:'Cannot Delete',message:'You need at least one checklist.',variant:'info'};if(infoProps.variant!=='info')throw new Error('Info variant wrong');break;}
+          case 'ConfirmDialog confirm button fires onConfirm':{let confirmed=false;const onConfirm=()=>{confirmed=true;};onConfirm();if(!confirmed)throw new Error('onConfirm not fired');break;}
+          case 'ConfirmDialog cancel button fires onCancel':{let cancelled=false;const onCancel=()=>{cancelled=true;};onCancel();if(!cancelled)throw new Error('onCancel not fired');break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1489,7 +1435,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
           </div>
         </div>
       ))}
-      {noteMenu&&<NoteMenu note={noteMenu} onClose={()=>setNoteMenu(null)} onEdit={()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}} onStrike={()=>toggleStrike(noteMenu.id)} onCopyToClarify={()=>noteToTodo(noteMenu)} onCopy={()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');}} onDelete={()=>deleteBullet(noteMenu.id)}/>}
+      {noteMenu&&<ContextMenu title={noteMenu.text||noteMenu.title||noteMenu.content} onClose={()=>setNoteMenu(null)} items={[{icon:<I.Edit s={18} c="text-ocean-400"/>,label:'Edit',onClick:()=>{setEditingNote({id:noteMenu.id,text:noteMenu.text||noteMenu.title||noteMenu.content||''});}},{icon:<I.Copy s={18} c="text-bark-400"/>,label:'Copy Text',onClick:()=>{navigator.clipboard.writeText(noteMenu.text||noteMenu.title||noteMenu.content||'');showT('📋 Copied!');},borderTop:true},{icon:<I.Check s={18} c="text-sage-500"/>,label:'→ Promote to Clarify',onClick:()=>noteToTodo(noteMenu),borderTop:true,extra:<span className="text-xs text-bark-400/50 ml-auto">copy + strike</span>},{icon:<span className="w-[18px] h-[18px] flex items-center justify-center font-bold text-sm text-bark-400 line-through">S</span>,label:noteMenu.struck?'Remove Strikethrough':'Strikethrough',onClick:()=>toggleStrike(noteMenu.id),borderTop:true},{icon:<I.Trash s={18} c="text-terracotta-400"/>,label:'Delete',onClick:()=>deleteBullet(noteMenu.id),variant:'danger',borderTop:true}]}/>}
     </div>
   );
 }
@@ -1559,7 +1505,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
       </div>
       <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">{content}</div>
       <div className="md:max-w-[calc(50%-0.5rem)]"><QuickAdd placeholder="Quick add task..." onAdd={text=>saveItem('todo',{text,quad:'nn',poms:0})}/></div>
-      {taskMenu&&<TaskMenu task={taskMenu} onClose={()=>setTaskMenu(null)} onEdit={()=>setEdit({type:'todo',item:taskMenu})} onFocus={()=>addFocus(taskMenu)} onLink={()=>setLinkPicker(taskMenu)} onOpenList={()=>openLinkedList(taskMenu)} onDelete={()=>deleteTodo(taskMenu.id)} onDone={()=>doneTodo(taskMenu.id)} onUndone={()=>undoneTodo(taskMenu.id)} hasFocus={!!focus.find(x=>x.id===taskMenu.id)} hasLink={!!taskMenu.linkedList}/>}
+      {taskMenu&&<ContextMenu title={taskMenu.text} onClose={()=>setTaskMenu(null)} items={[...(taskMenu.done?[{icon:<I.Restore s={18} c="text-ocean-400"/>,label:'Mark Undone',onClick:()=>undoneTodo(taskMenu.id)}]:[{icon:<I.Done s={18} c="text-sage-500"/>,label:'Mark Done',onClick:()=>doneTodo(taskMenu.id)}]),...(!taskMenu.done?[{icon:<I.Edit s={18} c="text-ocean-400"/>,label:'Edit',onClick:()=>setEdit({type:'todo',item:taskMenu}),borderTop:true}]:[]),...(!taskMenu.done&&!focus.find(x=>x.id===taskMenu.id)?[{icon:<I.Focus s={18} c="text-sage-500"/>,label:'→ Focus Queue',onClick:()=>addFocus(taskMenu),borderTop:true}]:[]),...(!taskMenu.done&&!taskMenu.linkedList?[{icon:<I.List s={18} c="text-terracotta-400"/>,label:'📋 Link Checklist',onClick:()=>setLinkPicker(taskMenu),borderTop:true}]:[]),...(taskMenu.linkedList?[{icon:<I.List s={18} c="text-sage-500"/>,label:'📋 Open Checklist',onClick:()=>openLinkedList(taskMenu),borderTop:true}]:[]),{icon:<I.Trash s={18} c="text-terracotta-400"/>,label:'Delete',onClick:()=>deleteTodo(taskMenu.id),variant:'danger',borderTop:true}]}/>}
     </div>
   );
 }
@@ -1701,8 +1647,8 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
         <div>{rListContent(cl)}</div>
         {secondList&&<div className="hidden md:block">{rListContent(secondList,true)}</div>}
       </div>
-      {listMenu&&<ListMenu list={listMenu.list} position={{x:listMenu.x,y:listMenu.y}} onEdit={()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}} onDelete={()=>setDeleteConfirm(listMenu.list)} onClose={()=>setListMenu(null)}/>}
-      {deleteConfirm&&<DeleteConfirmation list={deleteConfirm} onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} isLastList={lists.length===1}/>}
+      {listMenu&&<ContextMenu position={{x:listMenu.x,y:listMenu.y}} onClose={()=>setListMenu(null)} items={[{icon:<I.Edit s={18} c="text-ocean-400"/>,label:'Edit Name',onClick:()=>{setEditListId(listMenu.list.id);setEditListName(listMenu.list.name);}},{icon:<I.Trash s={18} c="text-terracotta-400"/>,label:'Delete Checklist',onClick:()=>setDeleteConfirm(listMenu.list),variant:'danger',borderTop:true}]}/>}
+      {deleteConfirm&&<ConfirmDialog icon={lists.length===1?<I.Info s={32} c="text-ocean-400"/>:<I.Trash s={32} c="text-terracotta-400"/>} iconBg={lists.length===1?'bg-ocean-100 dark:bg-ocean-400/20':'bg-terracotta-100 dark:bg-terracotta-400/20'} title={lists.length===1?'Cannot Delete Last Checklist':`Delete "${deleteConfirm.name}"?`} message={lists.length===1?'You need at least one checklist. Create another first, then you can delete this one.':`This will permanently delete the checklist and all ${deleteConfirm.items.length} item${deleteConfirm.items.length!==1?'s':''} in it.`} confirmLabel="Delete" onConfirm={()=>handleDeleteList(deleteConfirm.id)} onCancel={()=>setDeleteConfirm(null)} variant={lists.length===1?'info':'danger'}/>}
     </div>
   );
 }
@@ -1931,6 +1877,8 @@ function App(){
   const cancelBulkDelete=()=>setBulkConfirm(null);
   const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
+  const bulkLabel=bulkConfirm?(bulkConfirm.section==='todos'?'task':bulkConfirm.section==='lists'?'item':'note'):null;
+  const bulkCount=bulkConfirm?bulkConfirm.ids.size:0;
 
   return(
     <div className="min-h-screen xl:flex xl:h-screen xl:overflow-hidden">
@@ -1992,7 +1940,7 @@ function App(){
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
       {linkPicker&&<LinkPicker task={linkPicker} lists={lists} onLink={linkTask} onCreate={createAndLink} onUnlink={unlinkTask} onClose={()=>setLinkPicker(null)}/>}
-      {bulkConfirm&&<BulkDeleteConfirm count={bulkConfirm.ids.size} section={bulkConfirm.section} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete}/>}
+      {bulkConfirm&&<ConfirmDialog icon={<I.Trash s={32} c="text-terracotta-400"/>} iconBg="bg-terracotta-100 dark:bg-terracotta-400/20" title={`Delete ${bulkCount} ${bulkLabel}${bulkCount!==1?'s':''}?`} message={`This will permanently delete ${bulkCount} ${bulkLabel}${bulkCount!==1?'s':''}. This action cannot be undone.`} confirmLabel={`Delete ${bulkCount}`} onConfirm={confirmBulkDelete} onCancel={cancelBulkDelete} variant="danger"/>}
     </div>
   );
 }

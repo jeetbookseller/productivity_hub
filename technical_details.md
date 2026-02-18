@@ -2,10 +2,10 @@
 
 ## Development Progress Summary
 
-**Last Updated:** February 17, 2026
-**Current Version:** v16.8-Alpha
+**Last Updated:** February 18, 2026
+**Current Version:** v16.9-Alpha
 **Current Model:** Opus 4.6
-**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1 → v16.7 (Opus 4.6)
+**Previous Versions:** v6 → v9.8 (Sonnet 4.5), v10.0-alpha → v11.2-alpha (Opus 4.5), v12.0-alpha → v12.7-alpha (Opus 4.6), v14-Beta (Opus 4.6), v15-Alpha → v15_5-Alpha (Opus 4.6), v15_6 → v16-Alpha (Opus 4.6), v16.1 → v16.8 (Opus 4.6)
 
 ## 📚 Table of Contents
 - [Context for New Session](#-context-for-new-session)
@@ -23,7 +23,7 @@
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental str_replace edits
-- **Current phase:** v16.8 — CSS-only responsive layout complete. All desktop/mobile JSX duplication eliminated.
+- **Current phase:** v16.9 — Unified ContextMenu + ConfirmDialog complete. 5 bespoke menu/dialog components replaced with 2 reusable shared components.
 - **Working file:** `productivity_hub.html` (~185KB, ~2023 lines)
 - **Key constraint:** Output token limits require incremental edits, not full-file rewrites
 - **Encoding note:** File had double-encoded UTF-8 emojis (cp1252→UTF-8 chain). Fixed in v15_4.
@@ -36,21 +36,22 @@
 - Tablet (768px+): Side-by-side Focus (equal flex-1 cols), 2-col Clarify/Confirm/Settings (flexbox), constrained QuickAdd, Explainer 2-col grid
 - Settings: Theme + Timer + Data + Install as App + Desktop Mode; flexbox 2-col on tablet+ with always-expanded cards; collapsible on mobile
 - Explainer: 7 collapsible accordion sections on mobile, always-expanded 2-col grid on tablet+
-- Test Suite (61 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
+- Test Suite (68 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
 
 ---
 
 ## 📦 Latest Release
 
-**productivity_hub.html** (v16.8-Alpha)
+**productivity_hub.html** (v16.9-Alpha)
 
 ### Release Focus
-- ✅ **CSS-only responsive layout:** Eliminated all desktop/mobile JSX duplication in App layout, ReviewSection, FocusSection, ConfirmSection, and ClarifySection.
-- ✅ Single JSX tree per component — layout adapts via Tailwind responsive classes (`xl:`, `md:`) instead of JS ternaries.
-- ✅ Sidebar uses `hidden xl:flex`, bottom tab bar uses `xl:hidden`, sticky headers use `xl:top-0`.
-- ✅ `useDesk()`/`useWide()` hooks retained for JS-only logic (drag-and-drop, right-click, compact rendering).
-- ✅ 6 new CSS responsive tests added, 2 existing layout tests updated. **Tests:** 55 → 61.
-- ✅ No visual changes — layout behavior is identical, driven by CSS instead of JS.
+- ✅ **Unified ContextMenu component:** Replaces `TaskMenu`, `NoteMenu`, and `ListMenu` with a single reusable `ContextMenu({title, items, onClose, position})` component. Two rendering modes: centered modal (no position) and positioned popup (with position).
+- ✅ **Unified ConfirmDialog component:** Replaces `DeleteConfirmation` and `BulkDeleteConfirm` with a single `ConfirmDialog({icon, iconBg, title, message, confirmLabel, onConfirm, onCancel, variant})` component. Supports `danger` (two-button) and `info` (single OK button) variants.
+- ✅ Items array pattern: `[{icon, label, onClick, variant, borderTop, extra}]` enables fully data-driven menu construction.
+- ✅ Callers updated in `CaptureSection`, `ClarifySection`, `ConfirmSection`, and `App`.
+- ✅ 5 components removed (`TaskMenu`, `NoteMenu`, `ListMenu`, `DeleteConfirmation`, `BulkDeleteConfirm`), 2 added (`ContextMenu`, `ConfirmDialog`).
+- ✅ **Tests:** 61 → 68 (7 new Unified Components tests).
+- ✅ No visual changes — menus and dialogs render identically to before.
 
 ---
 
@@ -215,7 +216,16 @@
 - **Archived summary:** Priority 1 refactor complete (v16.1–v16.7). CSS-only responsive layout complete (v16.8).
 - **Tracking note:** Remaining refactor/product work is maintained under `## 🔮 Future Features` → `### 📌 Combined Prioritized Backlog (Refactor + Product Features)`.
 
-### v16.8 ← CURRENT
+### v16.9 ← CURRENT
+- **Unified ContextMenu + ConfirmDialog:** Replaced 5 bespoke menu/dialog components with 2 reusable shared components.
+  - `ContextMenu({title, items, onClose, position})` — data-driven context menu. Centered modal mode (no position) or positioned popup mode (with position). Items: `[{icon, label, onClick, variant, borderTop, extra}]`.
+  - `ConfirmDialog({icon, iconBg, title, message, confirmLabel, onConfirm, onCancel, variant})` — unified confirm dialog. `variant:'danger'` for delete confirmations, `variant:'info'` for single OK button.
+  - Removed: `TaskMenu`, `NoteMenu`, `ListMenu`, `DeleteConfirmation`, `BulkDeleteConfirm`
+  - Updated callers: `CaptureSection` (NoteMenu → ContextMenu), `ClarifySection` (TaskMenu → ContextMenu), `ConfirmSection` (ListMenu → ContextMenu, DeleteConfirmation → ConfirmDialog), `App` (BulkDeleteConfirm → ConfirmDialog)
+- **Tests:** 61 → 68 (7 new tests in 'Unified Components' category)
+- No visual changes — all menus and dialogs render identically
+
+### v16.8
 - **CSS-only responsive layout:** Eliminated all desktop/mobile JSX duplication. Replaced JS-driven `wide?`/`desk?` layout ternaries with single JSX trees using responsive Tailwind classes.
   - **App layout:** Single tree — sidebar `hidden xl:flex xl:flex-col`, mobile header `xl:hidden`, bottom tab bar `xl:hidden`, content area with responsive padding/max-width (`xl:px-8 xl:pb-6 xl:max-w-none`)
   - **ReviewSection:** `space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0` (was `wide?(grid):(stack)`)
@@ -265,31 +275,7 @@
 
 1. ~~`P0` **Eliminate desktop/mobile JSX duplication (CSS-only responsive)**~~ ✅ **COMPLETED in v16.8**
 
-2. `P0` **Unified ContextMenu + ConfirmDialog**
-   Replace TaskMenu/NoteMenu/ListMenu and delete-confirm variants with reusable shared components.
-
-   **Implementation:**
-   - Create `ContextMenu({title, items, onClose, position})` component:
-     - `items` array: `[{icon: <Component/>, label: 'Edit', onClick: fn, variant: 'default'|'danger', borderTop: bool}]`
-     - If `position` prop provided → render positioned popup (like current `ListMenu`): absolute positioning, no backdrop blur
-     - If no `position` → render centered fullscreen modal (like current `TaskMenu`/`NoteMenu`): `fixed inset-0 bg-bark-700/40 backdrop-blur-sm` overlay
-     - Shared button class defined once: `w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-100 dark:hover:bg-sage-400/20 transition-colors text-left`
-     - `variant: 'danger'` → uses `hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20` instead
-     - Preserve `anim-in` entrance animation and `gcard` styling
-   - Create `ConfirmDialog({icon, iconBg, title, message, confirmLabel, onConfirm, onCancel, variant})` component:
-     - Replaces both `DeleteConfirmation` and `BulkDeleteConfirm`
-     - Renders: icon circle + title + message + Cancel/Confirm buttons
-     - `variant: 'danger'` → terracotta confirm button; `variant: 'info'` → single OK button (for "cannot delete last list")
-   - Replace callers in `CaptureSection` (NoteMenu), `ClarifySection` (TaskMenu), `ConfirmSection` (ListMenu, DeleteConfirmation), and `App` (BulkDeleteConfirm) — each passes its own items array
-
-   **TDD — Write these tests first:**
-   - `ContextMenu renders all items` — pass 3 items, assert 3 buttons rendered
-   - `ContextMenu calls onClose on backdrop click` — simulate backdrop click, verify onClose called
-   - `ContextMenu item click fires callback and closes` — click item, verify onClick + onClose called
-   - `ContextMenu positioned mode renders at coordinates` — pass position, verify absolute positioning
-   - `ConfirmDialog renders title and message` — pass title/message, verify text present in DOM
-   - `ConfirmDialog confirm button fires onConfirm` — click confirm, verify callback
-   - `ConfirmDialog cancel button fires onCancel` — click cancel, verify callback
+2. ~~`P0` **Unified ContextMenu + ConfirmDialog**~~ ✅ **COMPLETED in v16.9**
 
 3. `P1` **StickyHeader + CSS class abstraction**
    Extract shared sticky header UI and semantic Tailwind classes (`@apply`) to reduce repeated utility strings.
@@ -370,14 +356,15 @@ For each step below: **(1)** write the TDD tests first, **(2)** run tests (expec
 | Order | Item | Status |
 |-------|------|--------|
 | 1st | ~~Eliminate desktop/mobile JSX duplication (P0 #1)~~ | ✅ **Done — v16.8** |
-| 2nd | Unified ContextMenu + ConfirmDialog (P0 #2) | Pending |
+| 2nd | ~~Unified ContextMenu + ConfirmDialog (P0 #2)~~ | ✅ **Done — v16.9** |
 | 3rd | StickyHeader + CSS class abstraction (P1 #3) | Pending |
 | 4th | UI smoothness pass (P1 #4) | Pending |
 | 5th | Lazy-load test suite (P1 #5) | Pending |
 
 **Versioning:**
 - ~~Step 1 → **v16.8**~~ ✅ (CSS-only responsive layout — completed)
-- Steps 2 + 3 → **v16.9** (shared components + CSS abstraction)
+- ~~Step 2~~ → **v16.9** ✅ (unified ContextMenu + ConfirmDialog — completed)
+- Step 3 → **v16.10** (StickyHeader + CSS class abstraction)
 - Steps 4 + 5 → **v17.0** (smoothness + lazy-load = user-facing polish, major version bump)
 
 6. `P2` **Recurring Tasks**  
@@ -406,7 +393,7 @@ For each step below: **(1)** write the TDD tests first, **(2)** run tests (expec
 - **Rule:** Small features increment minor (15_1 → 15_2), big features increment major (15 → 16)
 - **Format:** `v16-Alpha`, `v15_1-Alpha`, etc.
 - **Alpha tag:** Current release stage
-- **Current:** v16.8 (CSS-only responsive layout — all desktop/mobile JSX duplication eliminated)
+- **Current:** v16.9 (Unified ContextMenu + ConfirmDialog — 5 components replaced with 2 reusable shared components)
 
 ### UI Patterns Established (v15+)
 - **⋮ 3-dot menu:** Always-visible vertical dots on every item (Capture notes, Clarify tasks, Confirm checklist items)
@@ -516,13 +503,13 @@ Derived:    wkData, doneCount
 - `React.useReducer` in FocusTimer, `React.memo` for performance
 - `selMode`/`selSection`/`selIds`/`bulkConfirm` — batch selection (App)
 - `editingNote` — inline note editing (CaptureSection)
-- `noteMenu` — NoteMenu 3-dot context menu state (CaptureSection)
-- `taskMenu` — TaskMenu 3-dot context menu state (ClarifySection)
+- `noteMenu` — ContextMenu 3-dot context menu state (CaptureSection)
+- `taskMenu` — ContextMenu 3-dot context menu state (ClarifySection)
 - `dragQ` — matrix drag-and-drop source tracking (ClarifySection)
 - `settExp` — collapsible sections in Settings (`{pwa, desk}`) — mobile only (SettingsSection)
 - `helpExp` — collapsible sections in Explainer — mobile only (SettingsSection)
 - `toggleHelp(key)` — helper to toggle Explainer accordion sections (SettingsSection)
-- `newList`/`showNew`/`listMenu`/`editListId`/`editListName`/`deleteConfirm` — list management (ConfirmSection)
+- `newList`/`showNew`/`listMenu`/`editListId`/`editListName`/`deleteConfirm` — list management, ContextMenu + ConfirmDialog state (ConfirmSection)
 - `dragI`/`dragO` — focus queue drag-and-drop (FocusSection)
 - `expQ` — quadrant expand/collapse (ClarifySection)
 
@@ -553,12 +540,12 @@ Removed: arc, reminders, Swipe component
 | `EditModal` | Create/edit tasks, lists, notes (with onDelete for list items) |
 | `HelpModal` | Compact App Navigation popup (? icon) |
 | `AboutModal` | Welcome overlay (first launch, IndexedDB-aware) + About modal |
-| `TaskMenu` | 3-dot task menu in Clarify (Edit, Done/Undone, Focus, Link, Delete) |
-| `NoteMenu` | 3-dot note menu in Capture (Edit, Copy Text, Promote to Clarify, Strikethrough, Delete) |
+| `ContextMenu` | Unified context menu — data-driven items array, two modes (centered modal / positioned popup) |
+| `ConfirmDialog` | Unified confirm dialog — icon + title + message + variant (danger/info) |
 | `LinkPicker` | Modal to link/unlink/create checklists for tasks |
-| `TestRunner` | Test suite (61 tests, 10 categories) |
+| `TestRunner` | Test suite (68 tests, 11 categories) |
 | `QuickAdd` / `Chart` | Input, visualization |
-| `ListMenu` / `DeleteConfirmation` / `Subtasks` | List management |
+| `Subtasks` | Subtask rendering for tasks |
 | `Empty.*` / `ThemeProv` / `I.*` | Empty states, theme, icons (includes MoreV) |
 
 ### CSS Architecture
