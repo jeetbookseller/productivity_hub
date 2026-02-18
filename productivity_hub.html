@@ -1816,11 +1816,34 @@ function App(){
   );
 }
 
+class AppErrorBoundary extends React.Component{
+  constructor(props){super(props);this.state={err:null};}
+  static getDerivedStateFromError(err){return{err};}
+  componentDidCatch(err){
+    window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render failed: ${err?.message||err}`);
+  }
+  render(){
+    if(this.state.err){
+      const msg=this.state.err?.message||String(this.state.err);
+      return(
+        <div style={{maxWidth:'760px',margin:'48px auto',padding:'20px',border:'1px solid #e5e7eb',borderRadius:'12px',background:'#fff',fontFamily:'Nunito,sans-serif',lineHeight:'1.5'}}>
+          <h2 style={{margin:'0 0 8px'}}>App failed to render</h2>
+          <p style={{margin:'0 0 8px'}}>A runtime error occurred while rendering React components.</p>
+          <p style={{margin:0,color:'#b91c1c',fontFamily:'monospace',fontSize:'12px',whiteSpace:'pre-wrap'}}>{msg}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 try{
-  ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>);
-  window.__PH_BOOT_DONE&&window.__PH_BOOT_DONE();
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <AppErrorBoundary>
+      <ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>
+    </AppErrorBoundary>
+  );
 }catch(err){
-  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render failed: ${err.message||err}`);
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render bootstrap failed: ${err.message||err}`);
   throw err;
 }
 })();
