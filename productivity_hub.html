@@ -828,7 +828,7 @@ const TestRunner=({onShowToast})=>{
       name:'Capture note create/edit/delete updates rendered output',
       tier:'T1',
       area:'Capture Workflow',
-      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert}){
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert,delay}){
         await withStorageSnapshot(async()=>{
           await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
             const input=mount.querySelector('textarea[placeholder*="Quick note"]');
@@ -843,6 +843,8 @@ const TestRunner=({onShowToast})=>{
             await waitFor(()=>mount.querySelector('input[type="text"]'),{timeout:1200,message:'Inline editor did not open'});
             const editInput=mount.querySelector('input[type="text"]');
             setInputValue(editInput,'T1 note updated');
+            await waitFor(()=>mount.querySelector('input[type="text"]')?.value==='T1 note updated',{timeout:1200,message:'Edit input value did not sync'});
+            await delay(0);
             editInput.dispatchEvent(new Event('blur',{bubbles:true}));
             await waitFor(()=>mount.textContent.includes('T1 note updated'),{timeout:2000,message:'Updated note not rendered'});
 
@@ -955,7 +957,7 @@ const TestRunner=({onShowToast})=>{
           assert(shortBtn&&shortBtn.className.includes('bg-white/40'),'Timer did not switch to short break mode');
           const focusBtn=findButtonByText(mount,'Focus');
           focusBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
-          assert(focusBtn.className.includes('bg-white/40'),'Timer did not return to work mode');
+          await waitFor(()=>findButtonByText(mount,'Focus')?.className.includes('bg-white/40'),{timeout:1200,message:'Timer did not return to work mode'});
         });
       }
     },
