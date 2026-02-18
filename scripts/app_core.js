@@ -134,10 +134,11 @@ const uid=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
 // Native Notifications
 const notify=(title,body)=>{
   if(!('Notification'in window))return;
-  if(Notification.permission==='granted'){new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%237CB69D"/></svg>'});}
-  else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')new Notification(title,{body});});}
+  if(Notification.permission==='granted'){
+    new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%237CB69D"/></svg>'});
+  }
 };
-const reqNotifyPerm=()=>{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();};
+const reqNotifyPerm=()=>{};
 
 // Constants
 const PRESETS={classic:{work:25,shortBreak:5,longBreak:15,l:'Classic'},long:{work:50,shortBreak:10,longBreak:30,l:'Long'},short:{work:15,shortBreak:3,longBreak:10,l:'Short'},custom:{work:25,shortBreak:5,longBreak:15,l:'Custom'}};

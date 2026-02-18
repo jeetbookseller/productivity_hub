@@ -828,7 +828,7 @@ const TestRunner=({onShowToast})=>{
       name:'Capture note create/edit/delete updates rendered output',
       tier:'T1',
       area:'Capture Workflow',
-      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert,delay}){
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert}){
         await withStorageSnapshot(async()=>{
           await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
             const input=mount.querySelector('textarea[placeholder*="Quick note"]');
@@ -843,9 +843,8 @@ const TestRunner=({onShowToast})=>{
             await waitFor(()=>mount.querySelector('input[type="text"]'),{timeout:1200,message:'Inline editor did not open'});
             const editInput=mount.querySelector('input[type="text"]');
             setInputValue(editInput,'T1 note updated');
-            await waitFor(()=>mount.querySelector('input[type="text"]')?.value==='T1 note updated',{timeout:1200,message:'Edit input value did not sync'});
-            await delay(0);
-            editInput.dispatchEvent(new Event('blur',{bubbles:true}));
+            editInput.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+            await waitFor(()=>!mount.querySelector('input[type="text"]'),{timeout:1500,message:'Inline editor did not close after Enter save'});
             await waitFor(()=>mount.textContent.includes('T1 note updated'),{timeout:2000,message:'Updated note not rendered'});
 
             const menuBtn=mount.querySelector('[data-menu-btn]');
@@ -1554,7 +1553,7 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
         <div className="text-7xl md:text-8xl font-extrabold text-center mb-3 md:mb-5 text-white drop-shadow-sm tracking-tight timer-display">{fmt(left)}</div>
         {activeTaskText&&<div className="text-center text-white/90 text-sm mb-4 font-medium sel">🎯 {activeTaskText}</div>}
         <div className="flex justify-center gap-3">
-          <button onClick={()=>{if(!run)reqNotifyPerm();dispatch({type:'TOGGLE_RUN'});}} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
+          <button onClick={()=>dispatch({type:'TOGGLE_RUN'})} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
           <button onClick={()=>switchMode(mode)} aria-label="Reset timer" className="p-3 bg-white/30 rounded-2xl text-white"><I.Reset s={24}/></button>
         </div>
         <div className="flex items-center justify-center gap-2 mt-4"><span className="text-sm text-white/80 font-medium">Keep awake</span><button onClick={()=>dispatch({type:'SET_WAKE',wake:!wake})} aria-label={wake?'Disable keep awake':'Enable keep awake'} className={`w-11 h-6 rounded-full transition-colors p-0.5 ${wake?'bg-white/40':'bg-black/20'}`}><div className={`w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${wake?'translate-x-5':'translate-x-0'}`}/></button></div>
