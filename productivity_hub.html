@@ -25,11 +25,25 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="./scripts/app_core.js"></script>
+<script>
+if(!window.React||!window.ReactDOM||!window.Babel){
+  const root=document.getElementById('root');
+  if(root){
+    root.innerHTML='<div style="max-width:720px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;font-family:Nunito,sans-serif;line-height:1.5"><h2 style="margin:0 0 8px">App failed to bootstrap</h2><p style="margin:0 0 8px">Required CDN scripts did not load (React/ReactDOM/Babel).</p><p style="margin:0">Check internet access and reload.</p></div>';
+  }
+}
+</script>
 <script type="text/babel">
 /* == BEGIN: Block A == */
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 const PH=window.PH_CORE;
-if(!PH)throw new Error('PH_CORE failed to load. Ensure ./scripts/app_core.js loads before Babel scripts.');
+if(!PH){
+  const root=document.getElementById('root');
+  if(root){
+    root.innerHTML='<div style="max-width:720px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;font-family:Nunito,sans-serif;line-height:1.5"><h2 style="margin:0 0 8px">App failed to bootstrap</h2><p style="margin:0 0 8px">`window.PH_CORE` is missing.</p><p style="margin:0 0 8px">Expected local files next to this HTML:</p><ul style="margin:0 0 8px 18px"><li>styles/app.css</li><li>scripts/pwa_setup.js</li><li>scripts/app_core.js</li></ul><p style="margin:0">Open from the project root (not a copied standalone HTML file).</p></div>';
+  }
+  throw new Error('PH_CORE failed to load. Ensure ./scripts/app_core.js loads before Babel scripts.');
+}
 const{APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile}=PH;
 
 // Icons - More visible with less transparency
