@@ -17,13 +17,23 @@
 **productivity_hub.html** (`v16.11-Alpha`)
 
 ### Release Focus
-- Debounced writes: `usePersistedState` debounces `S.set()` calls (~300ms) via `useRef` timer. Reads remain instant; cleanup flushes on unmount.
-- `useAnimatedClose(onClose)` hook: Returns `{closing, triggerClose}`; sets `closing=true`, waits for `animationend`, then calls `onClose`. Applied to `ContextMenu`, `ConfirmDialog`, `EditModal`, `LinkPicker`, `AboutModal`.
-- CSS animations: Added `@keyframes fadeOut` and `.anim-out` (0.2s ease-in). Tab content wrapped in `<div key={tab} className="anim-in">` for fresh fade-in on every tab switch.
-- Toast auto-fade: Opacity transition over last 500ms of 2000ms display via `toastFading` state.
-- Item transitions: `transition-all duration-200` on item containers in Capture, Clarify, Confirm for smooth add/remove/complete transitions.
-- Tests: 72 -> 77 (5 new UI Smoothness tests).
-- Post-merge fix: 4 flaky tests updated to use environment-stable inspection strategies (script-source scanning instead of live DOM/computed styles).
+- In-app `TestRunner` modernized from name-switch pseudo-tests to structured tiered cases:
+  - schema: `id`, `name`, `tier`, `area`, `run(ctx)`, optional `cleanup(ctx)`
+- Added deterministic harness utilities in runner:
+  - `assert`, `assertEq`, `assertIncludes`, `waitFor`
+  - `withDomFixture`, `withStorageFixture`, `withStorageSnapshot`
+  - strict cleanup registry execution
+- Added tiered coverage gates:
+  - `T0` (contract/boot) must pass 100%
+  - `T1` (workflow behavior) must pass 100%
+  - `T2` (UX/quality) must pass >=90%
+  - `T2` deterministic consistency verified across 3 runs (zero flaky variance required)
+- Report format upgraded:
+  - adds `suiteVersion` and `baselineDate`
+  - adds per-tier pass summaries and gate outcomes
+  - retains copy/download human-readable report export
+- Clean re-baseline completed:
+  - test inventory reset to **26** total (`T0=10`, `T1=9`, `T2=8`)
 
 ---
 
@@ -245,4 +255,3 @@
 
 #### v16.1
 - Refactor Step 1: `useAppData()` extracted from `App`
-

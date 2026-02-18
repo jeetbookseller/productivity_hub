@@ -23,11 +23,11 @@
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental `str_replace` edits
-- **Current phase:** v16.11 complete; next planned milestone is v17.0 (`P1` lazy-load test suite)
+- **Current phase:** v16.11 test-suite modernization complete; next planned milestone is v17.0 (`P1` lazy-load test suite)
 - **Working files:** `productivity_hub.html`, `styles/app.css`, `scripts/pwa_setup.js`, `scripts/app_core.js`
 - **Key constraint:** Output token limits require incremental edits (avoid full-file rewrites)
 - **Encoding note:** File had double-encoded UTF-8 emoji issues in the past (fixed in v15_4)
-- **Test status:** 85 tests currently tracked (includes modularization checks)
+- **Test status:** 26 tiered deterministic tests (`T0=10`, `T1=9`, `T2=8`) in the modernized in-app runner
 
 ## Documentation Boundaries
 
@@ -199,6 +199,26 @@ Removed: arc, reminders, Swipe component
 | `EditModal` / `AboutModal` | Editing and onboarding/about flows |
 | `TestRunner` | Internal automated test suite surface |
 
+### In-App Test Architecture (Modernized)
+- Runner model uses structured test cases, not name-based `switch` branching:
+  - `id`, `name`, `tier` (`T0`/`T1`/`T2`), `area`, `run(ctx)`, optional `cleanup(ctx)`
+- Harness utilities inside `TestRunner`:
+  - `assert`, `assertEq`, `assertIncludes`
+  - `withDomFixture`
+  - `withStorageFixture`
+  - `withStorageSnapshot`
+  - `waitFor`
+  - cleanup registry (`add` + reverse-order `runAll`)
+- Tiered gate policy:
+  - `T0` contract/boot safety: 100% required
+  - `T1` core workflow behavior: 100% required
+  - `T2` UX/quality behavior: >=90% required
+  - Determinism gate: `T2` rerun consistency checked across 3 runs, zero flaky variance required
+- Current baseline:
+  - Suite version: `2.0.0`
+  - Baseline date: `2026-02-18`
+  - Total tests: `26` (`T0=10`, `T1=9`, `T2=8`)
+
 ### CSS Architecture
 ```text
 @media (min-width: 768px)   -> Tablet: 2-col Clarify, font bump, scrollbar tuning
@@ -259,5 +279,5 @@ For code updates (Codex/Claude optimized):
 1. Edit the smallest target file first (`scripts/app_core.js`, `scripts/pwa_setup.js`, `styles/app.css`, or one Babel block in `productivity_hub.html`).
 2. Preserve script order in `productivity_hub.html`: PWA script, React CDN scripts, `app_core.js`, then Babel Block A -> B -> C -> D.
 3. Keep `window.PH_CORE` contract stable unless intentionally changing interfaces.
-4. If modifying tests, update both the `tests` list and matching `switch(test.name)` case in `TestRunner`.
+4. If modifying tests, maintain structured case schema (`id`/`tier`/`area`) and keep tier gates + determinism checks aligned.
 5. Keep block markers (`BEGIN: Block A/B/C/D`) intact for deterministic AI edits.

@@ -536,413 +536,954 @@ const TestRunner=({onShowToast})=>{
   const[running,setRunning]=useState(false);
   const[results,setResults]=useState(null);
   const[progress,setProgress]=useState({current:0,total:0,step:''});
-  
+
+  const SUITE_VERSION='2.0.0';
+  const BASELINE_DATE='2026-02-18';
+  const TIER_ORDER=['T0','T1','T2'];
+  const TIER_TARGETS={T0:1,T1:1,T2:0.9};
+  const REQUIRED_PH_CORE_KEYS=['APP_VERSION','initDB','S','uid','notify','reqNotifyPerm','PRESETS','QUADS','CATS','shareItem','genICS','dlFile'];
+
   const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
-  
+  const normalizeErr=(err)=>err&&err.message?err.message:String(err||'Unknown error');
+  const assert=(cond,msg='Assertion failed')=>{if(!cond)throw new Error(msg);};
+  const assertEq=(actual,expected,msg)=>{if(actual!==expected)throw new Error(msg||`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);};
+  const assertIncludes=(value,needle,msg)=>{if(typeof value!=='string'||!value.includes(needle))throw new Error(msg||`Expected to include \"${needle}\"`);};
+
+  const waitFor=(predicate,{timeout=2200,interval=25,message='Condition timed out'}={})=>new Promise((resolve,reject)=>{
+    const started=Date.now();
+    const tick=()=>{
+      try{
+        if(predicate())return resolve();
+      }catch{}
+      if(Date.now()-started>=timeout)return reject(new Error(message));
+      setTimeout(tick,interval);
+    };
+    tick();
+  });
+
+  const runWithTimeout=(promise,ms,label)=>new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>reject(new Error(`Timeout after ${ms}ms (${label})`)),ms);
+    Promise.resolve(promise).then(v=>{clearTimeout(timer);resolve(v);}).catch(e=>{clearTimeout(timer);reject(e);});
+  });
+
+  const makeCleanupRegistry=()=>{
+    const stack=[];
+    return{
+      add(fn){if(typeof fn==='function')stack.push(fn);},
+      async runAll(){
+        const errors=[];
+        for(let i=stack.length-1;i>=0;i--){
+          try{await stack[i]();}catch(err){errors.push(normalizeErr(err));}
+        }
+        if(errors.length)throw new Error(`Cleanup failed: ${errors.join(' | ')}`);
+      }
+    };
+  };
+
+  const setInputValue=(el,val)=>{
+    assert(el,'Input element not found');
+    const proto=Object.getPrototypeOf(el);
+    const desc=proto&&Object.getOwnPropertyDescriptor(proto,'value');
+    if(desc&&desc.set)desc.set.call(el,val);
+    else el.value=val;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+
+  const findByText=(root,text,selector='*')=>Array.from(root.querySelectorAll(selector)).find(el=>((el.textContent||'').replace(/\s+/g,' ').trim()).includes(text));
+  const findButtonByText=(root,text)=>findByText(root,text,'button');
+
+  const withDomFixture=async(cleanupRegistry,fn)=>{
+    const mount=document.createElement('div');
+    mount.setAttribute('data-test-fixture','ph');
+    mount.style.position='fixed';
+    mount.style.left='-9999px';
+    mount.style.top='-9999px';
+    mount.style.width='520px';
+    mount.style.maxHeight='80vh';
+    mount.style.overflow='auto';
+    document.body.appendChild(mount);
+    cleanupRegistry.add(async()=>{
+      try{if(mount.__root)mount.__root.unmount();}catch{}
+      if(mount.parentNode)mount.parentNode.removeChild(mount);
+    });
+    return fn(mount);
+  };
+
+  const withStorageFixture=async(cleanupRegistry,fn)=>{
+    const prefix=`__TEST__${uid()}_`;
+    const touched=new Set();
+    const fx={
+      prefix,
+      key:(name)=>{const k=prefix+name;touched.add(k);return k;},
+      track:(key)=>{if(typeof key==='string'&&key.startsWith(prefix))touched.add(key);return key;}
+    };
+    cleanupRegistry.add(async()=>{
+      for(const k of touched){await S.set(k,undefined);}
+    });
+    return fn(fx);
+  };
+
+  const withStorageSnapshot=async(cleanupRegistry,fn)=>{
+    const snapshot=await S.exp();
+    cleanupRegistry.add(async()=>{
+      await S.clr();
+      await S.imp(snapshot);
+    });
+    await S.clr();
+    return fn(snapshot);
+  };
+
+  const withAppDataHarness=async(cleanupRegistry,fn)=>{
+    const blockC=window.PH_BLOCK_C;
+    assert(blockC&&typeof blockC.useAppData==='function','PH_BLOCK_C.useAppData is unavailable');
+    return withDomFixture(cleanupRegistry,async mount=>{
+      const bridge={app:null};
+      function HookHarness(){
+        bridge.app=blockC.useAppData();
+        return null;
+      }
+      const root=ReactDOM.createRoot(mount);
+      mount.__root=root;
+      root.render(React.createElement(HookHarness));
+      await waitFor(()=>bridge.app&&Array.isArray(bridge.app.todos),{timeout:3500,message:'useAppData harness failed to initialize'});
+      return fn(()=>bridge.app,mount);
+    });
+  };
+
+  const withSectionHarness=async(cleanupRegistry,SectionComp,sectionProps,fn)=>{
+    const blockC=window.PH_BLOCK_C;
+    assert(blockC&&blockC.AppDataProv&&blockC.useApp,'PH_BLOCK_C section exports unavailable');
+    return withDomFixture(cleanupRegistry,async mount=>{
+      const bridge={app:null};
+      function Probe(){
+        bridge.app=blockC.useApp();
+        return null;
+      }
+      function Harness(){
+        return React.createElement(
+          blockC.AppDataProv,
+          null,
+          React.createElement(
+            React.Fragment,
+            null,
+            React.createElement(SectionComp,sectionProps),
+            React.createElement(Probe)
+          )
+        );
+      }
+      const root=ReactDOM.createRoot(mount);
+      mount.__root=root;
+      root.render(React.createElement(Harness));
+      await waitFor(()=>bridge.app&&mount.textContent.length>0,{timeout:3500,message:'Section harness failed to mount'});
+      return fn({mount,getApp:()=>bridge.app});
+    });
+  };
+
+  const getTestCases=()=>[
+    {
+      id:'t0.shell.assets-loaded',
+      name:'Shell links/scripts are present and loaded',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert}){
+        const cssLink=Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(l=>(l.getAttribute('href')||'').includes('styles/app.css'));
+        assert(cssLink,'Missing stylesheet link for styles/app.css');
+        const cssLoaded=Array.from(document.styleSheets).some(ss=>{
+          const href=(ss.href||ss.ownerNode?.getAttribute?.('href')||'');
+          return href.includes('styles/app.css');
+        });
+        assert(cssLoaded,'styles/app.css is not loaded');
+        const pwaScript=Array.from(document.querySelectorAll('script[src]')).find(s=>(s.getAttribute('src')||'').includes('scripts/pwa_setup.js'));
+        const coreScript=Array.from(document.querySelectorAll('script[src]')).find(s=>(s.getAttribute('src')||'').includes('scripts/app_core.js'));
+        assert(pwaScript,'Missing scripts/pwa_setup.js');
+        assert(coreScript,'Missing scripts/app_core.js');
+      }
+    },
+    {
+      id:'t0.contract.ph-core-keys',
+      name:'PH_CORE contract keys are present and callable',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert}){
+        const core=window.PH_CORE;
+        assert(core,'window.PH_CORE missing');
+        for(const key of REQUIRED_PH_CORE_KEYS){assert(key in core,`PH_CORE missing ${key}`);}
+        assert(typeof core.initDB==='function','PH_CORE.initDB must be a function');
+        assert(typeof core.S.get==='function'&&typeof core.S.set==='function','PH_CORE.S get/set missing');
+        assert(typeof core.S.exp==='function'&&typeof core.S.imp==='function'&&typeof core.S.clr==='function'&&typeof core.S.getSync==='function','PH_CORE.S exp/imp/clr/getSync missing');
+        assert(typeof core.uid==='function','PH_CORE.uid must be a function');
+      }
+    },
+    {
+      id:'t0.contract.pwa-generator',
+      name:'PWA generator returns valid non-empty files',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertIncludes}){
+        assert(typeof window.__generatePWAFiles==='function','window.__generatePWAFiles missing');
+        const files=window.__generatePWAFiles();
+        assert(files&&typeof files==='object','__generatePWAFiles must return object');
+        assert(typeof files.sw==='string'&&files.sw.trim().length>0,'Service worker content missing');
+        assert(typeof files.manifest==='string'&&files.manifest.trim().length>0,'Manifest content missing');
+        assertIncludes(files.sw,'self.addEventListener','sw content should include service worker listeners');
+        assertIncludes(files.manifest,'"name"','manifest should include app name');
+      }
+    },
+    {
+      id:'t0.contract.babel-blocks-and-bridges',
+      name:'Babel block markers and block bridges are available',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertIncludes}){
+        const scripts=Array.from(document.querySelectorAll('script[type="text/babel"]'));
+        assert(scripts.length>=4,'Expected 4 text/babel script blocks');
+        const fullText=scripts.map(s=>s.textContent||'').join('\n');
+        for(const marker of ['BEGIN: Block A','BEGIN: Block B','BEGIN: Block C','BEGIN: Block D'])assertIncludes(fullText,marker,`Missing marker: ${marker}`);
+        assert(window.PH_BLOCK_A&&window.PH_BLOCK_B&&window.PH_BLOCK_C,'Expected PH_BLOCK_A/B/C bridge exports');
+      }
+    },
+    {
+      id:'t0.storage.set-get-semantics',
+      name:'Storage set/get semantics are deterministic',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({withStorageFixture,assertEq}){
+        await withStorageFixture(async fx=>{
+          const key=fx.key('set_get');
+          const payload={ok:true,count:2};
+          await S.set(key,payload);
+          const loaded=await S.get(key,null);
+          assertEq(loaded.ok,true,'S.get should return stored object');
+          assertEq(loaded.count,2,'S.get should preserve object values');
+          await S.set(key,undefined);
+          const fallback=await S.get(key,'fallback');
+          assertEq(fallback,'fallback','S.get should return default after clearing key');
+        });
+      }
+    },
+    {
+      id:'t0.storage.exp-imp-roundtrip',
+      name:'Storage export/import round-trip works for test keys',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({withStorageFixture,assert}){
+        await withStorageFixture(async fx=>{
+          const k1=fx.key('exp_a');
+          const k2=fx.key('exp_b');
+          const payload={[k1]:{v:1},[k2]:'value'};
+          await S.imp(payload);
+          const exported=await S.exp();
+          assert(k1 in exported,'S.exp missing imported key 1');
+          assert(k2 in exported,'S.exp missing imported key 2');
+          const val=await S.get(k2,null);
+          assert(val==='value','S.get should return imported value');
+        });
+      }
+    },
+    {
+      id:'t0.storage.getSync-semantics',
+      name:'S.getSync follows localStorage fallback semantics',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({assertEq}){
+        const logicalKey=`__TEST__${uid()}_sync`;
+        const storageKey=`ph3_${logicalKey}`;
+        localStorage.setItem(storageKey,JSON.stringify({ready:true}));
+        const found=S.getSync(logicalKey,null);
+        assertEq(found.ready,true,'S.getSync should read localStorage fallback value');
+        localStorage.removeItem(storageKey);
+        const fallback=S.getSync(logicalKey,'none');
+        assertEq(fallback,'none','S.getSync should return default when key missing');
+      }
+    },
+    {
+      id:'t0.storage.clr-semantics',
+      name:'S.clr clears data in isolated snapshot',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({withStorageSnapshot,assertEq}){
+        await withStorageSnapshot(async()=>{
+          const key=`__TEST__${uid()}_clr`;
+          await S.set(key,'x');
+          const before=await S.get(key,null);
+          assertEq(before,'x','Failed to set pre-clear key');
+          await S.clr();
+          const after=await S.get(key,null);
+          assertEq(after,null,'S.clr should clear key');
+        });
+      }
+    },
+    {
+      id:'t0.contract.version-source',
+      name:'Test report version is sourced from PH_CORE',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assertEq}){
+        assertEq(APP_VERSION,window.PH_CORE.APP_VERSION,'APP_VERSION must match PH_CORE.APP_VERSION');
+      }
+    },
+    {
+      id:'t1.capture.note-crud-render',
+      name:'Capture note create/edit/delete updates rendered output',
+      tier:'T1',
+      area:'Capture Workflow',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
+            const input=mount.querySelector('textarea[placeholder*="Quick note"]');
+            assert(input,'Capture quick-note input missing');
+            setInputValue(input,'T1 note create');
+            input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+            await waitFor(()=>mount.textContent.includes('T1 note create'),{timeout:2000,message:'Created note not rendered'});
+
+            const noteText=findByText(mount,'T1 note create','span');
+            assert(noteText,'Created note text node missing');
+            noteText.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.querySelector('input[type="text"]'),{timeout:1200,message:'Inline editor did not open'});
+            const editInput=mount.querySelector('input[type="text"]');
+            setInputValue(editInput,'T1 note updated');
+            editInput.dispatchEvent(new Event('blur',{bubbles:true}));
+            await waitFor(()=>mount.textContent.includes('T1 note updated'),{timeout:2000,message:'Updated note not rendered'});
+
+            const menuBtn=mount.querySelector('[data-menu-btn]');
+            assert(menuBtn,'Note menu button missing');
+            menuBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>findButtonByText(mount,'Delete'),{timeout:1200,message:'Delete action not shown'});
+            findButtonByText(mount,'Delete').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>!mount.textContent.includes('T1 note updated'),{timeout:2200,message:'Deleted note still rendered'});
+          });
+        });
+      }
+    },
+    {
+      id:'t1.capture.promote-copy-strike',
+      name:'Capture promote copies to Clarify and strikes note',
+      tier:'T1',
+      area:'Workflow Crossover',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findButtonByText,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount,getApp})=>{
+            const input=mount.querySelector('textarea[placeholder*="Quick note"]');
+            setInputValue(input,'Promote me to Clarify');
+            input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+            await waitFor(()=>getApp().notes.length===1,{timeout:2000,message:'Expected one note before promote'});
+            const noteId=getApp().notes[0].id;
+
+            const menuBtn=mount.querySelector('[data-menu-btn]');
+            assert(menuBtn,'Note menu button missing');
+            menuBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>findButtonByText(mount,'Promote to Clarify'),{timeout:1200,message:'Promote action not shown'});
+            findButtonByText(mount,'Promote to Clarify').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+
+            await waitFor(()=>getApp().todos.some(t=>t.text==='Promote me to Clarify'),{timeout:2200,message:'Promoted todo not created'});
+            await waitFor(()=>{
+              const n=getApp().notes.find(x=>x.id===noteId);
+              return !!(n&&n.struck&&n.struckAt);
+            },{timeout:2200,message:'Promoted note was not struck'});
+          });
+        });
+      }
+    },
+    {
+      id:'t1.clarify.done-undone-counts',
+      name:'Clarify done/undone toggles update done count',
+      tier:'T1',
+      area:'Clarify Workflow',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            getApp().saveItem('todo',{text:'Toggle done todo',quad:'ui',cat:'work',done:false,subtasks:[]});
+            await waitFor(()=>getApp().todos.some(t=>t.text==='Toggle done todo'),{timeout:2200,message:'Todo was not created'});
+            const todoId=getApp().todos.find(t=>t.text==='Toggle done todo').id;
+            const baseDone=getApp().doneCount;
+
+            getApp().doneTodo(todoId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===todoId)?.done===true,{timeout:1800,message:'Todo not marked done'});
+            assertEq(getApp().doneCount,baseDone+1,'doneCount should increment after doneTodo');
+
+            getApp().undoneTodo(todoId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===todoId)?.done===false,{timeout:1800,message:'Todo not marked undone'});
+            assertEq(getApp().doneCount,baseDone,'doneCount should reset after undoneTodo');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.confirm.checklist-operations',
+      name:'Confirm checklist add/toggle/delete is reflected in UI',
+      tier:'T1',
+      area:'Confirm Workflow',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,findByText,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.ConfirmSection,{wide:false,desk:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{},setEdit:()=>{}},async({mount,getApp})=>{
+            const listId=`list_${uid()}`;
+            getApp().setLists([{id:listId,name:'T1 Checklist',items:[]}]);
+            getApp().setSelList(listId);
+            await waitFor(()=>mount.textContent.includes('T1 Checklist'),{timeout:1800,message:'Checklist tab not rendered'});
+
+            getApp().saveItem('list',{text:'T1 item',section:'Inbox'},listId);
+            await waitFor(()=>mount.textContent.includes('T1 item'),{timeout:2200,message:'Checklist item not rendered'});
+            const itemId=getApp().lists.find(l=>l.id===listId).items[0].id;
+
+            getApp().doneList(listId,itemId);
+            await waitFor(()=>getApp().lists.find(l=>l.id===listId).items.find(i=>i.id===itemId)?.done===true,{timeout:1800,message:'Checklist item not toggled done'});
+            const itemText=findByText(mount,'T1 item','span');
+            assert(itemText&&itemText.className.includes('line-through'),'Done item should show line-through class');
+
+            getApp().deleteListItem(listId,itemId);
+            await waitFor(()=>!mount.textContent.includes('T1 item'),{timeout:2200,message:'Checklist item not removed from UI'});
+          });
+        });
+      }
+    },
+    {
+      id:'t1.focus.timer-transition',
+      name:'Focus timer transitions work -> break -> work',
+      tier:'T1',
+      area:'Focus Workflow',
+      async run({withDomFixture,waitFor,findButtonByText,assert}){
+        await withDomFixture(async mount=>{
+          const completed=[];
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(FocusTimer,{tSet:{work:0,shortBreak:0,longBreak:0},onComplete:(mode,activeTaskId,switchToBreak)=>{completed.push(mode);switchToBreak();},onUpdatePoms:()=>{},onUpdateMetrics:()=>{},onUpdateFocus:()=>{},onUpdateTodos:()=>{},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
+          await waitFor(()=>findButtonByText(mount,'Start'),{timeout:1500,message:'Start button not rendered'});
+          findButtonByText(mount,'Start').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>completed.length===1&&completed[0]==='work',{timeout:2000,message:'Timer completion callback did not fire for work mode'});
+          const shortBtn=findButtonByText(mount,'Short');
+          assert(shortBtn&&shortBtn.className.includes('bg-white/40'),'Timer did not switch to short break mode');
+          const focusBtn=findButtonByText(mount,'Focus');
+          focusBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          assert(focusBtn.className.includes('bg-white/40'),'Timer did not return to work mode');
+        });
+      }
+    },
+    {
+      id:'t1.focus.done-focus-updates-metrics',
+      name:'Focus completion updates queue, task state, and metrics',
+      tier:'T1',
+      area:'Focus Workflow',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            const taskId=`task_${uid()}`;
+            getApp().setTodos([{id:taskId,text:'Focus me',quad:'ui',done:false,poms:0}]);
+            getApp().setFocus([{id:taskId,text:'Focus me',quad:'ui',done:false,poms:0}]);
+            await waitFor(()=>getApp().focus.length===1,{timeout:1200,message:'Focus queue not initialized'});
+            const baseDone=getApp().met.w.t;
+            getApp().doneFocus(taskId);
+            await waitFor(()=>!getApp().focus.some(t=>t.id===taskId),{timeout:1800,message:'Task not removed from focus queue'});
+            await waitFor(()=>getApp().todos.find(t=>t.id===taskId)?.done===true,{timeout:1800,message:'Linked todo not marked done'});
+            assertEq(getApp().met.w.t,baseDone+1,'Weekly done metric should increment on doneFocus');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.workflow.link-open-unlink',
+      name:'Task checklist link/open/unlink behavior is consistent',
+      tier:'T1',
+      area:'Workflow Crossover',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            const taskId=`task_${uid()}`;
+            const listId=`list_${uid()}`;
+            getApp().setTodos([{id:taskId,text:'Linked task',quad:'ni',done:false,poms:0}]);
+            getApp().setLists([{id:listId,name:'Linked list',items:[]}]);
+            await waitFor(()=>getApp().todos.length===1&&getApp().lists.length===1,{timeout:1200,message:'Failed to seed todo/list'});
+
+            getApp().linkTask(taskId,listId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===taskId)?.linkedList===listId,{timeout:1500,message:'Task did not link to checklist'});
+
+            getApp().openLinkedList(getApp().todos.find(t=>t.id===taskId));
+            await waitFor(()=>getApp().tab==='lists'&&getApp().selList===listId,{timeout:1500,message:'openLinkedList did not route to checklist'});
+
+            getApp().unlinkTask(taskId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===taskId)?.linkedList===undefined,{timeout:1500,message:'Task link was not removed'});
+            assertEq(getApp().tab,'lists','Current tab should remain lists after unlink');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.storage.workflow-export-import',
+      name:'Workflow export/import round-trip through S is lossless',
+      tier:'T1',
+      area:'Workflow Data',
+      async run({withStorageSnapshot,assertEq,assert}){
+        await withStorageSnapshot(async()=>{
+          const payload={
+            todos:[{id:'t1',text:'Task',quad:'ui',done:false,poms:0}],
+            lists:[{id:'l1',name:'List',items:[{id:'i1',text:'Item',done:false,section:'Inbox'}]}],
+            notes:[{id:'n1',text:'Note',crAt:new Date().toISOString()}]
+          };
+          await S.imp(payload);
+          const exported=await S.exp();
+          assert(Array.isArray(exported.todos)&&exported.todos.length===1,'Exported todos should contain imported data');
+          await S.clr();
+          await S.imp(payload);
+          const todos=await S.get('todos',[]);
+          const lists=await S.get('lists',[]);
+          assertEq(todos[0].text,'Task','Imported todo text mismatch');
+          assertEq(lists[0].items.length,1,'Imported checklist items mismatch');
+        });
+      }
+    },
+    {
+      id:'t1.review.derived-shape',
+      name:'Review derived data and heatmap shape are valid',
+      tier:'T1',
+      area:'Review Workflow',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.ReviewSection,{wide:false},async({mount,getApp})=>{
+            const today=new Date().toDateString();
+            const yesterday=new Date(Date.now()-864e5).toDateString();
+            getApp().setMet({d:{p:2,t:1,m:50,date:today},w:{p:6,t:3,m:150}});
+            getApp().setDHist([{date:yesterday,p:1,t:1,m:25}]);
+            await waitFor(()=>getApp().wkData.length===7,{timeout:1500,message:'wkData should have 7 points'});
+            assert(getApp().wkData.every(d=>typeof d.l==='string'&&typeof d.v==='number'),'wkData points should have {l,v} shape');
+            await waitFor(()=>mount.textContent.includes('This Week')&&mount.textContent.includes('Matrix Overview'),{timeout:1800,message:'Review cards did not render'});
+            const heatmapCells=mount.querySelectorAll('div[title]');
+            assert(heatmapCells.length>=20,'Heatmap did not render expected cell tooltips');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.css.menu-btn-computed',
+      name:'.menu-btn CSS applies computed interaction styles',
+      tier:'T2',
+      area:'CSS/UX',
+      async run({assert}){
+        const el=document.createElement('button');
+        el.className='menu-btn';
+        el.textContent='menu';
+        document.body.appendChild(el);
+        const st=getComputedStyle(el);
+        const displayOk=st.display==='flex'||st.display==='inline-flex';
+        const alignOk=st.textAlign==='left'||st.textAlign==='start';
+        document.body.removeChild(el);
+        assert(displayOk,'.menu-btn should set display:flex');
+        assert(alignOk,'.menu-btn should set text-align:left');
+      }
+    },
+    {
+      id:'t2.css.section-card-computed',
+      name:'.section-card CSS applies visual card surface',
+      tier:'T2',
+      area:'CSS/UX',
+      async run({assert}){
+        const el=document.createElement('div');
+        el.className='section-card';
+        el.textContent='card';
+        document.body.appendChild(el);
+        const st=getComputedStyle(el);
+        const bf=(st.backdropFilter||'').toLowerCase();
+        const wbf=(st.webkitBackdropFilter||'').toLowerCase();
+        const hasBackdrop=(bf&&bf!=='none')||(wbf&&wbf!=='none');
+        const hasFallback=(st.boxShadow&&st.boxShadow!=='none')&&(st.borderRadius&&st.borderRadius!=='0px');
+        document.body.removeChild(el);
+        assert(hasBackdrop||hasFallback,'.section-card should apply backdrop-filter or equivalent card styling');
+      }
+    },
+    {
+      id:'t2.css.anim-out-runtime',
+      name:'anim-out class maps to active fadeOut animation',
+      tier:'T2',
+      area:'Animation',
+      async run({assert}){
+        const el=document.createElement('div');
+        el.className='anim-out';
+        document.body.appendChild(el);
+        const st=getComputedStyle(el);
+        const animName=(st.animationName||'').toLowerCase();
+        const animDuration=st.animationDuration||'0s';
+        document.body.removeChild(el);
+        assert(!(animName==='none'&&animDuration==='0s'),'anim-out should map to fadeOut animation');
+      }
+    },
+    {
+      id:'t2.sticky-header.runtime',
+      name:'StickyHeader renders in sections with sticky class contract',
+      tier:'T2',
+      area:'Layout UX',
+      async run({withStorageSnapshot,withSectionHarness,assert,waitFor}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
+            await waitFor(()=>mount.querySelector('[data-testid="sticky-header"]'),{timeout:1200,message:'Sticky header missing'});
+            const header=mount.querySelector('[data-testid="sticky-header"]');
+            assert(header.className.includes('sticky'),'Sticky header should include sticky class');
+            assert(header.className.includes('top-14'),'Sticky header should include mobile top offset');
+            assert(header.className.includes('xl:top-0'),'Sticky header should include wide top offset');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.responsive.sidebar-tabbar-classes',
+      name:'Responsive class gating exists for sidebar and tab bar',
+      tier:'T2',
+      area:'Layout UX',
+      async run({assert,assertIncludes}){
+        const sidebar=document.querySelector('[data-testid="sidebar-nav"]');
+        const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');
+        assert(sidebar,'Sidebar nav not found');
+        assert(tabBar,'Bottom tab bar not found');
+        assertIncludes(sidebar.className,'hidden','Sidebar should be hidden on smaller screens');
+        assertIncludes(sidebar.className,'xl:flex','Sidebar should become visible on wide screens');
+        assertIncludes(tabBar.className,'xl:hidden','Bottom tab bar should hide on wide screens');
+      }
+    },
+    {
+      id:'t2.modal.contextmenu-anim-close',
+      name:'ContextMenu applies anim-out class before close callback',
+      tier:'T2',
+      area:'Animation',
+      async run({withDomFixture,waitFor,assert}){
+        await withDomFixture(async mount=>{
+          let closed=false;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ContextMenu,{title:'Menu',items:[{icon:React.createElement('span',null,'x'),label:'Action',onClick:()=>{}}],onClose:()=>{closed=true;},position:null}));
+          await waitFor(()=>mount.querySelector('.gcard'),{timeout:1200,message:'ContextMenu not rendered'});
+          const menuCard=mount.querySelector('.gcard');
+          const overlay=mount.firstElementChild;
+          overlay.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>menuCard.className.includes('anim-out'),{timeout:600,message:'ContextMenu did not apply anim-out class'});
+          await waitFor(()=>closed===true,{timeout:800,message:'ContextMenu did not invoke onClose'});
+          assert(closed,'ContextMenu close callback not triggered');
+        });
+      }
+    },
+    {
+      id:'t2.toast.lifecycle-fade-state',
+      name:'Toast lifecycle toggles fade state then clears',
+      tier:'T2',
+      area:'Animation',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            getApp().showT('Lifecycle toast');
+            await waitFor(()=>getApp().toast==='Lifecycle toast',{timeout:800,message:'Toast message did not appear'});
+            assertEq(getApp().toastFading,false,'Toast should not fade immediately');
+            await waitFor(()=>getApp().toastFading===true,{timeout:1900,message:'Toast did not enter fade state'});
+            await waitFor(()=>getApp().toast===null,{timeout:2600,message:'Toast did not clear after lifecycle'});
+          });
+        });
+      }
+    },
+    {
+      id:'t2.tab.anim-in-runtime',
+      name:'Active tab content keeps anim-in runtime class',
+      tier:'T2',
+      area:'Layout UX',
+      async run({assert}){
+        const tabContent=document.querySelector('[data-testid="tab-content"]');
+        assert(tabContent,'Tab content container not found');
+        assert(tabContent.className.includes('anim-in'),'Tab content should include anim-in class');
+      }
+    }
+  ];
+
+  const summarizeByTier=(tests,rows)=>{
+    const summary={};
+    for(const tier of TIER_ORDER)summary[tier]={total:0,passed:0,failed:0,skipped:0,passRate:0};
+    for(const test of tests){if(!summary[test.tier])summary[test.tier]={total:0,passed:0,failed:0,skipped:0,passRate:0};summary[test.tier].total++;}
+    for(const row of rows){
+      const bucket=summary[row.tier]||{total:0,passed:0,failed:0,skipped:0,passRate:0};
+      if(row.status==='passed')bucket.passed++;
+      else if(row.status==='failed')bucket.failed++;
+      else bucket.skipped++;
+      summary[row.tier]=bucket;
+    }
+    for(const tier of Object.keys(summary)){
+      const b=summary[tier];
+      b.passRate=b.total>0?b.passed/b.total:0;
+    }
+    return summary;
+  };
+
+  const buildReportText=(r)=>{
+    const lines=[];
+    lines.push('╔══════════════════════════════════════════════════════════════════════╗');
+    lines.push('║             PRODUCTIVITY HUB - MODERNIZED TEST REPORT               ║');
+    lines.push(`║     Suite ${r.suiteVersion} | Baseline ${r.baselineDate} | App v${r.appVersion}              ║`);
+    lines.push('╚══════════════════════════════════════════════════════════════════════╝');
+    lines.push('');
+    lines.push(`Date: ${new Date(r.timestamp).toLocaleString()}`);
+    lines.push(`Browser: ${r.browser}`);
+    lines.push('');
+    lines.push('Summary');
+    lines.push(`  Passed: ${r.summary.passed}`);
+    lines.push(`  Failed: ${r.summary.failed}`);
+    lines.push(`  Skipped: ${r.summary.skipped}`);
+    lines.push(`  Total: ${r.summary.total}`);
+    lines.push('');
+    lines.push('Tier Summary');
+    for(const tier of TIER_ORDER){
+      const t=r.tiers[tier]||{passed:0,total:0,failed:0,passRate:0};
+      lines.push(`  ${tier}: ${t.passed}/${t.total} passed, ${t.failed} failed (${Math.round((t.passRate||0)*100)}%)`);
+    }
+    lines.push('');
+    lines.push('Gate Status');
+    lines.push(`  T0 required 100%: ${r.gates.T0?'PASS':'FAIL'}`);
+    lines.push(`  T1 required 100%: ${r.gates.T1?'PASS':'FAIL'}`);
+    lines.push(`  T2 required >=90% + stable: ${r.gates.T2?'PASS':'FAIL'}`);
+    lines.push(`  Uncategorized tests: ${r.gates.uncategorized?'PASS':'FAIL'}`);
+    lines.push(`  Deterministic rerun consistency: ${r.gates.deterministic?'PASS':'FAIL'}`);
+    lines.push(`  Overall: ${r.gates.overall?'PASS':'FAIL'}`);
+    lines.push('');
+    lines.push('Determinism');
+    lines.push(`  Runs: ${r.consistency.runs}`);
+    lines.push(`  Flaky tests: ${r.consistency.flakyTests.length}`);
+    if(r.consistency.flakyTests.length>0){
+      for(const f of r.consistency.flakyTests)lines.push(`    - ${f.id}: ${f.name}`);
+    }
+    lines.push('');
+    lines.push('Detailed Results');
+    for(const tier of TIER_ORDER){
+      lines.push(`  [${tier}]`);
+      for(const row of r.tests.filter(x=>x.tier===tier)){
+        const mark=row.status==='passed'?'✅':row.status==='failed'?'❌':'⏭️';
+        const base=`    ${mark} ${row.id} - ${row.name} (${row.duration}ms)`;
+        lines.push(base);
+        if(row.error)lines.push(`      Error: ${row.error}`);
+      }
+      lines.push('');
+    }
+    lines.push(`Generated by Productivity Hub v${r.appVersion}`);
+    return lines.join('\n');
+  };
+
   const runTests=async()=>{
     setRunning(true);
     setResults(null);
+
+    const tests=getTestCases();
+    const invalidTierTests=tests.filter(t=>!TIER_ORDER.includes(t.tier));
+    const duplicateIds=tests.map(t=>t.id).filter((id,idx,arr)=>arr.indexOf(id)!==idx);
+    const t2Tests=tests.filter(t=>t.tier==='T2');
+    const totalSteps=tests.length+(t2Tests.length*2);
+    setProgress({current:0,total:Math.max(totalSteps,1),step:'Preparing suite...'});
+
+    const originalData=await S.exp();
     const report={
-      version:APP_VERSION,
+      suiteVersion:SUITE_VERSION,
+      baselineDate:BASELINE_DATE,
+      appVersion:APP_VERSION,
       timestamp:new Date().toISOString(),
       browser:navigator.userAgent,
       tests:[],
-      summary:{passed:0,failed:0,skipped:0}
+      summary:{passed:0,failed:0,skipped:0,total:0},
+      tiers:{},
+      gates:{T0:false,T1:false,T2:false,uncategorized:false,deterministic:false,overall:false},
+      consistency:{runs:3,stable:false,flakyTests:[],runsDetail:[]},
+      invalidTierTests:invalidTierTests.map(t=>t.id),
+      duplicateIds:Array.from(new Set(duplicateIds))
     };
-    
-    const tests=[
-      {name:'External CSS file linked',category:'Modularization'},
-      {name:'PWA setup script loaded',category:'Modularization'},
-      {name:'App core script loaded',category:'Modularization'},
-      {name:'PH_CORE contract keys available',category:'Modularization'},
-      {name:'__generatePWAFiles callable',category:'Modularization'},
-      {name:'__generatePWAFiles returns content',category:'Modularization'},
-      {name:'Test report version uses PH_CORE',category:'Modularization'},
-      {name:'Babel split block markers present',category:'Modularization'},
-      {name:'IndexedDB Initialization',category:'Storage'},
-      {name:'IndexedDB Write',category:'Storage'},
-      {name:'IndexedDB Read',category:'Storage'},
-      {name:'IndexedDB Delete',category:'Storage'},
-      {name:'Create Todo',category:'CRUD - Todos'},
-      {name:'Read Todo',category:'CRUD - Todos'},
-      {name:'Update Todo',category:'CRUD - Todos'},
-      {name:'Delete Todo',category:'CRUD - Todos'},
-      {name:'Create List',category:'CRUD - Lists'},
-      {name:'Add List Item',category:'CRUD - Lists'},
-      {name:'Update List Item',category:'CRUD - Lists'},
-      {name:'Delete List Item',category:'CRUD - Lists'},
-      {name:'Create Note',category:'CRUD - Notes'},
-      {name:'Update Note',category:'CRUD - Notes'},
-      {name:'Delete Note',category:'CRUD - Notes'},
-      {name:'Clear Completed',category:'Cleanup'},
-      {name:'Data Export',category:'Export/Import'},
-      {name:'Data Import',category:'Export/Import'},
-      {name:'Theme Switch (Light)',category:'Theme'},
-      {name:'Theme Switch (Dark)',category:'Theme'},
-      {name:'Theme Switch (System)',category:'Theme'},
-      {name:'Timer Settings Load',category:'Focus Timer'},
-      {name:'Preset Change',category:'Focus Timer'},
-      {name:'UID Generation',category:'Utilities'},
-      {name:'ICS Generation',category:'Utilities'},
-      {name:'Batch Select Enter',category:'Batch Selection'},
-      {name:'Batch Select Toggle',category:'Batch Selection'},
-      {name:'Batch Select Exit',category:'Batch Selection'},
-      {name:'Batch Select All',category:'Batch Selection'},
-      {name:'Batch Bulk Action',category:'Batch Selection'},
-      {name:'Batch Empty Auto-Exit',category:'Batch Selection'},
-      {name:'Batch Delete Confirm Gate',category:'Batch Selection'},
-      {name:'Day Rotation Archive',category:'Streak Heatmap'},
-      {name:'Day Rotation Reset',category:'Streak Heatmap'},
-      {name:'Streak Calculation',category:'Streak Heatmap'},
-      {name:'Heatmap Color Levels',category:'Streak Heatmap'},
-      {name:'Note Strikethrough Toggle',category:'Capture Actions'},
-      {name:'Note Strikethrough Timestamp',category:'Capture Actions'},
-      {name:'Note Copy to Clarify',category:'Capture Actions'},
-      {name:'Note Copy Keeps Note Struck',category:'Capture Actions'},
-      {name:'Note Auto-Clear 30 Days',category:'Capture Actions'},
-      {name:'Note Bulk Copy to Clarify',category:'Capture Actions'},
-      {name:'Note Bulk Strikethrough',category:'Capture Actions'},
-      {name:'3-Dot Menu Icon Set',category:'UI Interactions'},
-      {name:'Undone Todo Toggle',category:'UI Interactions'},
-      {name:'Delete List Item From Edit',category:'UI Interactions'},
-      {name:'Scroll Guard Distance',category:'UI Interactions'},
-      {name:'Quadrant Colors Defined',category:'UI Interactions'},
-      {name:'Timer Info State',category:'Desktop Layout'},
-      {name:'Focus Side-by-Side Desk',category:'Desktop Layout'},
-      {name:'Review Dashboard Grid Wide',category:'Desktop Layout'},
-      {name:'Sidebar Timer Format',category:'Desktop Layout'},
-      {name:'Settings Flexbox Desk',category:'Desktop Layout'},
-      {name:'Explainer Collapsible State',category:'Desktop Layout'},
-      {name:'Explainer Desktop Always Open',category:'Desktop Layout'},
-      {name:'App Sidebar Nav Wide CSS',category:'CSS Responsive'},
-      {name:'App Tab Bar Mobile CSS',category:'CSS Responsive'},
-      {name:'App Sidebar Hidden Mobile CSS',category:'CSS Responsive'},
-      {name:'App Tab Bar Hidden Wide CSS',category:'CSS Responsive'},
-      {name:'Review 2-Col Grid CSS',category:'CSS Responsive'},
-      {name:'Focus Side-by-Side CSS',category:'CSS Responsive'},
-      {name:'ContextMenu renders all items',category:'Unified Components'},
-      {name:'ContextMenu calls onClose on backdrop click',category:'Unified Components'},
-      {name:'ContextMenu item click fires callback and closes',category:'Unified Components'},
-      {name:'ContextMenu positioned mode renders at coordinates',category:'Unified Components'},
-      {name:'ConfirmDialog renders title and message',category:'Unified Components'},
-      {name:'ConfirmDialog confirm button fires onConfirm',category:'Unified Components'},
-      {name:'ConfirmDialog cancel button fires onCancel',category:'Unified Components'},
-      {name:'StickyHeader sticky class string',category:'StickyHeader & CSS'},
-      {name:'StickyHeader section headers in DOM',category:'StickyHeader & CSS'},
-      {name:'.menu-btn CSS applied',category:'StickyHeader & CSS'},
-      {name:'.section-card CSS applied',category:'StickyHeader & CSS'},
-      {name:'usePersistedState debounces writes',category:'UI Smoothness'},
-      {name:'usePersistedState flushes on unmount',category:'UI Smoothness'},
-      {name:'Modal applies anim-out class when closing',category:'UI Smoothness'},
-      {name:'Tab switch applies anim-in to new content',category:'UI Smoothness'},
-      {name:'Toast fades out before removal',category:'UI Smoothness'},
-    ];
-    
-    setProgress({current:0,total:tests.length,step:'Initializing...'});
-    
-    const testData={testTodo:null,testList:null,testListItem:null,testReminder:null,testNote:null};
-    const TEST_PREFIX='__TEST__';
-    
-    for(let i=0;i<tests.length;i++){
-      const test=tests[i];
-      setProgress({current:i+1,total:tests.length,step:test.name});
-      await delay(80);
-      
-      let result={name:test.name,category:test.category,status:'passed',duration:0,error:null};
-      const startTime=performance.now();
-      
+
+    const executeCase=async(test,stepIndex,stepTotal,label='Primary')=>{
+      setProgress({current:stepIndex,total:stepTotal,step:`${label}: ${test.name}`});
+      const started=performance.now();
+      const cleanupRegistry=makeCleanupRegistry();
+      const ctx={
+        assert,assertEq,assertIncludes,waitFor,
+        withDomFixture:(fn)=>withDomFixture(cleanupRegistry,fn),
+        withStorageFixture:(fn)=>withStorageFixture(cleanupRegistry,fn),
+        withStorageSnapshot:(fn)=>withStorageSnapshot(cleanupRegistry,fn),
+        withAppDataHarness:(fn)=>withAppDataHarness(cleanupRegistry,fn),
+        withSectionHarness:(SectionComp,sectionProps,fn)=>withSectionHarness(cleanupRegistry,SectionComp,sectionProps,fn),
+        setInputValue,findByText,findButtonByText,delay
+      };
+
+      let status='passed';
+      let error=null;
       try{
-        switch(test.name){
-          case 'External CSS file linked':{
-            const link=document.querySelector('link[rel="stylesheet"][href="./styles/app.css"]')||Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(l=>(l.getAttribute('href')||'').includes('styles/app.css'));
-            if(!link)throw new Error('Expected stylesheet link for ./styles/app.css');
-            break;}
-          case 'PWA setup script loaded':{
-            const script=Array.from(document.querySelectorAll('script[src]')).find(s=>(s.getAttribute('src')||'').includes('scripts/pwa_setup.js'));
-            if(!script)throw new Error('Expected script src ./scripts/pwa_setup.js');
-            break;}
-          case 'App core script loaded':{
-            const script=Array.from(document.querySelectorAll('script[src]')).find(s=>(s.getAttribute('src')||'').includes('scripts/app_core.js'));
-            if(!script)throw new Error('Expected script src ./scripts/app_core.js');
-            break;}
-          case 'PH_CORE contract keys available':{
-            if(!window.PH_CORE)throw new Error('window.PH_CORE missing');
-            const keys=['APP_VERSION','initDB','S','uid','notify','reqNotifyPerm','PRESETS','QUADS','CATS','shareItem','genICS','dlFile'];
-            for(const k of keys){if(!(k in window.PH_CORE))throw new Error(`PH_CORE missing key: ${k}`);}
-            if(typeof window.PH_CORE.S.get!=='function')throw new Error('PH_CORE.S.get missing');
-            if(typeof window.PH_CORE.S.set!=='function')throw new Error('PH_CORE.S.set missing');
-            if(typeof window.PH_CORE.uid!=='function')throw new Error('PH_CORE.uid missing');
-            break;}
-          case '__generatePWAFiles callable':{
-            if(typeof window.__generatePWAFiles!=='function')throw new Error('__generatePWAFiles should be a function');
-            break;}
-          case '__generatePWAFiles returns content':{
-            const out=window.__generatePWAFiles?.();
-            if(!out||typeof out!=='object')throw new Error('__generatePWAFiles must return object');
-            if(typeof out.sw!=='string'||!out.sw.trim())throw new Error('sw content missing');
-            if(typeof out.manifest!=='string'||!out.manifest.trim())throw new Error('manifest content missing');
-            break;}
-          case 'Test report version uses PH_CORE':{
-            if(!window.PH_CORE)throw new Error('PH_CORE missing');
-            if(APP_VERSION!==window.PH_CORE.APP_VERSION)throw new Error('APP_VERSION should come from PH_CORE');
-            break;}
-          case 'Babel split block markers present':{
-            const scripts=Array.from(document.querySelectorAll('script[type="text/babel"]'));
-            const allText=scripts.map(s=>s.textContent||'').join('\n');
-            const markers=['BEGIN: Block A','BEGIN: Block B','BEGIN: Block C','BEGIN: Block D'];
-            for(const m of markers){if(!allText.includes(m))throw new Error(`Missing marker: ${m}`);}
-            break;}
-          case 'IndexedDB Initialization':{const db=await initDB();if(!db)throw new Error('Failed to initialize IndexedDB');break;}
-          case 'IndexedDB Write':{await S.set(TEST_PREFIX+'test_key','test_value');break;}
-          case 'IndexedDB Read':{const val=await S.get(TEST_PREFIX+'test_key','default');if(val!=='test_value')throw new Error(`Expected 'test_value', got '${val}'`);break;}
-          case 'IndexedDB Delete':{await S.set(TEST_PREFIX+'test_key',undefined);break;}
-          case 'Create Todo':{testData.testTodo={id:TEST_PREFIX+uid(),text:'Test Todo',pri:'high',cat:'work',quad:'ui',done:false};if(!testData.testTodo.id)throw new Error('Failed to create todo ID');break;}
-          case 'Read Todo':{if(!testData.testTodo||!testData.testTodo.text)throw new Error('Todo not readable');break;}
-          case 'Update Todo':{testData.testTodo.text='Updated Test Todo';if(testData.testTodo.text!=='Updated Test Todo')throw new Error('Todo update failed');break;}
-          case 'Delete Todo':{testData.testTodo=null;if(testData.testTodo!==null)throw new Error('Todo deletion failed');break;}
-          case 'Create List':{testData.testList={id:TEST_PREFIX+uid(),name:'Test List',items:[]};if(!testData.testList.id)throw new Error('Failed to create list');break;}
-          case 'Add List Item':{testData.testListItem={id:TEST_PREFIX+uid(),text:'Test Item',done:false};testData.testList.items.push(testData.testListItem);if(testData.testList.items.length!==1)throw new Error('Failed to add item to list');break;}
-          case 'Update List Item':{testData.testListItem.done=true;if(!testData.testListItem.done)throw new Error('List item update failed');break;}
-          case 'Delete List Item':{testData.testList.items=testData.testList.items.filter(i=>i.id!==testData.testListItem.id);if(testData.testList.items.length!==0)throw new Error('List item deletion failed');break;}
-          case 'Create Note':{testData.testNote={id:TEST_PREFIX+uid(),title:'Test Note',content:'Test content',crAt:new Date().toISOString()};if(!testData.testNote.id)throw new Error('Failed to create note');break;}
-          case 'Update Note':{testData.testNote.content='Updated content';if(testData.testNote.content!=='Updated content')throw new Error('Note update failed');break;}
-          case 'Delete Note':{testData.testNote=null;if(testData.testNote!==null)throw new Error('Note deletion failed');break;}
-          case 'Clear Completed':{const todos=[{id:'a',done:true},{id:'b',done:false},{id:'c',done:true}];const after=todos.filter(t=>!t.done);if(after.length!==1||after[0].id!=='b')throw new Error('Clear completed failed');break;}
-          case 'Data Export':{const exported=await S.exp();if(typeof exported!=='object')throw new Error('Export did not return object');break;}
-          case 'Data Import':{const testImport={[TEST_PREFIX+'import_test']:'import_value'};await S.imp(testImport);const val=await S.get(TEST_PREFIX+'import_test');if(val!=='import_value')throw new Error('Import verification failed');break;}
-          case 'Theme Switch (Light)':{document.documentElement.classList.remove('dark');if(document.documentElement.classList.contains('dark'))throw new Error('Light theme not applied');break;}
-          case 'Theme Switch (Dark)':{document.documentElement.classList.add('dark');if(!document.documentElement.classList.contains('dark'))throw new Error('Dark theme not applied');break;}
-          case 'Theme Switch (System)':{const prefDark=window.matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.classList.toggle('dark',prefDark);break;}
-          case 'Timer Settings Load':{const preset=PRESETS.classic;if(preset.work!==25||preset.shortBreak!==5||preset.longBreak!==15)throw new Error('Default preset values incorrect');break;}
-          case 'Preset Change':{const longPreset=PRESETS.long;if(longPreset.work!==50)throw new Error('Long preset work duration incorrect');break;}
-          case 'UID Generation':{const id1=uid();const id2=uid();if(id1===id2)throw new Error('UIDs not unique');if(!id1.includes('-'))throw new Error('UID format invalid');break;}
-          case 'ICS Generation':{const ics=genICS({text:'Test',time:'10:00',date:'2026-02-01'});if(!ics.includes('BEGIN:VCALENDAR'))throw new Error('ICS format invalid');if(!ics.includes('Test'))throw new Error('ICS content missing');break;}
-          case 'Batch Select Enter':{const selState={mode:false,section:null,ids:new Set()};selState.mode=true;selState.section='todos';selState.ids.add('test-id-1');if(!selState.mode)throw new Error('Selection mode not activated');if(selState.section!=='todos')throw new Error('Section not set');if(selState.ids.size!==1)throw new Error('First item not selected');break;}
-          case 'Batch Select Toggle':{const ids=new Set(['id1']);ids.add('id2');if(ids.size!==2)throw new Error('Add failed');ids.delete('id1');if(ids.size!==1||ids.has('id1'))throw new Error('Remove failed');ids.add('id1');ids.add('id3');if(ids.size!==3)throw new Error('Multi-select failed');break;}
-          case 'Batch Select Exit':{const st={mode:true,section:'todos',ids:new Set(['a','b'])};st.mode=false;st.section=null;st.ids=new Set();if(st.mode||st.section||st.ids.size!==0)throw new Error('Exit did not clear state');break;}
-          case 'Batch Select All':{const allIds=['t1','t2','t3','t4'];const sel=new Set(allIds);if(sel.size!==4)throw new Error('Select all count wrong');const isAll=sel.size===allIds.length;if(!isAll)throw new Error('Select all check failed');sel.clear();if(sel.size!==0)throw new Error('Deselect all failed');break;}
-          case 'Batch Bulk Action':{const todos=[{id:'a',done:false},{id:'b',done:false},{id:'c',done:true}];const selIds=new Set(['a','b']);const afterDone=todos.map(t=>selIds.has(t.id)?{...t,done:true}:t);if(!afterDone[0].done||!afterDone[1].done)throw new Error('Bulk done failed');if(afterDone[2].done!==true)throw new Error('Non-selected item changed');const afterDel=todos.filter(t=>!selIds.has(t.id));if(afterDel.length!==1||afterDel[0].id!=='c')throw new Error('Bulk delete failed');break;}
-          case 'Batch Empty Auto-Exit':{const sel=new Set(['a']);sel.delete('a');const shouldExit=sel.size===0;if(!shouldExit)throw new Error('Empty set did not trigger exit condition');if(sel.size!==0)throw new Error('Set not empty after removal');break;}
-          case 'Batch Delete Confirm Gate':{const threshold=3;const small=new Set(['a','b']);const large=new Set(['a','b','c']);const needsConfirmSmall=small.size>=threshold;const needsConfirmLarge=large.size>=threshold;if(needsConfirmSmall)throw new Error('2 items should not need confirmation');if(!needsConfirmLarge)throw new Error('3 items should need confirmation');break;}
-          case 'Day Rotation Archive':{const oldHist=[];const oldMet={d:{p:3,t:2,m:75,date:'Mon Jan 01 2026'},w:{p:5,t:4,m:120}};const filtered=oldHist.filter(x=>x.date!==oldMet.d.date);const newHist=[...filtered,{date:oldMet.d.date,p:oldMet.d.p,t:oldMet.d.t,m:oldMet.d.m}];if(newHist.length!==1)throw new Error('Archive count wrong');if(newHist[0].p!==3||newHist[0].t!==2||newHist[0].m!==75)throw new Error('Archived data mismatch');break;}
-          case 'Day Rotation Reset':{const oldDate='Mon Jan 05 2026';const today='Tue Jan 06 2026';const isNewDay=oldDate!==today;if(!isNewDay)throw new Error('Day change not detected');const newMet={d:{p:0,t:0,m:0,date:today}};if(newMet.d.p!==0||newMet.d.t!==0)throw new Error('Daily metrics not reset');break;}
-          case 'Streak Calculation':{const hist=[{date:new Date(Date.now()-864e5).toDateString(),p:2,t:1,m:50},{date:new Date(Date.now()-2*864e5).toDateString(),p:1,t:0,m:25},{date:new Date(Date.now()-4*864e5).toDateString(),p:3,t:2,m:75}];let streak=0;for(let i=1;i<=5;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();const h=hist.find(x=>x.date===ds);if(h&&(h.p>0||h.t>0))streak++;else break;}if(streak!==2)throw new Error(`Expected streak 2, got ${streak}`);break;}
-          case 'Heatmap Color Levels':{const clr=(p)=>{if(p===0)return'empty';if(p<=1)return'L1';if(p<=3)return'L2';if(p<=5)return'L3';return'L4';};if(clr(0)!=='empty')throw new Error('Level 0 wrong');if(clr(1)!=='L1')throw new Error('Level 1 wrong');if(clr(3)!=='L2')throw new Error('Level 2 wrong');if(clr(5)!=='L3')throw new Error('Level 3 wrong');if(clr(8)!=='L4')throw new Error('Level 4 wrong');break;}
-          case 'Note Strikethrough Toggle':{const n={id:'n1',text:'Test',struck:false};const toggled={...n,struck:!n.struck};if(!toggled.struck)throw new Error('Strikethrough not toggled on');const unToggled={...toggled,struck:!toggled.struck};if(unToggled.struck)throw new Error('Strikethrough not toggled off');break;}
-          case 'Note Strikethrough Timestamp':{const now=Date.now();const n={id:'n1',text:'Test',struck:false,struckAt:null};const struck={...n,struck:true,struckAt:now};if(!struck.struckAt)throw new Error('struckAt not set');const unstruck={...struck,struck:false,struckAt:null};if(unstruck.struckAt!==null)throw new Error('struckAt not cleared');break;}
-          case 'Note Copy to Clarify':{const note={id:'n1',text:'Migrate me',struck:false};const newTodo={id:'t1',text:note.text,quad:'nn',poms:0,done:false};if(newTodo.text!=='Migrate me')throw new Error('Text not carried over');if(newTodo.quad!=='nn')throw new Error('Quad not set to nn');const afterNote={...note,struck:true,struckAt:Date.now()};if(!afterNote.struck)throw new Error('Note should be struck after copy');break;}
-          case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
-          case 'Note Auto-Clear 30 Days':{const thirtyDays=30*24*60*60*1000;const now=Date.now();const oldNote={id:'n1',struck:true,struckAt:now-thirtyDays-1000};const newNote={id:'n2',struck:true,struckAt:now-1000};const notes=[oldNote,newNote];const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));if(toRemove.length!==1||toRemove[0].id!=='n1')throw new Error('Auto-clear filter wrong');const remaining=notes.filter(n=>!toRemove.find(r=>r.id===n.id));if(remaining.length!==1||remaining[0].id!=='n2')throw new Error('Wrong note removed');break;}
-          case 'Note Bulk Copy to Clarify':{const notes=[{id:'n1',text:'A',struck:false},{id:'n2',text:'B',struck:false},{id:'n3',text:'C',struck:false}];const selIds=new Set(['n1','n3']);const toMove=notes.filter(x=>selIds.has(x.id));const newTodos=toMove.map(x=>({id:'t_'+x.id,text:x.text,quad:'nn',poms:0,done:false}));if(newTodos.length!==2)throw new Error('Wrong copy count');const afterNotes=notes.map(x=>selIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x);if(!afterNotes[0].struck)throw new Error('n1 should be struck');if(afterNotes[1].struck)throw new Error('n2 should be unchanged');if(!afterNotes[2].struck)throw new Error('n3 should be struck');if(afterNotes.length!==3)throw new Error('Notes should not be deleted');break;}
-          case 'Note Bulk Strikethrough':{const notes=[{id:'n1',struck:false},{id:'n2',struck:true},{id:'n3',struck:false}];const selIds=new Set(['n1','n2']);const after=notes.map(x=>selIds.has(x.id)?{...x,struck:!x.struck}:x);if(!after[0].struck)throw new Error('n1 should be struck');if(after[1].struck)throw new Error('n2 should be unstruck (toggled)');if(after[2].struck)throw new Error('n3 should be unchanged');break;}
-          case '3-Dot Menu Icon Set':{if(typeof I.MoreV!=='function')throw new Error('MoreV icon not defined');const el=I.MoreV({s:18,c:'test'});if(!el)throw new Error('MoreV icon did not render');const icons=['Focus','List','Check','Edit','Trash','Plus','MoreV'];for(const name of icons){if(typeof I[name]!=='function')throw new Error(`Icon ${name} missing`);}break;}
-          case 'Undone Todo Toggle':{const todo={id:'t1',text:'Test',done:true};const undone={...todo,done:false};if(undone.done)throw new Error('Todo should be undone');const redone={...undone,done:true};if(!redone.done)throw new Error('Todo should be done again');break;}
-          case 'Delete List Item From Edit':{const list={id:'l1',items:[{id:'i1',text:'A'},{id:'i2',text:'B'},{id:'i3',text:'C'}]};const toDelete='i2';const after={...list,items:list.items.filter(i=>i.id!==toDelete)};if(after.items.length!==2)throw new Error('Should have 2 items');if(after.items.find(i=>i.id==='i2'))throw new Error('Item i2 should be deleted');break;}
-          case 'Scroll Guard Distance':{const threshold=10;const noScroll={dx:5,dy:3};const scrolled={dx:12,dy:2};if(Math.abs(noScroll.dx)>threshold||Math.abs(noScroll.dy)>threshold)throw new Error('Small movement should not trigger scroll');if(!(Math.abs(scrolled.dx)>threshold||Math.abs(scrolled.dy)>threshold))throw new Error('12px movement should trigger scroll');break;}
-          case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
-          case 'Timer Info State':{const ti={left:1500,run:false,mode:'work'};if(ti.left!==1500)throw new Error('Timer left wrong');if(ti.run!==false)throw new Error('Timer run wrong');if(ti.mode!=='work')throw new Error('Timer mode wrong');const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(1500)!=='25:00')throw new Error('Format wrong: '+fmtSB(1500));if(fmtSB(63)!=='1:03')throw new Error('Format 63s wrong');break;}
-          case 'Focus Side-by-Side Desk':{const cls='md:flex md:gap-6 md:items-start';if(!cls.includes('md:flex'))throw new Error('Focus should use md:flex for CSS responsive');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6');break;}
-          case 'Review Dashboard Grid Wide':{const cls='space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0';if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should use xl:grid-cols-2 for CSS responsive');if(!cls.includes('space-y-4'))throw new Error('Review should stack on mobile with space-y-4');break;}
-          case 'Sidebar Timer Format':{const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(0)!=='0:00')throw new Error('0s format wrong');if(fmtSB(59)!=='0:59')throw new Error('59s wrong');if(fmtSB(600)!=='10:00')throw new Error('600s wrong');const run=true;const mode='work';const label=run?fmtSB(1200):'Focus';if(label!=='20:00')throw new Error('Running label should show time');const notRun=false;const label2=notRun?fmtSB(1200):'Focus';if(label2!=='Focus')throw new Error('Not running should show Focus');break;}
-          case 'Settings Flexbox Desk':{const desk=true;const expected='flex gap-4';const mobile=false;const mExpected='space-y-4';if(!expected.includes('flex'))throw new Error('Desk settings should use flexbox');if(mExpected.includes('flex'))throw new Error('Mobile settings should not use flexbox');if(!expected.includes('gap-4'))throw new Error('Desk should have gap');break;}
-          case 'Explainer Collapsible State':{const helpExp={};const toggleHelp=(k,s)=>({...s,[k]:!s[k]});const after=toggleHelp('wf',helpExp);if(!after.wf)throw new Error('Toggle should open section');const after2=toggleHelp('wf',after);if(after2.wf)throw new Error('Toggle should close section');break;}
-          case 'Explainer Desktop Always Open':{const desk=true;const helpExp={};const isOpen=desk||helpExp.wf;if(!isOpen)throw new Error('Desktop should always show explainer content');const mobile=false;const mOpen=mobile||helpExp.wf;if(mOpen)throw new Error('Mobile with closed state should hide content');break;}
-          case 'App Sidebar Nav Wide CSS':{const sidebar=document.querySelector('[data-testid="sidebar-nav"]');if(!sidebar)throw new Error('Sidebar nav element not found');const cls=sidebar.className;if(!cls.includes('xl:flex'))throw new Error('Sidebar should have xl:flex class');if(!cls.includes('xl:flex-col'))throw new Error('Sidebar should have xl:flex-col class');break;}
-          case 'App Tab Bar Mobile CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden class to hide on wide');break;}
-          case 'App Sidebar Hidden Mobile CSS':{const sidebar=document.querySelector('[data-testid="sidebar-nav"]');if(!sidebar)throw new Error('Sidebar nav element not found');const cls=sidebar.className;if(!cls.includes('hidden'))throw new Error('Sidebar should have hidden class for mobile');break;}
-          case 'App Tab Bar Hidden Wide CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden to hide at 1280px+');break;}
-          case 'Review 2-Col Grid CSS':{const cls='space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0';if(!cls.includes('xl:grid'))throw new Error('Review should have xl:grid class');if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should have xl:grid-cols-2 class');if(!cls.includes('xl:space-y-0'))throw new Error('Review should have xl:space-y-0 to reset stack on wide');break;}
-          case 'Focus Side-by-Side CSS':{const cls='md:flex md:gap-6 md:items-start';if(!cls.includes('md:flex'))throw new Error('Focus should have md:flex class for tablet+');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6 class');break;}
-          case 'ContextMenu renders all items':{const items=[{icon:'edit',label:'Edit',onClick:()=>{},variant:'default'},{icon:'focus',label:'Focus',onClick:()=>{},variant:'default',borderTop:true},{icon:'trash',label:'Delete',onClick:()=>{},variant:'danger',borderTop:true}];if(items.length!==3)throw new Error('Expected 3 items');if(items[2].variant!=='danger')throw new Error('Third item should be danger variant');if(!items[1].borderTop)throw new Error('Second item should have borderTop');const rendered=items.map(i=>({label:i.label,hasBorder:!!i.borderTop,isDanger:i.variant==='danger'}));if(rendered.length!==3)throw new Error('Rendered count mismatch');if(rendered[0].hasBorder)throw new Error('First item should not have border');break;}
-          case 'ContextMenu calls onClose on backdrop click':{let closed=false;const onClose=()=>{closed=true;};onClose();if(!closed)throw new Error('onClose not called on backdrop click');break;}
-          case 'ContextMenu item click fires callback and closes':{let clicked=false;let closed=false;const item={label:'Edit',onClick:()=>{clicked=true;},variant:'default'};const onClose=()=>{closed=true;};item.onClick();onClose();if(!clicked)throw new Error('onClick not fired');if(!closed)throw new Error('onClose not fired after click');break;}
-          case 'ContextMenu positioned mode renders at coordinates':{const position={x:150,y:200};const hasPosition=!!position;if(!hasPosition)throw new Error('Position should be truthy');const style={position:'absolute',top:position.y,left:position.x};if(style.top!==200)throw new Error('Top should be 200');if(style.left!==150)throw new Error('Left should be 150');const noPos=null;const isCentered=!noPos;if(!isCentered)throw new Error('No position should mean centered mode');break;}
-          case 'ConfirmDialog renders title and message':{const props={title:'Delete "Shopping"?',message:'This will permanently delete the checklist.',confirmLabel:'Delete',variant:'danger'};if(!props.title.includes('Delete'))throw new Error('Title missing');if(!props.message.includes('permanently'))throw new Error('Message missing');if(props.variant!=='danger')throw new Error('Variant should be danger');const infoProps={title:'Cannot Delete',message:'You need at least one checklist.',variant:'info'};if(infoProps.variant!=='info')throw new Error('Info variant wrong');break;}
-          case 'ConfirmDialog confirm button fires onConfirm':{let confirmed=false;const onConfirm=()=>{confirmed=true;};onConfirm();if(!confirmed)throw new Error('onConfirm not fired');break;}
-          case 'ConfirmDialog cancel button fires onCancel':{let cancelled=false;const onCancel=()=>{cancelled=true;};onCancel();if(!cancelled)throw new Error('onCancel not fired');break;}
-          case 'StickyHeader sticky class string':{const cls='sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4';if(!cls.includes('sticky'))throw new Error('Should be sticky positioned');if(!cls.includes('top-14'))throw new Error('Should have top-14 for mobile');if(!cls.includes('xl:top-0'))throw new Error('Should have xl:top-0 for wide desktop');if(!cls.includes('md:top-16'))throw new Error('Should have md:top-16 for tablet');if(!cls.includes('glass'))throw new Error('Should use glass effect');break;}
-          case 'StickyHeader section headers in DOM':{const scripts=Array.from(document.querySelectorAll('script'));let defScript=null;for(const s of scripts){if(s.textContent.includes('StickyHeader')&&s.textContent.includes('data-testid="sticky-header"')){defScript=s;break;}}if(!defScript)throw new Error('Expected at least 1 sticky header in DOM, found 0');if(!defScript.textContent.includes('sticky'))throw new Error('Header element should have sticky class');if(!defScript.textContent.includes('glass'))throw new Error('Header element should have glass class');break;}
-          case '.menu-btn CSS applied':{
-            const el=document.createElement('button');
-            el.className='menu-btn';
-            el.textContent='Test';
-            document.body.appendChild(el);
-            const st=getComputedStyle(el);
-            const hasDisplay=st.display==='flex'||st.display==='inline-flex';
-            const hasTextAlign=st.textAlign==='left'||st.textAlign==='start';
-            document.body.removeChild(el);
-            if(!hasDisplay)throw new Error('.menu-btn should apply display:flex');
-            if(!hasTextAlign)throw new Error('.menu-btn should apply text-align:left');
-            break;}
-          case '.section-card CSS applied':{
-            const el=document.createElement('div');
-            el.className='section-card';
-            el.textContent='x';
-            document.body.appendChild(el);
-            const st=getComputedStyle(el);
-            const bf=(st.backdropFilter||'').toLowerCase();
-            const wbf=(st.webkitBackdropFilter||'').toLowerCase();
-            const hasBackdrop=(bf&&bf!=='none')||(wbf&&wbf!=='none');
-            const hasVisualFallback=(st.boxShadow&&st.boxShadow!=='none')&&(st.borderRadius&&st.borderRadius!=='0px');
-            document.body.removeChild(el);
-            if(!hasBackdrop&&!hasVisualFallback)throw new Error('.section-card should apply backdrop-filter (or equivalent visual card styling)');
-            break;}
-          case 'usePersistedState debounces writes':{
-            // Simulate debounce: 5 rapid state changes should produce only 1 write after settling
-            const writes=[];let timerRef={current:null};
-            const debouncedSet=(val)=>{clearTimeout(timerRef.current);timerRef.current=setTimeout(()=>writes.push(val),300);};
-            debouncedSet(1);debouncedSet(2);debouncedSet(3);debouncedSet(4);debouncedSet(5);
-            await delay(450);
-            if(writes.length!==1)throw new Error(`Expected 1 debounced write after 5 rapid sets, got ${writes.length}`);
-            if(writes[0]!==5)throw new Error(`Expected final value 5, got ${writes[0]}`);
-            break;}
-          case 'usePersistedState flushes on unmount':{
-            // Simulate: debounced write timer runs to completion (flush before cleanup)
-            const testKey=TEST_PREFIX+'debounce_flush';
-            let written=false;
-            let timerRef={current:null};
-            timerRef.current=setTimeout(async()=>{await S.set(testKey,'flush_val');written=true;},100);
-            await delay(250);
-            if(!written)throw new Error('Debounced write should complete within timeout');
-            const val=await S.get(testKey,'missing');
-            if(val!=='flush_val')throw new Error(`Expected 'flush_val', got '${val}'`);
-            await S.set(testKey,undefined);
-            break;}
-          case 'Modal applies anim-out class when closing':{
-            const el=document.createElement('div');
-            el.className='gcard anim-in';
-            document.body.appendChild(el);
-            el.classList.add('anim-out');
-            if(!el.classList.contains('anim-out'))throw new Error('anim-out class not applied');
-            const st=getComputedStyle(el);
-            const animName=(st.animationName||'').toLowerCase();
-            const animDuration=st.animationDuration||'0s';
-            document.body.removeChild(el);
-            if(animName==='none'&&animDuration==='0s')throw new Error('.anim-out animation style not applied');
-            break;}
-          case 'Tab switch applies anim-in to new content':{
-            // Verify tab content wrapper uses anim-in for fade-in on switch
-            const tabContent=document.querySelector('[data-testid="tab-content"]');
-            if(!tabContent)throw new Error('Tab content wrapper with data-testid="tab-content" not found');
-            if(!tabContent.className.includes('anim-in'))throw new Error('Tab content wrapper should have anim-in class');
-            break;}
-          case 'Toast fades out before removal':{
-            // Verify toast implementation uses transition-opacity and opacity-0 for fade-out
-            const scripts=Array.from(document.querySelectorAll('script'));
-            let hasTransitionOpacity=false,hasOpacityZero=false;
-            for(const s of scripts){if(s.textContent.includes('transition-opacity'))hasTransitionOpacity=true;if(s.textContent.includes('opacity-0'))hasOpacityZero=true;}
-            if(!hasTransitionOpacity)throw new Error('Toast should use transition-opacity for fade-out');
-            if(!hasOpacityZero)throw new Error('opacity-0 class should make element invisible');
-            break;}
-          default:result.status='skipped';report.summary.skipped++;
-        }
-        if(result.status==='passed')report.summary.passed++;
+        await runWithTimeout(Promise.resolve(test.run(ctx)),test.timeoutMs||7000,test.id);
       }catch(err){
-        result.status='failed';
-        result.error=err.message;
-        report.summary.failed++;
+        status='failed';
+        error=normalizeErr(err);
       }
-      
-      result.duration=Math.round(performance.now()-startTime);
-      report.tests.push(result);
+
+      try{
+        if(typeof test.cleanup==='function')await test.cleanup(ctx);
+      }catch(err){
+        status='failed';
+        const extra=`cleanup hook: ${normalizeErr(err)}`;
+        error=error?`${error} | ${extra}`:extra;
+      }
+
+      try{await cleanupRegistry.runAll();}
+      catch(err){
+        status='failed';
+        error=error?`${error} | ${normalizeErr(err)}`:normalizeErr(err);
+      }
+
+      return{id:test.id,name:test.name,tier:test.tier,area:test.area,status,error,duration:Math.round(performance.now()-started)};
+    };
+
+    const runCaseList=async(caseList,offset,label)=>{
+      const out=[];
+      for(let i=0;i<caseList.length;i++){
+        out.push(await executeCase(caseList[i],offset+i+1,totalSteps,label));
+      }
+      return out;
+    };
+
+    try{
+      const primaryRows=await runCaseList(tests,0,'Primary');
+      report.tests=primaryRows;
+
+      const baselineT2=new Map(primaryRows.filter(r=>r.tier==='T2').map(r=>[r.id,r.status]));
+      const flakyMap=new Map();
+      const run2=await runCaseList(t2Tests,tests.length,'Consistency #2');
+      const run3=await runCaseList(t2Tests,tests.length+t2Tests.length,'Consistency #3');
+      report.consistency.runsDetail=[run2,run3];
+      for(const row of [...run2,...run3]){
+        const baseline=baselineT2.get(row.id);
+        if(baseline&&baseline!==row.status){
+          if(!flakyMap.has(row.id))flakyMap.set(row.id,{id:row.id,name:row.name});
+        }
+      }
+      report.consistency.flakyTests=[...flakyMap.values()];
+      report.consistency.stable=report.consistency.flakyTests.length===0;
+
+      report.summary={
+        passed:primaryRows.filter(r=>r.status==='passed').length,
+        failed:primaryRows.filter(r=>r.status==='failed').length,
+        skipped:primaryRows.filter(r=>r.status==='skipped').length,
+        total:primaryRows.length
+      };
+      report.tiers=summarizeByTier(tests,primaryRows);
+
+      const t0=report.tiers.T0||{failed:0,total:0,passRate:0};
+      const t1=report.tiers.T1||{failed:0,total:0,passRate:0};
+      const t2=report.tiers.T2||{failed:0,total:0,passRate:0};
+      report.gates={
+        T0:t0.total>0&&t0.failed===0,
+        T1:t1.total>0&&t1.failed===0,
+        T2:t2.total>0&&t2.passRate>=TIER_TARGETS.T2&&report.consistency.flakyTests.length===0,
+        uncategorized:invalidTierTests.length===0&&report.duplicateIds.length===0,
+        deterministic:report.consistency.stable,
+        overall:false
+      };
+      report.gates.overall=report.gates.T0&&report.gates.T1&&report.gates.T2&&report.gates.uncategorized&&report.gates.deterministic;
+
+      setProgress({current:totalSteps,total:totalSteps,step:'Final cleanup...'});
+      await delay(120);
+
+      const afterData=await S.exp();
+      for(const key of Object.keys(afterData))if(key.startsWith('__TEST__'))await S.set(key,undefined);
+      await S.clr();
+      await S.imp(originalData);
+      document.documentElement.classList.remove('dark');
+
+      setResults(report);
+      onShowToast(`${report.gates.overall?'✅':'⚠️'} Suite complete: ${report.summary.passed}/${report.summary.total} passed`);
+    }catch(err){
+      const msg=normalizeErr(err);
+      report.summary.failed=report.summary.failed+1;
+      report.tests.push({id:'suite.runtime',name:'Suite runtime execution',tier:'T0',area:'Harness',status:'failed',error:msg,duration:0});
+      setResults(report);
+      onShowToast(`❌ Test suite error: ${msg}`);
+      try{
+        await S.clr();
+        await S.imp(originalData);
+      }catch{}
     }
-    
-    setProgress({current:tests.length,total:tests.length,step:'Cleaning up...'});
-    await delay(200);
-    
-    const allData=await S.exp();
-    for(const key of Object.keys(allData)){
-      if(key.startsWith(TEST_PREFIX)){await S.set(key,undefined);}
-    }
-    document.documentElement.classList.remove('dark');
-    
-    setResults(report);
+
     setRunning(false);
-    onShowToast(`✅ Tests complete: ${report.summary.passed} passed, ${report.summary.failed} failed`);
   };
-  
-  const generateReport=()=>{
-    if(!results)return'';
-    let report=`
-╔═══════════════════════════════════════════════════════════════╗
-║          PRODUCTIVITY HUB - TEST REPORT                       ║
-║                    Version ${results.version}                            ║
-╚═══════════════════════════════════════════════════════════════╝
 
-📅 Date: ${new Date(results.timestamp).toLocaleString()}
-🌐 Browser: ${results.browser.slice(0,60)}...
+  const generateReport=()=>results?buildReportText(results):'';
+  const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('Report copied to clipboard');};
+  const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('Report downloaded');};
 
-═══════════════════════════════════════════════════════════════
-                         SUMMARY
-═══════════════════════════════════════════════════════════════
+  const suiteCounts=getTestCases().reduce((acc,t)=>{acc.total++;acc[t.tier]=(acc[t.tier]||0)+1;return acc;},{total:0,T0:0,T1:0,T2:0});
 
-  ✅ Passed:  ${results.summary.passed}
-  ❌ Failed:  ${results.summary.failed}
-  ⏭️  Skipped: ${results.summary.skipped}
-  ━━━━━━━━━━━━━━━━━━━
-  📊 Total:   ${results.tests.length}
-
-═══════════════════════════════════════════════════════════════
-                      DETAILED RESULTS
-═══════════════════════════════════════════════════════════════
-`;
-    const categories={};
-    results.tests.forEach(t=>{if(!categories[t.category])categories[t.category]=[];categories[t.category].push(t);});
-    for(const[cat,tests]of Object.entries(categories)){
-      report+=`\n┌─ ${cat} ${'─'.repeat(Math.max(0,55-cat.length))}┐\n`;
-      tests.forEach(t=>{
-        const icon=t.status==='passed'?'✅':t.status==='failed'?'❌':'⏭️';
-        report+=`│ ${icon} ${t.status.toUpperCase().padEnd(7)} ${t.name.padEnd(35)} ${t.duration}ms`;
-        if(t.error)report+=`\n│    └─ Error: ${t.error}`;
-        report+='\n';
-      });
-      report+=`└${'─'.repeat(60)}┘\n`;
-    }
-    report+=`\n═══════════════════════════════════════════════════════════════\n                         END OF REPORT\n═══════════════════════════════════════════════════════════════\nGenerated by Productivity Hub v${APP_VERSION}\n`;
-    return report;
-  };
-  
-  const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('📋 Report copied!');};
-  const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('📥 Report downloaded!');};
-  
   return(
     <div className="space-y-4">
       <div className="gcard rounded-2xl p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-2xl bg-lavender-100 flex items-center justify-center"><I.Test s={24} c="text-lavender-400"/></div>
-          <div><h3 className="font-bold text-bark-600 dark:text-sand-100">App Test Suite</h3><p className="text-xs text-bark-400 dark:text-sand-300">Validate all features are working correctly</p></div>
+          <div>
+            <h3 className="font-bold text-bark-600 dark:text-sand-100">Tiered Test Suite</h3>
+            <p className="text-xs text-bark-400 dark:text-sand-300">Suite {SUITE_VERSION} • Baseline {BASELINE_DATE} • file:// deterministic gate</p>
+          </div>
         </div>
+
         <div className="bg-terracotta-50 dark:bg-terracotta-400/10 border border-terracotta-200 dark:border-terracotta-400/30 rounded-xl p-3 mb-4">
-          <div className="flex items-start gap-2"><span className="text-lg">⚠️</span><div><p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Alpha Feature</p><p className="text-xs text-bark-500 dark:text-sand-200">Tests use isolated data and clean up automatically. Your data is safe.</p></div></div>
+          <div className="flex items-start gap-2">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Modernized In-App Runner</p>
+              <p className="text-xs text-bark-500 dark:text-sand-200">T0/T1 require 100%, T2 requires ≥90% and zero flaky rerun variance across 3 runs.</p>
+            </div>
+          </div>
         </div>
+
         {running?(
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm"><span className="text-bark-500 dark:text-sand-200">{progress.step}</span><span className="font-semibold text-sage-500">{progress.current}/{progress.total}</span></div>
-            <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden"><div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${(progress.current/progress.total)*100}%`}}/></div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-bark-500 dark:text-sand-200">{progress.step}</span>
+              <span className="font-semibold text-sage-500">{progress.current}/{progress.total}</span>
+            </div>
+            <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden">
+              <div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${progress.total?((progress.current/progress.total)*100):0}%`}}/>
+            </div>
           </div>
         ):(
-          <button onClick={runTests} className="w-full py-3 bg-lavender-400 hover:bg-lavender-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><I.Play s={20}/>Run All Tests</button>
+          <button onClick={runTests} className="w-full py-3 bg-lavender-400 hover:bg-lavender-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><I.Play s={20}/>Run Tiered Suite</button>
         )}
       </div>
+
       {results&&(
-        <div className="gcard rounded-2xl p-5">
-          <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📊 Test Results</h4>
-          <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="gcard rounded-2xl p-5 space-y-4">
+          <h4 className="font-bold text-bark-600 dark:text-sand-100">Test Results</h4>
+
+          <div className="grid grid-cols-3 gap-3">
             <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-sage-600 dark:text-sage-300">{results.summary.passed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Passed</div></div>
             <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-terracotta-500 dark:text-terracotta-300">{results.summary.failed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Failed</div></div>
-            <div className="bg-sand-200 dark:bg-bark-500/30 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-bark-500 dark:text-sand-200">{results.summary.skipped}</div><div className="text-xs text-bark-500 dark:text-sand-200">Skipped</div></div>
+            <div className="bg-sand-200 dark:bg-bark-500/30 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-bark-500 dark:text-sand-200">{results.summary.total}</div><div className="text-xs text-bark-500 dark:text-sand-200">Total</div></div>
           </div>
-          {results.summary.failed>0&&(<div className="bg-terracotta-50 dark:bg-terracotta-400/10 rounded-xl p-3 mb-4"><h5 className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-2">❌ Failed Tests:</h5><ul className="space-y-1">{results.tests.filter(t=>t.status==='failed').map((t,i)=>(<li key={i} className="text-xs text-bark-500 dark:text-sand-200">• {t.name}: <span className="text-terracotta-500">{t.error}</span></li>))}</ul></div>)}
+
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            {TIER_ORDER.map(tier=>{
+              const t=results.tiers[tier]||{passed:0,total:0,failed:0,passRate:0};
+              return <div key={tier} className="section-card"><div className="font-bold text-bark-600 dark:text-sand-100">{tier}</div><div className="text-bark-500 dark:text-sand-200">{t.passed}/{t.total} passed</div><div className="text-bark-400/70 dark:text-sand-300/70">{Math.round((t.passRate||0)*100)}%</div></div>;
+            })}
+          </div>
+
+          <div className={`rounded-xl p-3 border ${results.gates.overall?'bg-sage-50 dark:bg-sage-400/10 border-sage-300 dark:border-sage-500/40':'bg-terracotta-50 dark:bg-terracotta-400/10 border-terracotta-300 dark:border-terracotta-500/40'}`}>
+            <div className="text-sm font-semibold text-bark-600 dark:text-sand-100">Gate Status: {results.gates.overall?'PASS':'FAIL'}</div>
+            <div className="text-xs text-bark-500 dark:text-sand-200 mt-1">T0 {results.gates.T0?'✓':'✗'} • T1 {results.gates.T1?'✓':'✗'} • T2 {results.gates.T2?'✓':'✗'} • Determinism {results.gates.deterministic?'✓':'✗'} • Flaky {results.consistency.flakyTests.length}</div>
+          </div>
+
+          {results.summary.failed>0&&(
+            <div className="bg-terracotta-50 dark:bg-terracotta-400/10 rounded-xl p-3">
+              <h5 className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-2">Failed Tests</h5>
+              <ul className="space-y-1">
+                {results.tests.filter(t=>t.status==='failed').map(t=><li key={t.id} className="text-xs text-bark-500 dark:text-sand-200">• <span className="font-semibold">{t.id}</span>: {t.error}</li>)}
+              </ul>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button onClick={copyReport} className="flex-1 py-2.5 bg-ocean-100 text-ocean-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Copy s={16}/>Copy Report</button>
             <button onClick={downloadReport} className="flex-1 py-2.5 bg-sage-100 text-sage-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Download s={16}/>Download</button>
           </div>
         </div>
       )}
+
       <div className="section-card">
-        <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">📋 Tests Included:</h4>
+        <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">Coverage Model</h4>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-bark-500 dark:text-sand-200">
-          <div>• IndexedDB Storage</div><div>• CRUD Operations</div><div>• Export/Import</div><div>• Theme Switching</div><div>• Focus Timer Settings</div><div>• Utility Functions</div><div>• Data Validation</div><div>• Streak Heatmap</div>
+          <div>• Total tests: {suiteCounts.total}</div><div>• T0 Contract/Boot: {suiteCounts.T0}</div>
+          <div>• T1 Core Workflow: {suiteCounts.T1}</div><div>• T2 UX/Quality: {suiteCounts.T2}</div>
+          <div>• Suite version: {SUITE_VERSION}</div><div>• Baseline date: {BASELINE_DATE}</div>
         </div>
       </div>
     </div>
