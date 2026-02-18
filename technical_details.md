@@ -27,7 +27,7 @@
 - **Working files:** `productivity_hub.html`, `styles/app.css`, `scripts/pwa_setup.js`, `scripts/app_core.js`
 - **Key constraint:** Output token limits require incremental edits (avoid full-file rewrites)
 - **Encoding note:** File had double-encoded UTF-8 emoji issues in the past (fixed in v15_4)
-- **Test status:** 26 tiered deterministic tests (`T0=10`, `T1=9`, `T2=8`) in the modernized in-app runner
+- **Test status:** 36 tiered deterministic tests (`T0=10`, `T1=13`, `T2=14`) in the modernized in-app runner
 
 ## Documentation Boundaries
 
@@ -217,7 +217,7 @@ Removed: arc, reminders, Swipe component
 - Current baseline:
   - Suite version: `2.0.0`
   - Baseline date: `2026-02-18`
-  - Total tests: `26` (`T0=10`, `T1=9`, `T2=8`)
+  - Total tests: `36` (`T0=10`, `T1=13`, `T2=14`)
 
 ### CSS Architecture
 ```text

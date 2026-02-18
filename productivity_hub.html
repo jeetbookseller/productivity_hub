@@ -1054,6 +1054,90 @@ const TestRunner=({onShowToast})=>{
       }
     },
     {
+      id:'t1.utility.uid-unique-format',
+      name:'UID generation remains unique and formatted',
+      tier:'T1',
+      area:'Utility Contracts',
+      async run({assert}){
+        const ids=new Set(Array.from({length:40},()=>uid()));
+        assert(ids.size===40,'uid() should generate unique IDs');
+        for(const id of ids)assert(typeof id==='string'&&id.includes('-'),'uid() should contain hyphenated format');
+      }
+    },
+    {
+      id:'t1.utility.ics-generation-contract',
+      name:'ICS generator returns expected calendar contract',
+      tier:'T1',
+      area:'Utility Contracts',
+      async run({assertIncludes}){
+        const ics=genICS({text:'T1 Event',time:'10:30',date:'2030-01-01'});
+        assertIncludes(ics,'BEGIN:VCALENDAR','ICS should include calendar header');
+        assertIncludes(ics,'BEGIN:VEVENT','ICS should include event block');
+        assertIncludes(ics,'SUMMARY:T1 Event','ICS should include summary text');
+      }
+    },
+    {
+      id:'t1.batch.selcheck-toggle-callback',
+      name:'Batch selection checkbox triggers toggle callback',
+      tier:'T1',
+      area:'Batch Selection',
+      async run({withDomFixture,waitFor,assertEq}){
+        await withDomFixture(async mount=>{
+          let toggles=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(SelCheck,{checked:false,onToggle:()=>{toggles++;}}));
+          await waitFor(()=>mount.querySelector('button'),{timeout:800,message:'SelCheck button not rendered'});
+          mount.querySelector('button').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          assertEq(toggles,1,'SelCheck should trigger onToggle exactly once per click');
+        });
+      }
+    },
+    {
+      id:'t1.batch.bulkactionbar-routing',
+      name:'BulkActionBar routes select/deselect/action callbacks',
+      tier:'T1',
+      area:'Batch Selection',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq,assert}){
+        await withDomFixture(async mount=>{
+          const actions=[];
+          let selectAllCount=0;
+          let deselectAllCount=0;
+          let cancelCount=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+
+          const renderBar=(count,allCount)=>root.render(React.createElement(BulkActionBar,{
+            count,
+            section:'todos',
+            allCount,
+            onSelectAll:()=>{selectAllCount++;},
+            onDeselectAll:()=>{deselectAllCount++;},
+            onAction:(action)=>actions.push(action),
+            onCancel:()=>{cancelCount++;}
+          }));
+
+          renderBar(1,3);
+          await waitFor(()=>findButtonByText(mount,'Select All')&&findButtonByText(mount,'Done')&&findButtonByText(mount,'Delete'),{timeout:1200,message:'BulkActionBar controls not rendered'});
+          findButtonByText(mount,'Select All').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          findButtonByText(mount,'Done').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          findButtonByText(mount,'Delete').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          const cancelBtn=mount.querySelector('button[aria-label="Cancel selection"]');
+          assert(cancelBtn,'Cancel selection button missing');
+          cancelBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+
+          renderBar(3,3);
+          await waitFor(()=>findButtonByText(mount,'Deselect All'),{timeout:1200,message:'Deselect All control not rendered'});
+          findButtonByText(mount,'Deselect All').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+
+          assertEq(selectAllCount,1,'Select All callback should fire once');
+          assertEq(deselectAllCount,1,'Deselect All callback should fire once');
+          assertEq(cancelCount,1,'Cancel callback should fire once');
+          assertEq(actions.join(','),'done,delete','Bulk actions should fire in clicked order');
+        });
+      }
+    },
+    {
       id:'t2.css.menu-btn-computed',
       name:'.menu-btn CSS applies computed interaction styles',
       tier:'T2',
@@ -1185,6 +1269,139 @@ const TestRunner=({onShowToast})=>{
         const tabContent=document.querySelector('[data-testid="tab-content"]');
         assert(tabContent,'Tab content container not found');
         assert(tabContent.className.includes('anim-in'),'Tab content should include anim-in class');
+      }
+    },
+    {
+      id:'t2.theme.light-dark-system-runtime',
+      name:'Theme provider applies light/dark/system runtime toggles',
+      tier:'T2',
+      area:'Theme UX',
+      async run({withStorageSnapshot,withDomFixture,waitFor,assert}){
+        await withStorageSnapshot(async()=>{
+          await withDomFixture(async mount=>{
+            const{ThemeProv,ThemeCtx}=window.PH_BLOCK_A;
+            assert(ThemeProv&&ThemeCtx,'Theme exports unavailable');
+            const prevDark=document.documentElement.classList.contains('dark');
+            let api=null;
+            function Probe(){api=React.useContext(ThemeCtx);return null;}
+            const root=ReactDOM.createRoot(mount);
+            mount.__root=root;
+            root.render(React.createElement(ThemeProv,null,React.createElement(Probe)));
+            await waitFor(()=>api&&typeof api.setTheme==='function',{timeout:2200,message:'Theme context unavailable'});
+
+            api.setTheme('dark');
+            await waitFor(()=>document.documentElement.classList.contains('dark'),{timeout:1500,message:'Dark theme class not applied'});
+            api.setTheme('light');
+            await waitFor(()=>!document.documentElement.classList.contains('dark'),{timeout:1500,message:'Light theme class not applied'});
+
+            const prefersDark=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+            api.setTheme('system');
+            await waitFor(()=>document.documentElement.classList.contains('dark')===prefersDark,{timeout:1800,message:'System theme did not follow media preference'});
+
+            if(prevDark)document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.contextmenu.backdrop-close-callback',
+      name:'ContextMenu backdrop click triggers close callback',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,assert}){
+        await withDomFixture(async mount=>{
+          let closed=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ContextMenu,{title:'Menu',items:[{icon:React.createElement('span',null,'x'),label:'Action',onClick:()=>{}}],onClose:()=>{closed++;},position:null}));
+          await waitFor(()=>mount.firstElementChild,{timeout:1000,message:'ContextMenu overlay not rendered'});
+          mount.firstElementChild.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>closed===1,{timeout:900,message:'ContextMenu onClose not called from backdrop'});
+          assert(closed===1,'Backdrop click should close exactly once');
+        });
+      }
+    },
+    {
+      id:'t2.contextmenu.item-click-callback-close',
+      name:'ContextMenu item click triggers item callback and close',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq}){
+        await withDomFixture(async mount=>{
+          let clicked=0;
+          let closed=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ContextMenu,{title:'Menu',items:[{icon:React.createElement('span',null,'x'),label:'Edit',onClick:()=>{clicked++;}}],onClose:()=>{closed++;},position:null}));
+          await waitFor(()=>findButtonByText(mount,'Edit'),{timeout:1000,message:'ContextMenu item not rendered'});
+          findButtonByText(mount,'Edit').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>clicked===1,{timeout:400,message:'ContextMenu item callback did not fire'});
+          await waitFor(()=>closed===1,{timeout:1000,message:'ContextMenu did not close after item click'});
+          assertEq(clicked,1,'Item callback should fire once');
+          assertEq(closed,1,'Close callback should fire once');
+        });
+      }
+    },
+    {
+      id:'t2.confirmdialog.confirm-callback',
+      name:'ConfirmDialog confirm action triggers onConfirm',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq}){
+        await withDomFixture(async mount=>{
+          let confirmed=0;
+          let cancelled=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ConfirmDialog,{icon:React.createElement('span',null,'!'),iconBg:'bg-terracotta-100',title:'Delete?',message:'Confirm delete',confirmLabel:'Delete',onConfirm:()=>{confirmed++;},onCancel:()=>{cancelled++;},variant:'danger'}));
+          await waitFor(()=>findButtonByText(mount,'Delete')&&findButtonByText(mount,'Cancel'),{timeout:1200,message:'ConfirmDialog buttons not rendered'});
+          findButtonByText(mount,'Delete').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>confirmed===1,{timeout:1000,message:'onConfirm was not called'});
+          assertEq(confirmed,1,'Confirm callback should fire once');
+          assertEq(cancelled,0,'Cancel callback should not fire during confirm');
+        });
+      }
+    },
+    {
+      id:'t2.confirmdialog.cancel-callback',
+      name:'ConfirmDialog cancel action triggers onCancel',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq}){
+        await withDomFixture(async mount=>{
+          let confirmed=0;
+          let cancelled=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ConfirmDialog,{icon:React.createElement('span',null,'!'),iconBg:'bg-terracotta-100',title:'Delete?',message:'Confirm delete',confirmLabel:'Delete',onConfirm:()=>{confirmed++;},onCancel:()=>{cancelled++;},variant:'danger'}));
+          await waitFor(()=>findButtonByText(mount,'Cancel'),{timeout:1200,message:'Cancel button not rendered'});
+          findButtonByText(mount,'Cancel').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>cancelled===1,{timeout:1000,message:'onCancel was not called'});
+          assertEq(cancelled,1,'Cancel callback should fire once');
+          assertEq(confirmed,0,'Confirm callback should not fire during cancel');
+        });
+      }
+    },
+    {
+      id:'t2.layout.focus-review-responsive-markers',
+      name:'Focus and Review sections keep responsive marker classes',
+      tier:'T2',
+      area:'Layout UX',
+      async run({withStorageSnapshot,withSectionHarness,assertIncludes,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.FocusSection,{onTimerTick:()=>{},desk:true},async({mount})=>{
+            const focusContent=mount.querySelector('[data-testid="focus-content"]');
+            assert(focusContent,'Focus content container missing');
+            assertIncludes(focusContent.className,'md:flex','Focus content should include md:flex for split layout');
+          });
+          await withSectionHarness(window.PH_BLOCK_C.ReviewSection,{wide:true},async({mount})=>{
+            const reviewContent=mount.querySelector('[data-testid="review-content"]');
+            assert(reviewContent,'Review content container missing');
+            assertIncludes(reviewContent.className,'xl:grid','Review content should include xl:grid marker');
+            assertIncludes(reviewContent.className,'xl:grid-cols-2','Review content should include xl:grid-cols-2 marker');
+          });
+        });
       }
     }
   ];
