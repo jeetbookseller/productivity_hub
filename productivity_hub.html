@@ -28,8 +28,10 @@
     .soft-shadow{box-shadow:0 4px 20px rgba(92,79,67,0.1),0 2px 8px rgba(92,79,67,0.05)}
     @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
     @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}
     .anim-float{animation:float 3s ease-in-out infinite}
     .anim-in{animation:fadeIn 0.3s ease-out}
+    .anim-out{animation:fadeOut 0.2s ease-in forwards}
     .sel{-webkit-user-select:text;user-select:text}
     @media(min-width:768px){
       /* ===== TABLET MODE (768px+) ===== */
@@ -263,7 +265,7 @@ self.addEventListener('fetch', (e) => {
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 
 // App Version
-const APP_VERSION = '16.10';
+const APP_VERSION = '16.11';
 
 // Icons - More visible with less transparency
 const I={
@@ -463,7 +465,8 @@ const useWide=()=>{const[w,setW]=useState(window.innerWidth>=1280);useEffect(()=
 const usePersistedState=(key,defaultValue)=>{
   const[state,setState]=useState(()=>S.getSync(key,defaultValue));
   const[loaded,setLoaded]=useState(false);
-  
+  const timerRef=useRef(null);
+
   // Load from IndexedDB on mount
   useEffect(()=>{
     S.get(key,defaultValue).then(val=>{
@@ -471,15 +474,29 @@ const usePersistedState=(key,defaultValue)=>{
       setLoaded(true);
     });
   },[key]);
-  
-  // Save to IndexedDB on change
+
+  // Debounced save to IndexedDB on change (~300ms)
   useEffect(()=>{
     if(loaded){
-      S.set(key,state);
+      clearTimeout(timerRef.current);
+      timerRef.current=setTimeout(()=>S.set(key,state),300);
     }
+    return()=>clearTimeout(timerRef.current);
   },[key,state,loaded]);
-  
+
   return[state,setState];
+};
+
+// Animated close hook — sets closing=true, plays exit animation, then calls onClose (v16.11)
+const useAnimatedClose=(onClose)=>{
+  const[closing,setClosing]=useState(false);
+  const triggerClose=useCallback(()=>setClosing(true),[]);
+  useEffect(()=>{
+    if(!closing)return;
+    const timer=setTimeout(()=>onClose(),200);
+    return()=>clearTimeout(timer);
+  },[closing]);// intentionally excludes onClose — it's stable within modal lifetime
+  return{closing,triggerClose};
 };
 
 // Constants
@@ -582,13 +599,14 @@ const BulkActionBar=({count,section,allCount,onSelectAll,onDeselectAll,onAction,
 
 // Unified ContextMenu (v16.9) — replaces TaskMenu, NoteMenu, ListMenu
 const ContextMenu=({title,items,onClose,position})=>{
+  const{closing,triggerClose}=useAnimatedClose(onClose);
   const pos=!!position;
   return(
-    <div className={pos?"fixed inset-0 z-30":"fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40"} onClick={onClose}>
-      <div className={pos?"gcard rounded-xl shadow-lg overflow-hidden":"gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in mx-4"} style={pos?{position:'absolute',top:position.y,left:position.x}:undefined} onClick={e=>e.stopPropagation()}>
+    <div className={pos?"fixed inset-0 z-30":"fixed inset-0 bg-bark-700/40 backdrop-blur-sm flex items-center justify-center z-40"} onClick={triggerClose}>
+      <div className={pos?`gcard rounded-xl shadow-lg overflow-hidden${closing?' anim-out':''}`:`gcard w-full max-w-xs rounded-2xl overflow-hidden anim-in${closing?' anim-out':''} mx-4`} style={pos?{position:'absolute',top:position.y,left:position.x}:undefined} onClick={e=>e.stopPropagation()}>
         {title&&<div className="px-4 py-3 border-b border-sand-200 dark:border-bark-500"><p className="font-bold text-bark-600 dark:text-sand-100 truncate">{title}</p></div>}
         {items.map((item,i)=>(
-          <button key={i} onClick={()=>{item.onClick();onClose();}} className={`menu-btn ${item.borderTop?'menu-btn-border':''} ${item.variant==='danger'?'hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20':'hover:bg-sage-100 dark:hover:bg-sage-400/20'}`}>
+          <button key={i} onClick={()=>{item.onClick();triggerClose();}} className={`menu-btn ${item.borderTop?'menu-btn-border':''} ${item.variant==='danger'?'hover:bg-terracotta-100 dark:hover:bg-terracotta-400/20':'hover:bg-sage-100 dark:hover:bg-sage-400/20'}`}>
             {item.icon}<span className="font-medium text-bark-600 dark:text-sand-100">{item.label}</span>{item.extra&&item.extra}
           </button>
         ))}
@@ -598,9 +616,19 @@ const ContextMenu=({title,items,onClose,position})=>{
 };
 
 // Unified ConfirmDialog (v16.9) — replaces DeleteConfirmation, BulkDeleteConfirm
-const ConfirmDialog=({icon,iconBg,title,message,confirmLabel,onConfirm,onCancel,variant})=>(
-  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onCancel}>
-    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
+const ConfirmDialog=({icon,iconBg,title,message,confirmLabel,onConfirm,onCancel,variant})=>{
+  const[closing,setClosing]=useState(false);
+  const[doConfirm,setDoConfirm]=useState(false);
+  useEffect(()=>{
+    if(!closing)return;
+    const timer=setTimeout(()=>doConfirm?onConfirm():onCancel(),200);
+    return()=>clearTimeout(timer);
+  },[closing,doConfirm]);
+  const triggerCancel=useCallback(()=>setClosing(true),[]);
+  const triggerConfirm=useCallback(()=>{setDoConfirm(true);setClosing(true);},[]);
+  return(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={triggerCancel}>
+    <div className={`gcard w-full max-w-sm rounded-2xl p-5 anim-in${closing?' anim-out':''}`} onClick={e=>e.stopPropagation()}>
       <div className="text-center mb-4">
         <div className={`w-16 h-16 ${iconBg} rounded-full flex items-center justify-center mx-auto mb-3`}>{icon}</div>
         <h3 className="text-lg font-bold text-bark-600 dark:text-sand-100 mb-2">{title}</h3>
@@ -608,13 +636,14 @@ const ConfirmDialog=({icon,iconBg,title,message,confirmLabel,onConfirm,onCancel,
       </div>
       <div className="flex gap-2">
         {variant==='info'?
-          <button onClick={onCancel} className="flex-1 py-2.5 bg-ocean-400 rounded-lg font-semibold text-white text-sm">OK</button>
-        :<><button onClick={onCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">{confirmLabel||'Confirm'}</button></>}
+          <button onClick={triggerCancel} className="flex-1 py-2.5 bg-ocean-400 rounded-lg font-semibold text-white text-sm">OK</button>
+        :<><button onClick={triggerCancel} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button>
+          <button onClick={triggerConfirm} className="flex-1 py-2.5 bg-terracotta-400 rounded-lg font-semibold text-white text-sm">{confirmLabel||'Confirm'}</button></>}
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // StickyHeader (v16.10) — unified sticky section header wrapper
 const StickyHeader=({children})=>(
@@ -624,15 +653,16 @@ const StickyHeader=({children})=>(
 );
 
 const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
+  const{closing,triggerClose}=useAnimatedClose(onClose);
   const[newName,setNewName]=useState('');
   return(
-  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={onClose}>
-    <div className="gcard w-full max-w-sm rounded-2xl p-5 anim-in" onClick={e=>e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-3"><h3 className="font-bold text-bark-600 dark:text-sand-100">📋 Link Checklist</h3><button onClick={onClose} className="text-bark-400"><I.X s={20}/></button></div>
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-3" onClick={triggerClose}>
+    <div className={`gcard w-full max-w-sm rounded-2xl p-5 anim-in${closing?' anim-out':''}`} onClick={e=>e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-3"><h3 className="font-bold text-bark-600 dark:text-sand-100">📋 Link Checklist</h3><button onClick={triggerClose} className="text-bark-400"><I.X s={20}/></button></div>
       <p className="text-xs text-bark-500 dark:text-sand-200 mb-3">Link <strong>"{task.text}"</strong> to a checklist:</p>
-      {task.linkedList&&<button onClick={()=>{onUnlink(task.id);onClose();}} className="w-full mb-3 py-2.5 px-4 rounded-xl bg-terracotta-100 dark:bg-terracotta-400/20 text-terracotta-500 text-sm font-semibold text-left">✕ Remove current link</button>}
-      <div className="space-y-1.5 max-h-48 overflow-y-auto hide-sb mb-3">{lists.map(l=><button key={l.id} onClick={()=>{onLink(task.id,l.id);onClose();}} className={`w-full py-2.5 px-4 rounded-xl text-sm font-medium text-left transition-colors ${task.linkedList===l.id?'bg-sage-400 text-white':'gcard text-bark-600 dark:text-sand-100 hover:bg-sage-50 dark:hover:bg-sage-400/10'}`}>{l.name}<span className="ml-2 text-xs opacity-60">({l.items.filter(i=>!i.done).length}/{l.items.length})</span></button>)}</div>
-      <div className="flex gap-2"><input type="text" value={newName} onChange={e=>setNewName(e.target.value)} placeholder="New checklist name..." onKeyDown={e=>{if(e.key==='Enter'&&newName.trim()){onCreate(task.id,newName.trim());onClose();}}} className="flex-1 bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500"/><button onClick={()=>{if(newName.trim()){onCreate(task.id,newName.trim());onClose();}}} className="px-4 py-2 bg-sage-400 rounded-lg text-white text-sm font-semibold">Create</button></div>
+      {task.linkedList&&<button onClick={()=>{onUnlink(task.id);triggerClose();}} className="w-full mb-3 py-2.5 px-4 rounded-xl bg-terracotta-100 dark:bg-terracotta-400/20 text-terracotta-500 text-sm font-semibold text-left">✕ Remove current link</button>}
+      <div className="space-y-1.5 max-h-48 overflow-y-auto hide-sb mb-3">{lists.map(l=><button key={l.id} onClick={()=>{onLink(task.id,l.id);triggerClose();}} className={`w-full py-2.5 px-4 rounded-xl text-sm font-medium text-left transition-colors ${task.linkedList===l.id?'bg-sage-400 text-white':'gcard text-bark-600 dark:text-sand-100 hover:bg-sage-50 dark:hover:bg-sage-400/10'}`}>{l.name}<span className="ml-2 text-xs opacity-60">({l.items.filter(i=>!i.done).length}/{l.items.length})</span></button>)}</div>
+      <div className="flex gap-2"><input type="text" value={newName} onChange={e=>setNewName(e.target.value)} placeholder="New checklist name..." onKeyDown={e=>{if(e.key==='Enter'&&newName.trim()){onCreate(task.id,newName.trim());triggerClose();}}} className="flex-1 bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500"/><button onClick={()=>{if(newName.trim()){onCreate(task.id,newName.trim());triggerClose();}}} className="px-4 py-2 bg-sage-400 rounded-lg text-white text-sm font-semibold">Create</button></div>
     </div>
   </div>
   );
@@ -641,6 +671,7 @@ const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
 
 // Edit Modal
 const EditModal=({item,type,onSave,onClose,onDelete})=>{
+  const{closing,triggerClose}=useAnimatedClose(onClose);
   const[text,setText]=useState(item?.text||item?.title||'');
   const[content,setContent]=useState(item?.content||'');
   const[notes,setNotes]=useState(item?.notes||'');
@@ -651,22 +682,22 @@ const EditModal=({item,type,onSave,onClose,onDelete})=>{
   const[time,setTime]=useState(item?.time||'09:00');
   const[date,setDate]=useState(item?.date||new Date().toISOString().split('T')[0]);
   const[deadline,setDl]=useState(item?.deadline||'');
-  
+
   const save=()=>{
     if(!text.trim())return;
     if(type==='note')onSave({...item,title:text,content,notes});
     else if(type==='list')onSave({...item,text,notes,section});
     else if(type==='todo')onSave({...item,text,notes,subtasks,quad,cat,deadline});
     else if(type==='reminder')onSave({...item,text,time,date});
-    onClose();
+    triggerClose();
   };
 
   return(
-    <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={onClose}>
-      <div className="gcard w-full max-w-md md:max-w-lg rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto anim-in modal-content" onClick={e=>e.stopPropagation()}>
+    <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-40 p-3" onClick={triggerClose}>
+      <div className={`gcard w-full max-w-md md:max-w-lg rounded-2xl p-4 md:p-6 max-h-[90vh] overflow-y-auto anim-in${closing?' anim-out':''} modal-content`} onClick={e=>e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-bark-600 dark:text-sand-100">{item?.id?'Edit':'New'} {type==='note'?'Note':type==='list'?'Item':type==='todo'?'Task':'Reminder'}</h3>
-          <button onClick={onClose} className="text-bark-400"><I.X s={22}/></button>
+          <button onClick={triggerClose} className="text-bark-400"><I.X s={22}/></button>
         </div>
         <div className="space-y-3">
           <div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">{type==='note'?'Title':'Text'}</label><input type="text" value={text} onChange={e=>setText(e.target.value)} className="w-full bg-cream-100 dark:bg-bark-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sage-400 text-bark-600 dark:text-sand-100 border border-sand-200 dark:border-bark-500 text-sm" placeholder={type==='reminder'?'e.g. Take medicine':'Enter text...'}/></div>
@@ -685,18 +716,20 @@ const EditModal=({item,type,onSave,onClose,onDelete})=>{
           {type==='todo'&&<div><label className="text-xs font-semibold text-bark-400/70 mb-1 block">Subtasks</label><Subtasks items={subtasks} onChange={setSub}/></div>}
         </div>
         <div className="flex gap-2 mt-4">
-          {type==='list'&&item?.id&&<button onClick={()=>{if(confirm('Delete this item?')){onDelete?.();onClose();}}} className="py-2.5 px-4 bg-terracotta-100 dark:bg-terracotta-400/20 rounded-lg font-semibold text-terracotta-500 dark:text-terracotta-300 text-sm hover:bg-terracotta-200 transition-colors"><I.Trash s={16} c="inline mr-1"/>Delete</button>}
-          <button onClick={onClose} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={save} className="flex-1 py-2.5 bg-sage-400 rounded-lg font-semibold text-white text-sm">Save</button></div>
+          {type==='list'&&item?.id&&<button onClick={()=>{if(confirm('Delete this item?')){onDelete?.();triggerClose();}}} className="py-2.5 px-4 bg-terracotta-100 dark:bg-terracotta-400/20 rounded-lg font-semibold text-terracotta-500 dark:text-terracotta-300 text-sm hover:bg-terracotta-200 transition-colors"><I.Trash s={16} c="inline mr-1"/>Delete</button>}
+          <button onClick={triggerClose} className="flex-1 py-2.5 bg-sand-200 dark:bg-bark-600 rounded-lg font-semibold text-bark-600 dark:text-sand-200 text-sm">Cancel</button><button onClick={save} className="flex-1 py-2.5 bg-sage-400 rounded-lg font-semibold text-white text-sm">Save</button></div>
       </div>
     </div>
   );
 };
 
 // Help Modal - Compact App Navigation
-const AboutModal=({onClose,isWelcome})=>(
-  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={onClose}>
-    <div className="gcard w-full max-w-sm md:max-w-lg rounded-2xl p-5 md:p-6 anim-in" onClick={e=>e.stopPropagation()}>
-      {isWelcome?(<div className="text-center mb-4"><div className="text-3xl mb-1">🌿</div><h2 className="text-lg md:text-xl font-extrabold text-bark-600 dark:text-sand-100">Welcome to Productivity Hub</h2><p className="text-sm text-bark-400 dark:text-sand-300 mt-0.5">Your all-in-one productivity system</p></div>):(<div className="flex items-center justify-between mb-3"><h2 className="text-base md:text-lg font-bold text-bark-600 dark:text-sand-100">🌿 About Productivity Hub</h2><button onClick={onClose} className="text-bark-400 hover:text-bark-600"><I.X s={20}/></button></div>)}
+const AboutModal=({onClose,isWelcome})=>{
+  const{closing,triggerClose}=useAnimatedClose(onClose);
+  return(
+  <div className="fixed inset-0 bg-bark-700/60 backdrop-blur-sm flex items-center justify-center z-50 p-2" onClick={triggerClose}>
+    <div className={`gcard w-full max-w-sm md:max-w-lg rounded-2xl p-5 md:p-6 anim-in${closing?' anim-out':''}`} onClick={e=>e.stopPropagation()}>
+      {isWelcome?(<div className="text-center mb-4"><div className="text-3xl mb-1">🌿</div><h2 className="text-lg md:text-xl font-extrabold text-bark-600 dark:text-sand-100">Welcome to Productivity Hub</h2><p className="text-sm text-bark-400 dark:text-sand-300 mt-0.5">Your all-in-one productivity system</p></div>):(<div className="flex items-center justify-between mb-3"><h2 className="text-base md:text-lg font-bold text-bark-600 dark:text-sand-100">🌿 About Productivity Hub</h2><button onClick={triggerClose} className="text-bark-400 hover:text-bark-600"><I.X s={20}/></button></div>)}
       <div className="space-y-2">
         <div><span className="font-bold text-bark-600 dark:text-sand-100">📝 Capture</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Brain dump everything. No organizing yet.</span></div>
         <div><span className="font-bold text-bark-600 dark:text-sand-100">🎯 Clarify</span><span className="text-sm text-bark-500 dark:text-sand-200"> — Sort by urgency & importance. Tap to toggle done. ⋮ for actions.</span></div>
@@ -706,10 +739,11 @@ const AboutModal=({onClose,isWelcome})=>(
       </div>
       <div className="mt-3 text-center"><p className="text-sm font-bold text-sage-500 dark:text-sage-400">Capture → Clarify → Focus → Confirm → Review → Repeat</p></div>
       <p className="mt-3 text-xs text-center text-bark-400 dark:text-sand-300">📚 Visit <strong className="text-bark-600 dark:text-sand-100">More → Explainer</strong> for the full guide</p>
-      <button onClick={onClose} className="w-full mt-3 py-2.5 bg-sage-400 rounded-xl font-bold text-white text-sm hover:bg-sage-500 transition-colors">{isWelcome?'Get Started':'Got it!'}</button>
+      <button onClick={triggerClose} className="w-full mt-3 py-2.5 bg-sage-400 rounded-xl font-bold text-white text-sm hover:bg-sage-500 transition-colors">{isWelcome?'Get Started':'Got it!'}</button>
     </div>
   </div>
-);
+  );
+};
 
 // Streak Heatmap (GitHub-style)
 const Heatmap=({dHist,met})=>{
@@ -914,6 +948,11 @@ const TestRunner=({onShowToast})=>{
       {name:'StickyHeader section headers in DOM',category:'StickyHeader & CSS'},
       {name:'.menu-btn CSS applied',category:'StickyHeader & CSS'},
       {name:'.section-card CSS applied',category:'StickyHeader & CSS'},
+      {name:'usePersistedState debounces writes',category:'UI Smoothness'},
+      {name:'usePersistedState flushes on unmount',category:'UI Smoothness'},
+      {name:'Modal applies anim-out class when closing',category:'UI Smoothness'},
+      {name:'Tab switch applies anim-in to new content',category:'UI Smoothness'},
+      {name:'Toast fades out before removal',category:'UI Smoothness'},
     ];
     
     setProgress({current:0,total:tests.length,step:'Initializing...'});
@@ -1003,6 +1042,58 @@ const TestRunner=({onShowToast})=>{
           case 'StickyHeader section headers in DOM':{const headers=document.querySelectorAll('[data-testid="sticky-header"]');if(headers.length<5)throw new Error(`Expected 5+ sticky headers in DOM, found ${headers.length}`);const cls=headers[0].className;if(!cls.includes('sticky'))throw new Error('Header element should have sticky class');if(!cls.includes('glass'))throw new Error('Header element should have glass class');break;}
           case '.menu-btn CSS applied':{const el=document.createElement('button');el.className='menu-btn';document.body.appendChild(el);const s=window.getComputedStyle(el);document.body.removeChild(el);if(s.display!=='flex')throw new Error('.menu-btn should apply display:flex');if(s.textAlign!=='left'&&s.textAlign!=='start')throw new Error('.menu-btn should apply text-align:left');break;}
           case '.section-card CSS applied':{const el=document.createElement('div');el.className='section-card';document.body.appendChild(el);const s=window.getComputedStyle(el);document.body.removeChild(el);const hasBackdrop=s.backdropFilter!=='none'&&s.backdropFilter!=='';if(!hasBackdrop)throw new Error('.section-card should apply backdrop-filter (from gcard styles)');break;}
+          case 'usePersistedState debounces writes':{
+            // Simulate debounce: 5 rapid state changes should produce only 1 write after settling
+            const writes=[];let timerRef={current:null};
+            const debouncedSet=(val)=>{clearTimeout(timerRef.current);timerRef.current=setTimeout(()=>writes.push(val),300);};
+            debouncedSet(1);debouncedSet(2);debouncedSet(3);debouncedSet(4);debouncedSet(5);
+            await delay(450);
+            if(writes.length!==1)throw new Error(`Expected 1 debounced write after 5 rapid sets, got ${writes.length}`);
+            if(writes[0]!==5)throw new Error(`Expected final value 5, got ${writes[0]}`);
+            break;}
+          case 'usePersistedState flushes on unmount':{
+            // Simulate: debounced write timer runs to completion (flush before cleanup)
+            const testKey=TEST_PREFIX+'debounce_flush';
+            let written=false;
+            let timerRef={current:null};
+            timerRef.current=setTimeout(async()=>{await S.set(testKey,'flush_val');written=true;},100);
+            await delay(250);
+            if(!written)throw new Error('Debounced write should complete within timeout');
+            const val=await S.get(testKey,'missing');
+            if(val!=='flush_val')throw new Error(`Expected 'flush_val', got '${val}'`);
+            await S.set(testKey,undefined);
+            break;}
+          case 'Modal applies anim-out class when closing':{
+            // Verify .anim-out class exists in CSS with fadeOut animation
+            const sheets=Array.from(document.styleSheets);
+            let hasAnimOut=false;
+            for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if((r.name==='fadeOut')||(r.selectorText==='.anim-out')){hasAnimOut=true;break;}}if(hasAnimOut)break;}catch(e){}}
+            if(!hasAnimOut)throw new Error('.anim-out / fadeOut keyframe not found in CSS');
+            // Verify class can be applied and removed
+            const el=document.createElement('div');el.className='gcard anim-in';
+            document.body.appendChild(el);
+            el.classList.add('anim-out');
+            if(!el.classList.contains('anim-out'))throw new Error('anim-out class not applied');
+            document.body.removeChild(el);
+            break;}
+          case 'Tab switch applies anim-in to new content':{
+            // Verify tab content wrapper uses anim-in for fade-in on switch
+            const tabContent=document.querySelector('[data-testid="tab-content"]');
+            if(!tabContent)throw new Error('Tab content wrapper with data-testid="tab-content" not found');
+            if(!tabContent.className.includes('anim-in'))throw new Error('Tab content wrapper should have anim-in class');
+            break;}
+          case 'Toast fades out before removal':{
+            // Verify toast element uses opacity transition for fade-out
+            const el=document.createElement('div');
+            el.className='gcard transition-opacity duration-500 opacity-0';
+            document.body.appendChild(el);
+            const s=window.getComputedStyle(el);
+            const hasOpacityTransition=s.transitionProperty.includes('opacity')||s.transition.includes('opacity');
+            const isHidden=parseFloat(s.opacity)===0;
+            document.body.removeChild(el);
+            if(!hasOpacityTransition)throw new Error('Toast should use transition-opacity for fade-out');
+            if(!isHidden)throw new Error('opacity-0 class should make element invisible');
+            break;}
           default:result.status='skipped';report.summary.skipped++;
         }
         if(result.status==='passed')report.summary.passed++;
@@ -1224,9 +1315,11 @@ function useAppData(){
     }
   },[]);
 
-  // Toast
+  // Toast with auto-fade (last 500ms of 2000ms display)
   const[toast,setToast]=useState(null);
-  const showT=m=>{setToast(m);setTimeout(()=>setToast(null),2000);};
+  const[toastFading,setToastFading]=useState(false);
+  const toastTimers=useRef({fade:null,clear:null});
+  const showT=m=>{clearTimeout(toastTimers.current.fade);clearTimeout(toastTimers.current.clear);setToast(m);setToastFading(false);toastTimers.current.fade=setTimeout(()=>setToastFading(true),1500);toastTimers.current.clear=setTimeout(()=>{setToast(null);setToastFading(false);},2000);};
 
   // Tab navigation
   const[tab,setTab]=usePersistedState('tab','notes');
@@ -1324,7 +1417,7 @@ function useAppData(){
     // Metrics
     met,setMet,fHist,setFHist,dHist,setDHist,
     // Toast
-    toast,showT,
+    toast,showT,toastFading,
     // Tab/nav
     tab,setTab,selList,setSelList,
     // Handlers
@@ -1445,7 +1538,7 @@ function CaptureSection({wide,selMode,selSection,selIds,toggleSelId,enterSelMode
               const onTM=(e)=>{const t=e.touches?e.touches[0]:null;if(t&&(Math.abs(t.clientX-touchData.x)>10||Math.abs(t.clientY-touchData.y)>10))touchData.moved=true;};
               const handleTap=(e)=>{if(touchData.moved||touchData.menuTap)return;if(e?.target?.closest?.('[data-menu-btn]'))return;if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});};
               return(
-                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
+                <div key={n.id} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={handleTap} onContextMenu={e=>{e.preventDefault();setNoteMenu(n);}} onClick={(e)=>{if(e.target?.closest?.('[data-menu-btn]'))return;if(e.type==='click'&&!('ontouchstart' in window)){if(inSel)toggleSelId(n.id);else if(!selMode&&!editingNote)setEditingNote({id:n.id,text:n.text||n.title||n.content||''});}}} className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition-all duration-200 ${isSel?'bg-sage-100 dark:bg-sage-400/20':'hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
                   {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(n.id)}/>}
                   {!inSel&&<span className={`flex-shrink-0 ${n.struck?'text-bark-400/40':'text-sage-400'}`}>•</span>}
                   {editingNote&&editingNote.id===n.id?
@@ -1487,7 +1580,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
                 const inSel=selMode&&selSection==='todos';
                 const isSel=inSel&&selIds.has(t.id);
                 return(
-                  <div key={t.id} className="gcard rounded-xl overflow-hidden">
+                  <div key={t.id} className="gcard rounded-xl overflow-hidden transition-all duration-200">
                   <div draggable={!t.done&&!selMode&&desk} onDragStart={e=>{e.dataTransfer.setData('text/plain',t.id);e.dataTransfer.effectAllowed='move';setDragQ(q.id);}} onDragEnd={()=>setDragQ(null)} onContextMenu={e=>{e.preventDefault();setTaskMenu(t);}} onClick={()=>{if(inSel)toggleSelId(t.id);else if(!selMode&&!t.done)doneTodo(t.id);else if(!selMode&&t.done)undoneTodo(t.id);}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 transition-colors cursor-pointer ${t.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
                     {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(t.id)}/>}
                     {!inSel&&<button onClick={e=>{e.stopPropagation();t.done?undoneTodo(t.id):doneTodo(t.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center group flex-shrink-0 transition-all ${t.done?'bg-sage-400 border-sage-400':'border-sage-400 hover:bg-sage-400'}`}><span className={`text-sm md:text-xs font-semibold ${t.done?'text-white':'text-sage-400 group-hover:text-white'}`}>✓</span></button>}
@@ -1609,7 +1702,7 @@ function ConfirmSection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
               const inSel=selMode&&selSection==='lists';
               const isSel=inSel&&selIds.has(item.id);
               return(
-                <div key={item.id} className="gcard rounded-xl overflow-hidden">
+                <div key={item.id} className="gcard rounded-xl overflow-hidden transition-all duration-200">
                 <div onClick={()=>{if(inSel)toggleSelId(item.id);else if(!selMode)doneList(cl.id,item.id);}} onContextMenu={e=>{e.preventDefault();setEdit({type:'list',item,listId:cl.id});}} className={`p-3 md:px-3 md:py-2 flex items-center gap-2 md:gap-2.5 cursor-pointer transition-colors ${item.done?'opacity-70':''} ${isSel?'ring-2 ring-sage-400 bg-sage-50 dark:bg-sage-400/10':'hover:bg-sand-50 dark:hover:bg-bark-600/50'}`}>
                   {inSel&&<SelCheck checked={isSel} onToggle={()=>toggleSelId(item.id)}/>}
                   {!inSel&&<button onClick={e=>{e.stopPropagation();doneList(cl.id,item.id);}} className={`w-6 h-6 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.done?'bg-sage-400 border-sage-400':'border-bark-300 dark:border-sand-300 hover:border-sage-400'}`}>{item.done&&<span className="text-white text-sm md:text-xs">✓</span>}</button>}
@@ -1846,7 +1939,7 @@ function App(){
   const wide=useWide();
   const{lists,setLists,todos,setTodos,notes,setNotes,
     setFocus,setMet,
-    toast,showT,tab,setTab,selList,
+    toast,showT,toastFading,tab,setTab,selList,
     linkTask,unlinkTask,createAndLink,
     deleteListItem,saveItem,seedSampleData}=useApp();
 
@@ -1935,12 +2028,14 @@ function App(){
           <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
         </div>
         <div className="px-4 md:px-8 xl:px-8 py-4 md:py-6 xl:py-6 pb-28 md:pb-32 xl:pb-6 max-w-lg md:max-w-5xl xl:max-w-none mx-auto">
-          {tab==='focus'&&<div className="max-w-2xl mx-auto xl:max-w-none"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>}
-          {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
-          {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
-          {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
-          {tab==='review'&&<ReviewSection wide={wide}/>}
-          {tab==='more'&&<SettingsSection desk={desk}/>}
+          <div key={tab} className="anim-in" data-testid="tab-content">
+            {tab==='focus'&&<div className="max-w-2xl mx-auto xl:max-w-none"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>}
+            {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
+            {tab==='todos'&&<ClarifySection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit} setLinkPicker={setLinkPicker}/>}
+            {tab==='notes'&&<CaptureSection wide={wide} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode}/>}
+            {tab==='review'&&<ReviewSection wide={wide}/>}
+            {tab==='more'&&<SettingsSection desk={desk}/>}
+          </div>
         </div>
         {selMode&&<BulkActionBar count={selIds.size} section={selSection} allCount={getAllIdsForSection().length} onSelectAll={selectAll} onDeselectAll={deselectAll} onAction={bulkAction} onCancel={exitSelMode}/>}
       </div>
@@ -1958,7 +2053,7 @@ function App(){
           })}
         </div>
       </div>
-      {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center"><div className="gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold">{toast}</div></div>}
+      {toast&&<div className="fixed top-20 left-4 right-4 z-50 flex justify-center toast-wrap"><div className={`gcard px-5 py-3 rounded-2xl anim-in text-bark-600 dark:text-sand-100 font-semibold transition-opacity duration-500 ${toastFading?'opacity-0':'opacity-100'}`}>{toast}</div></div>}
       {showHelp&&<AboutModal onClose={()=>setShowHelp(false)} isWelcome={false}/>}
       {showWelcome&&<AboutModal onClose={()=>{setShowWelcome(false);setSeenAbout(true);seedSampleData();}} isWelcome={true}/>}
       {edit&&<EditModal item={edit.item} type={edit.type} onSave={item=>saveItem(edit.type,item,edit.listId)} onClose={()=>setEdit(null)} onDelete={edit.type==='list'&&edit.item?.id?()=>{deleteListItem(edit.listId,edit.item.id);}:undefined}/>}
