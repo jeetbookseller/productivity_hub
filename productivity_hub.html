@@ -72,6 +72,7 @@ if(!window.React||!window.ReactDOM||!window.Babel){
 </script>
 <script type="text/babel">
 /* == BEGIN: Block A == */
+(()=>{
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 const PH=window.PH_CORE;
 if(!PH){
@@ -405,10 +406,12 @@ window.PH_BLOCK_A=Object.freeze({
   I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
   Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,LinkPicker,EditModal,AboutModal
 });
+})();
 /* == END: Block A == */
 </script>
 <script type="text/babel">
 /* == BEGIN: Block B == */
+(()=>{
 const PH_BLOCK_A_B=window.PH_BLOCK_A;
 if(!PH_BLOCK_A_B)throw new Error('Block A exports missing. Cannot initialize Block B.');
 const{
@@ -995,10 +998,12 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
   );
 },(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
 window.PH_BLOCK_B=Object.freeze({Heatmap,Chart,TestRunner,FocusTimer});
+})();
 /* == END: Block B == */
 </script>
 <script type="text/babel">
 /* == BEGIN: Block C == */
+(()=>{
 const PH_BLOCK_A_C=window.PH_BLOCK_A;
 const PH_BLOCK_B_C=window.PH_BLOCK_B;
 if(!PH_BLOCK_A_C||!PH_BLOCK_B_C)throw new Error('Block A/B exports missing. Cannot initialize Block C.');
@@ -1665,10 +1670,12 @@ window.PH_BLOCK_C=Object.freeze({
   useAppData,AppDataCtx,AppDataProv,useApp,
   CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection
 });
+})();
 /* == END: Block C == */
 </script>
 <script type="text/babel">
 /* == BEGIN: Block D == */
+(()=>{
 const PH_BLOCK_A_D=window.PH_BLOCK_A;
 const PH_BLOCK_C_D=window.PH_BLOCK_C;
 if(!PH_BLOCK_A_D||!PH_BLOCK_C_D)throw new Error('Block A/C exports missing. Cannot initialize Block D.');
@@ -1816,6 +1823,7 @@ try{
   window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render failed: ${err.message||err}`);
   throw err;
 }
+})();
 /* == END: Block D == */
 </script>
 </body>
