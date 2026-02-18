@@ -19,14 +19,51 @@
   <link rel="stylesheet" href="./styles/app.css">
 </head>
 <body class="bg-cream-100 dark:bg-bark-700">
-<script src="./scripts/pwa_setup.js"></script>
-<div id="root"></div>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="./scripts/app_core.js"></script>
+<noscript>
+  <div style="max-width:760px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font-family:Nunito,sans-serif;line-height:1.5">
+    <h2 style="margin:0 0 8px">JavaScript is required</h2>
+    <p style="margin:0">Enable JavaScript and open `productivity_hub.html` in a regular browser.</p>
+  </div>
+</noscript>
+<div id="root">
+  <div id="boot-fallback" style="max-width:760px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font-family:Nunito,sans-serif;line-height:1.5">
+    <h2 style="margin:0 0 8px">Loading Productivity Hub...</h2>
+    <p id="boot-fallback-msg" style="margin:0">If this does not change, open this file in Chrome, Safari, or Firefox (not IDE preview).</p>
+  </div>
+</div>
+<script>
+(function(){
+  const msgEl=()=>document.getElementById('boot-fallback-msg');
+  const setMsg=(msg,color)=>{
+    const el=msgEl();
+    if(!el)return;
+    el.textContent=msg;
+    if(color)el.style.color=color;
+  };
+  window.__PH_BOOT_PHASE=(msg)=>setMsg(msg);
+  window.__PH_BOOT_FAIL=(msg)=>setMsg(msg||'Startup failed. Open browser console for details.','#b91c1c');
+  window.__PH_BOOT_DONE=()=>{
+    const fallback=document.getElementById('boot-fallback');
+    if(fallback)fallback.remove();
+  };
+  window.addEventListener('error',e=>{
+    if(e?.message)window.__PH_BOOT_FAIL('JavaScript error: '+e.message);
+  });
+  window.addEventListener('unhandledrejection',e=>{
+    const reason=e&&e.reason&&e.reason.message?e.reason.message:String(e.reason||'unknown');
+    window.__PH_BOOT_FAIL('Unhandled promise error: '+reason);
+  });
+  window.__PH_BOOT_PHASE('Loading scripts...');
+})();
+</script>
+<script src="./scripts/pwa_setup.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded scripts/pwa_setup.js')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load scripts/pwa_setup.js')"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded React')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load React from CDN')"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded ReactDOM')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load ReactDOM from CDN')"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded Babel runtime')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load Babel from CDN')"></script>
+<script src="./scripts/app_core.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded scripts/app_core.js')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load scripts/app_core.js')"></script>
 <script>
 if(!window.React||!window.ReactDOM||!window.Babel){
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Required CDN scripts are missing (React/ReactDOM/Babel).');
   const root=document.getElementById('root');
   if(root){
     root.innerHTML='<div style="max-width:720px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;font-family:Nunito,sans-serif;line-height:1.5"><h2 style="margin:0 0 8px">App failed to bootstrap</h2><p style="margin:0 0 8px">Required CDN scripts did not load (React/ReactDOM/Babel).</p><p style="margin:0">Check internet access and reload.</p></div>';
@@ -38,6 +75,7 @@ if(!window.React||!window.ReactDOM||!window.Babel){
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
 const PH=window.PH_CORE;
 if(!PH){
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('window.PH_CORE is missing. Ensure scripts/app_core.js is next to the HTML file.');
   const root=document.getElementById('root');
   if(root){
     root.innerHTML='<div style="max-width:720px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;font-family:Nunito,sans-serif;line-height:1.5"><h2 style="margin:0 0 8px">App failed to bootstrap</h2><p style="margin:0 0 8px">`window.PH_CORE` is missing.</p><p style="margin:0 0 8px">Expected local files next to this HTML:</p><ul style="margin:0 0 8px 18px"><li>styles/app.css</li><li>scripts/pwa_setup.js</li><li>scripts/app_core.js</li></ul><p style="margin:0">Open from the project root (not a copied standalone HTML file).</p></div>';
@@ -1732,7 +1770,13 @@ function App(){
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>);
+try{
+  ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>);
+  window.__PH_BOOT_DONE&&window.__PH_BOOT_DONE();
+}catch(err){
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render failed: ${err.message||err}`);
+  throw err;
+}
 /* == END: Block D == */
 </script>
 </body>
