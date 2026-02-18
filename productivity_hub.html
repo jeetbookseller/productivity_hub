@@ -399,10 +399,24 @@ const AboutModal=({onClose,isWelcome})=>{
   </div>
   );
 };
+window.PH_BLOCK_A=Object.freeze({
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,LinkPicker,EditModal,AboutModal
+});
 /* == END: Block A == */
 </script>
 <script type="text/babel">
 /* == BEGIN: Block B == */
+const PH_BLOCK_A_B=window.PH_BLOCK_A;
+if(!PH_BLOCK_A_B)throw new Error('Block A exports missing. Cannot initialize Block B.');
+const{
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,LinkPicker,EditModal,AboutModal
+}=PH_BLOCK_A_B;
 // Streak Heatmap (GitHub-style)
 const Heatmap=({dHist,met})=>{
   const[sel,setSel]=useState(null);
@@ -980,10 +994,21 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
     </div>
   );
 },(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
+window.PH_BLOCK_B=Object.freeze({Heatmap,Chart,TestRunner,FocusTimer});
 /* == END: Block B == */
 </script>
 <script type="text/babel">
 /* == BEGIN: Block C == */
+const PH_BLOCK_A_C=window.PH_BLOCK_A;
+const PH_BLOCK_B_C=window.PH_BLOCK_B;
+if(!PH_BLOCK_A_C||!PH_BLOCK_B_C)throw new Error('Block A/B exports missing. Cannot initialize Block C.');
+const{
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,LinkPicker,EditModal,AboutModal
+}=PH_BLOCK_A_C;
+const{Heatmap,Chart,TestRunner,FocusTimer}=PH_BLOCK_B_C;
 // useAppData — shared persisted data state and CRUD handlers (v16.2 refactor Step 1)
 function useAppData(){
   // Data
@@ -1636,10 +1661,24 @@ function SettingsSection({desk}){
     </div>
   );
 }
+window.PH_BLOCK_C=Object.freeze({
+  useAppData,AppDataCtx,AppDataProv,useApp,
+  CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection
+});
 /* == END: Block C == */
 </script>
 <script type="text/babel">
 /* == BEGIN: Block D == */
+const PH_BLOCK_A_D=window.PH_BLOCK_A;
+const PH_BLOCK_C_D=window.PH_BLOCK_C;
+if(!PH_BLOCK_A_D||!PH_BLOCK_C_D)throw new Error('Block A/C exports missing. Cannot initialize Block D.');
+const{
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,LinkPicker,EditModal,AboutModal
+}=PH_BLOCK_A_D;
+const{AppDataProv,useApp,CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection}=PH_BLOCK_C_D;
 // Main App — thin layout shell (sidebar/tab-bar + content area) (v16.2 refactor Step 9)
 function App(){
   const desk=useDesk();
