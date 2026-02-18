@@ -1,4 +1,4 @@
-# productivity_hub v16.7-Alpha
+# productivity_hub v16.11-Alpha
 
 Copyright © 2026 Jeet Bookseller. All Rights Reserved. This code is for demonstration purposes only. It may not be used, modified, or distributed for commercial or non-commercial purposes without my explicit written permission.
 
@@ -13,7 +13,7 @@ Technical details of the App on: https://jeetbookseller.github.io/productivity_h
 - Tablet (768px+): Side-by-side Focus (equal flex-1 cols), 2-col Clarify/Confirm/Settings (flexbox), constrained QuickAdd, Explainer 2-col grid
 - Settings: Theme + Timer + Data + Install as App + Desktop Mode; flexbox 2-col on tablet+ with always-expanded cards; collapsible on mobile
 - Explainer: 7 collapsible accordion sections on mobile, always-expanded 2-col grid on tablet+
-- Test Suite (55 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode
+- Test Suite (77 tests, cleaned), Export/Import, Theme (default: System), cohesive dark mode; modal exit animations, debounced writes, tab/item transitions
 
 ### Workflow Model
 ```
