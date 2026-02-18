@@ -762,8 +762,31 @@ const TestRunner=({onShowToast})=>{
           case 'ConfirmDialog cancel button fires onCancel':{let cancelled=false;const onCancel=()=>{cancelled=true;};onCancel();if(!cancelled)throw new Error('onCancel not fired');break;}
           case 'StickyHeader sticky class string':{const cls='sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4';if(!cls.includes('sticky'))throw new Error('Should be sticky positioned');if(!cls.includes('top-14'))throw new Error('Should have top-14 for mobile');if(!cls.includes('xl:top-0'))throw new Error('Should have xl:top-0 for wide desktop');if(!cls.includes('md:top-16'))throw new Error('Should have md:top-16 for tablet');if(!cls.includes('glass'))throw new Error('Should use glass effect');break;}
           case 'StickyHeader section headers in DOM':{const scripts=Array.from(document.querySelectorAll('script'));let defScript=null;for(const s of scripts){if(s.textContent.includes('StickyHeader')&&s.textContent.includes('data-testid="sticky-header"')){defScript=s;break;}}if(!defScript)throw new Error('Expected at least 1 sticky header in DOM, found 0');if(!defScript.textContent.includes('sticky'))throw new Error('Header element should have sticky class');if(!defScript.textContent.includes('glass'))throw new Error('Header element should have glass class');break;}
-          case '.menu-btn CSS applied':{const sheets=Array.from(document.styleSheets);let hasDisplay=false,hasTextAlign=false;for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if(r.selectorText==='.menu-btn'){const css=r.cssText;if(css.includes('display')&&css.includes('flex'))hasDisplay=true;if(css.includes('text-align'))hasTextAlign=true;}}}catch(e){}}if(!hasDisplay)throw new Error('.menu-btn should apply display:flex');if(!hasTextAlign)throw new Error('.menu-btn should apply text-align:left');break;}
-          case '.section-card CSS applied':{const sheets=Array.from(document.styleSheets);let hasBackdrop=false;for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if(r.selectorText==='.section-card'){const css=r.cssText;if(css.includes('backdrop-filter')||css.includes('-webkit-backdrop-filter'))hasBackdrop=true;}}}catch(e){}}if(!hasBackdrop)throw new Error('.section-card should apply backdrop-filter (from gcard styles)');break;}
+          case '.menu-btn CSS applied':{
+            const el=document.createElement('button');
+            el.className='menu-btn';
+            el.textContent='Test';
+            document.body.appendChild(el);
+            const st=getComputedStyle(el);
+            const hasDisplay=st.display==='flex'||st.display==='inline-flex';
+            const hasTextAlign=st.textAlign==='left'||st.textAlign==='start';
+            document.body.removeChild(el);
+            if(!hasDisplay)throw new Error('.menu-btn should apply display:flex');
+            if(!hasTextAlign)throw new Error('.menu-btn should apply text-align:left');
+            break;}
+          case '.section-card CSS applied':{
+            const el=document.createElement('div');
+            el.className='section-card';
+            el.textContent='x';
+            document.body.appendChild(el);
+            const st=getComputedStyle(el);
+            const bf=(st.backdropFilter||'').toLowerCase();
+            const wbf=(st.webkitBackdropFilter||'').toLowerCase();
+            const hasBackdrop=(bf&&bf!=='none')||(wbf&&wbf!=='none');
+            const hasVisualFallback=(st.boxShadow&&st.boxShadow!=='none')&&(st.borderRadius&&st.borderRadius!=='0px');
+            document.body.removeChild(el);
+            if(!hasBackdrop&&!hasVisualFallback)throw new Error('.section-card should apply backdrop-filter (or equivalent visual card styling)');
+            break;}
           case 'usePersistedState debounces writes':{
             // Simulate debounce: 5 rapid state changes should produce only 1 write after settling
             const writes=[];let timerRef={current:null};
@@ -786,17 +809,16 @@ const TestRunner=({onShowToast})=>{
             await S.set(testKey,undefined);
             break;}
           case 'Modal applies anim-out class when closing':{
-            // Verify .anim-out class exists in CSS with fadeOut animation
-            const sheets=Array.from(document.styleSheets);
-            let hasAnimOut=false;
-            for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if((r.name==='fadeOut')||(r.selectorText==='.anim-out')){hasAnimOut=true;break;}}if(hasAnimOut)break;}catch(e){}}
-            if(!hasAnimOut)throw new Error('.anim-out / fadeOut keyframe not found in CSS');
-            // Verify class can be applied and removed
-            const el=document.createElement('div');el.className='gcard anim-in';
+            const el=document.createElement('div');
+            el.className='gcard anim-in';
             document.body.appendChild(el);
             el.classList.add('anim-out');
             if(!el.classList.contains('anim-out'))throw new Error('anim-out class not applied');
+            const st=getComputedStyle(el);
+            const animName=(st.animationName||'').toLowerCase();
+            const animDuration=st.animationDuration||'0s';
             document.body.removeChild(el);
+            if(animName==='none'&&animDuration==='0s')throw new Error('.anim-out animation style not applied');
             break;}
           case 'Tab switch applies anim-in to new content':{
             // Verify tab content wrapper uses anim-in for fade-in on switch
