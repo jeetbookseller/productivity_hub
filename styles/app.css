@@ -1,0 +1,85 @@
+    *{-webkit-tap-highlight-color:transparent;font-family:'Nunito',sans-serif}
+    body{overscroll-behavior:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
+    .dark body{background:linear-gradient(180deg,#2D2720 0%,#1F1B17 100%)}
+    .hide-sb::-webkit-scrollbar{display:none}.hide-sb{-ms-overflow-style:none;scrollbar-width:none}
+    .glass{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.6)}
+    .dark .glass{background:rgba(45,39,32,0.9);border:1px solid rgba(255,255,255,0.15)}
+    .gcard{background:rgba(255,255,255,0.75);backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(92,79,67,0.08),0 2px 8px rgba(92,79,67,0.04);border:1px solid rgba(255,255,255,0.6)}
+    .dark .gcard{background:rgba(45,39,32,0.7);box-shadow:0 8px 32px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1)}
+    .soft-shadow{box-shadow:0 4px 20px rgba(92,79,67,0.1),0 2px 8px rgba(92,79,67,0.05)}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}
+    .anim-float{animation:float 3s ease-in-out infinite}
+    .anim-in{animation:fadeIn 0.3s ease-out}
+    .anim-out{animation:fadeOut 0.2s ease-in forwards}
+    .sel{-webkit-user-select:text;user-select:text}
+    @media(min-width:768px){
+      /* ===== TABLET MODE (768px+) ===== */
+      /* Todo quadrant grid */
+      .md-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+      
+      /* Base font bump */
+      body{font-size:1.0625rem;line-height:1.7}
+      
+      /* Remove all truncation on desktop */
+      .truncate{overflow:visible!important;text-overflow:unset!important;white-space:normal!important}
+      
+      /* Inputs: larger text */
+      input[type="text"],input[type="date"],input[type="time"],input[type="number"],textarea{
+        padding:0.625rem 0.875rem;font-size:0.9375rem;border-radius:0.75rem
+      }
+      
+      /* Modals: wider */
+      .modal-content{max-width:32rem}
+      
+      /* Toast: centered wider */
+      .toast-wrap{max-width:28rem;margin:0 auto}
+      
+      /* Timer: larger display */
+      .timer-display{font-size:4.5rem;letter-spacing:0.05em}
+      
+      /* Scrollbar for desktop */
+      ::-webkit-scrollbar{width:6px;height:6px}
+      ::-webkit-scrollbar-track{background:transparent}
+      ::-webkit-scrollbar-thumb{background:rgba(122,107,90,0.2);border-radius:3px}
+      ::-webkit-scrollbar-thumb:hover{background:rgba(122,107,90,0.4)}
+      .dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15)}
+      .dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.3)}
+      
+      /* Tab bar: more spacious */
+      .tab-bar-inner button{padding:0.75rem 0}
+      .tab-bar-inner span{font-size:0.8125rem}
+      
+      /* More tab sub-buttons: larger */
+      .more-sub-btn{padding:0.625rem 1.25rem;font-size:0.9375rem}
+      
+      /* Help content: larger text */
+      .help-section p,.help-section li{font-size:0.9375rem}
+    }
+    
+    @media(min-width:1280px){
+      /* ===== WIDE DESKTOP MODE (1280px+) ===== */
+      /* Confirm multi-column grid */
+      .confirm-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+      
+      /* Compact item rows — no oversized blocks */
+      .gcard{padding:0.75rem 1rem}
+      
+      /* Sticky headers: no top offset needed (no fixed header in wide mode) */
+      .sticky-section-header{position:sticky;top:0;z-index:10}
+      
+      /* Capture wide input area */
+      .capture-input{max-width:48rem}
+      
+      /* Compact timer for side-by-side Focus layout */
+      .timer-display{font-size:3.5rem;letter-spacing:0.03em}
+      /* Compact section-card padding on wide desktop (same as .gcard override) */
+      .section-card{padding:0.75rem 1rem}
+    }
+    /* CSS abstractions (v16.10) */
+    .menu-btn{width:100%;padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms;text-align:left}
+    .menu-btn-border{border-top-width:1px;border-top-color:#E8DFD0}
+    .dark .menu-btn-border{border-top-color:#5C4F43}
+    .section-card{background:rgba(255,255,255,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(92,79,67,0.08),0 2px 8px rgba(92,79,67,0.04);border:1px solid rgba(255,255,255,0.6);border-radius:1rem;padding:1rem}
+    .dark .section-card{background:rgba(45,39,32,0.7);box-shadow:0 8px 32px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1)}
