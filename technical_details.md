@@ -2,8 +2,8 @@
 
 ## Development Progress Summary
 
-**Last Updated:** February 18, 2026  
-**Current Version:** v16.11-Alpha  
+**Last Updated:** February 19, 2026  
+**Current Version:** v17.0-Alpha  
 **Current Model:** Opus 4.6
 
 ## Table of Contents
@@ -23,11 +23,11 @@
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental `str_replace` edits
-- **Current phase:** v16.11 test-suite modernization complete; next planned milestone is v17.0 (`P1` lazy-load test suite)
+- **Current phase:** v17.0 lazy-loaded test suite shipped; next planned milestone is `P1` recurring tasks
 - **Working files:** `productivity_hub.html`, `styles/app.css`, `scripts/pwa_setup.js`, `scripts/app_core.js`
 - **Key constraint:** Output token limits require incremental edits (avoid full-file rewrites)
 - **Encoding note:** File had double-encoded UTF-8 emoji issues in the past (fixed in v15_4)
-- **Test status:** 36 tiered deterministic tests (`T0=9`, `T1=13`, `T2=14`) in the modernized in-app runner
+- **Test status:** 41 tiered deterministic tests (`T0=11`, `T1=13`, `T2=17`) in the modernized in-app runner
 
 ## Documentation Boundaries
 
@@ -40,7 +40,7 @@
   - Thin app shell: metadata, root mount node, script/style includes.
   - Inline Babel blocks only:
     - Block A: shared hooks/components
-    - Block B: visual/test components
+    - Block B: visual/test components + lazy test-runner APIs (`getTestRunner`, `peekTestRunner`, `createTestRunnerModel`)
     - Block C: data/context/section components
     - Block D: app shell + bootstrap render
 - `styles/app.css`
@@ -57,49 +57,34 @@
 
 ### Combined Prioritized Backlog (Pending)
 
-1. `P1` **Lazy-load test suite**
-   Defer test suite initialization until the Test tab is opened.
-
-   **Implementation direction:**
-   - Wrap `TestRunner` component definition in a factory function.
-   - In `SettingsSection`, initialize test runner lazily on first Test tab click.
-   - Show loading placeholder until runner is available.
-   - Keep initialized runner stable across tab switches.
-
-   **TDD tests to write first:**
-   - `TestRunner not initialized on app startup`
-   - `TestRunner loads on first Test tab click`
-   - `TestRunner persists after tab switch`
-
-2. `P2` **Recurring Tasks**
+1. `P1` **Recurring Tasks**
    Add daily/weekly/monthly recurrence rules with schedule-based auto-recreation and completion tracking.
 
-3. `P2` **Tags & Filters**
+2. `P2` **Tags & Filters**
    Add tags to tasks/notes, filter views by tag, and support cross-section tag search.
 
-4. `P2` **Command Palette Search**
+3. `P2` **Command Palette Search**
    Implement keyboard-triggered global search across Capture, Clarify, Focus, Confirm, and Review.
 
-5. `P3` **Task Templates**
+4. `P3` **Task Templates**
    Save task + subtask bundles and quick-create from a reusable template library.
 
-6. `P4` **Storage Enhancement**
+5. `P4` **Storage Enhancement**
    Improve resilience beyond IndexedDB-only browser storage.
 
-7. `P5` **Checklist tab management UX**
+6. `P5` **Checklist tab management UX**
    Add better tab controls (for example right-click/3-dot rename/delete behavior) for checklist tabs.
 
 ### Planned Implementation Order (TDD)
 
 | Order | Item | Target Version | Status |
 |-------|------|----------------|--------|
-| 1st | Lazy-load test suite | v17.0 | Pending |
-| 2nd | Recurring Tasks | TBD | Pending |
-| 3rd | Tags & Filters | TBD | Pending |
-| 4th | Command Palette Search | TBD | Pending |
-| 5th | Task Templates | TBD | Pending |
-| 6th | Storage Enhancement | TBD | Pending |
-| 7th | Checklist tab management UX | TBD | Pending |
+| 1st | Recurring Tasks | TBD | Pending |
+| 2nd | Tags & Filters | TBD | Pending |
+| 3rd | Command Palette Search | TBD | Pending |
+| 4th | Task Templates | TBD | Pending |
+| 5th | Storage Enhancement | TBD | Pending |
+| 6th | Checklist tab management UX | TBD | Pending |
 
 ---
 
@@ -107,7 +92,7 @@
 
 ### Versioning System
 - **Rule:** Small features increment minor (for example `15_1` -> `15_2`), major workflow/layout shifts increment major (`15` -> `16` -> `17`).
-- **Format:** `v16-Alpha`, `v15_1-Alpha`, `v16.11-Alpha`.
+- **Format:** `v16-Alpha`, `v15_1-Alpha`, `v16.11-Alpha`, `v17.0-Alpha`.
 - **Release stage:** Alpha.
 
 ### Workflow Model
@@ -198,15 +183,25 @@ Removed: arc, reminders, Swipe component
 | `LinkPicker` | Task-checklist linking modal |
 | `EditModal` / `AboutModal` | Editing and onboarding/about flows |
 | `TestRunner` | Internal automated test suite surface |
+| `getTestRunner` / `peekTestRunner` | Lazy-load + cache contract for Test runner in Settings tab |
 
 ### In-App Test Architecture (Modernized)
 - Runner model uses structured test cases, not name-based `switch` branching:
   - `id`, `name`, `tier` (`T0`/`T1`/`T2`), `area`, `run(ctx)`, optional `cleanup(ctx)`
+- Lazy-load contract for runner mount in Settings:
+  - `window.PH_BLOCK_B.getTestRunner()` builds/caches runner on first request
+  - `window.PH_BLOCK_B.peekTestRunner()` returns cached runner or `null` without creating it
+  - Runtime markers: `data-testid="test-runner-root"`, `data-testid="test-runner-loading"`, `data-testid="test-runner-error"`
+- Test runner model split:
+  - `createTestRunnerModel()`
+  - `getSuiteManifest()` for eager metadata/counts
+  - `loadTestCases()` for lazy, cached case-registry build (only on Run button)
 - Harness utilities inside `TestRunner`:
   - `assert`, `assertEq`, `assertIncludes`
   - `withDomFixture`
   - `withStorageFixture`
   - `withStorageSnapshot`
+  - `withSettingsHarness`
   - `waitFor`
   - cleanup registry (`add` + reverse-order `runAll`)
 - Tiered gate policy:
@@ -215,9 +210,9 @@ Removed: arc, reminders, Swipe component
   - `T2` UX/quality behavior: >=90% required
   - Determinism gate: `T2` rerun consistency checked across 3 runs, zero flaky variance required
 - Current baseline:
-  - Suite version: `2.0.0`
-  - Baseline date: `2026-02-18`
-  - Total tests: `36` (`T0=9`, `T1=13`, `T2=14`)
+  - Suite version: `2.1.0`
+  - Baseline date: `2026-02-19`
+  - Total tests: `41` (`T0=11`, `T1=13`, `T2=17`)
 
 ### CSS Architecture
 ```text

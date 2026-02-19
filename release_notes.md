@@ -2,8 +2,8 @@
 
 ## Release Summary
 
-**Last Updated:** February 18, 2026  
-**Current Version:** v16.11-Alpha  
+**Last Updated:** February 19, 2026  
+**Current Version:** v17.0-Alpha  
 **Versioning Convention:** Small features increment minor (for example `v15_1` -> `v15_2`), big features increment major (for example `v15` -> `v16`).
 
 ## Table of Contents
@@ -14,26 +14,29 @@
 
 ## Latest Release
 
-**productivity_hub.html** (`v16.11-Alpha`)
+**productivity_hub.html** (`v17.0-Alpha`)
 
 ### Release Focus
-- In-app `TestRunner` modernized from name-switch pseudo-tests to structured tiered cases:
-  - schema: `id`, `name`, `tier`, `area`, `run(ctx)`, optional `cleanup(ctx)`
-- Added deterministic harness utilities in runner:
-  - `assert`, `assertEq`, `assertIncludes`, `waitFor`
-  - `withDomFixture`, `withStorageFixture`, `withStorageSnapshot`
-  - strict cleanup registry execution
-- Added tiered coverage gates:
-  - `T0` (contract/boot) must pass 100%
-  - `T1` (workflow behavior) must pass 100%
-  - `T2` (UX/quality) must pass >=90%
-  - `T2` deterministic consistency verified across 3 runs (zero flaky variance required)
-- Report format upgraded:
-  - adds `suiteVersion` and `baselineDate`
-  - adds per-tier pass summaries and gate outcomes
-  - retains copy/download human-readable report export
-- Clean re-baseline completed:
-  - test inventory reset to **36** total (`T0=9`, `T1=13`, `T2=14`)
+- Added lazy-load runner APIs in `PH_BLOCK_B`:
+  - `getTestRunner()` and `peekTestRunner()`
+  - `createTestRunnerModel()` for split manifest + lazy case-registry build
+- Refactored Settings Test tab mount flow:
+  - No `TestRunner` mount on initial settings render
+  - First click on `🧪 Test` initializes runner
+  - Loaded runner is reused after `test -> help -> test` switching
+- Added stable runtime markers for deterministic lazy-load checks:
+  - `data-testid="test-runner-root"`
+  - `data-testid="test-runner-loading"`
+  - `data-testid="test-runner-error"`
+- Expanded in-app suite coverage for lazy-load contracts and settings behavior:
+  - Added `T0` contract tests for lazy API/model semantics
+  - Added `T2` UX tests for first-click loading and remount reuse
+  - Test inventory increased to **41** total (`T0=11`, `T1=13`, `T2=17`)
+- Suite baseline bumped:
+  - suite version `2.1.0`
+  - baseline date `2026-02-19`
+- Documentation sync completed:
+  - `README.md`, `technical_details.md`, and `release_notes.md` aligned to `v17.0-Alpha`
 
 ---
 

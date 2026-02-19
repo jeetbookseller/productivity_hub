@@ -532,16 +532,68 @@ const Chart=({data,label,clr='bg-sage-400'})=>{
 // ============================================
 // TEST APP FEATURE - Alpha Version
 // ============================================
-const TestRunner=({onShowToast})=>{
+const TEST_SUITE_VERSION='2.1.0';
+const TEST_BASELINE_DATE='2026-02-19';
+const TIER_ORDER=['T0','T1','T2'];
+const TIER_TARGETS={T0:1,T1:1,T2:0.9};
+const TEST_RUNNER_LAZY_DELAY_MS=60;
+const REQUIRED_PH_CORE_KEYS=['APP_VERSION','initDB','S','uid','notify','reqNotifyPerm','PRESETS','QUADS','CATS','shareItem','genICS','dlFile'];
+
+const createTestRunnerModel=()=>{
+  const manifest=Object.freeze({
+    suiteVersion:TEST_SUITE_VERSION,
+    baselineDate:TEST_BASELINE_DATE,
+    tierOrder:[...TIER_ORDER],
+    tierTargets:{...TIER_TARGETS},
+    counts:Object.freeze({total:41,T0:11,T1:13,T2:17})
+  });
+  let cachedTests=null;
+  let loadCount=0;
+  return{
+    getSuiteManifest(){return manifest;},
+    loadTestCases(builder){
+      if(!cachedTests){
+        cachedTests=builder();
+        loadCount++;
+      }
+      return cachedTests;
+    },
+    getLoadStats(){return{loaded:!!cachedTests,loadCount};}
+  };
+};
+
+let __testRunnerFactoryCache=null;
+let __testRunnerFactoryCreateCount=0;
+const peekTestRunner=()=>__testRunnerFactoryCache;
+const getTestRunner=async()=>{
+  if(!__testRunnerFactoryCache){
+    await new Promise(resolve=>setTimeout(resolve,TEST_RUNNER_LAZY_DELAY_MS));
+    __testRunnerFactoryCache=TestRunnerInner;
+    __testRunnerFactoryCreateCount++;
+  }
+  return __testRunnerFactoryCache;
+};
+const __resetTestRunnerCacheForTests=()=>{
+  __testRunnerFactoryCache=null;
+  __testRunnerFactoryCreateCount=0;
+};
+const __getTestRunnerCacheStats=()=>({
+  hasCache:!!__testRunnerFactoryCache,
+  createCount:__testRunnerFactoryCreateCount
+});
+window.__PH_RESET_TEST_RUNNER_CACHE=__resetTestRunnerCacheForTests;
+
+const TestRunnerInner=({onShowToast})=>{
   const[running,setRunning]=useState(false);
   const[results,setResults]=useState(null);
   const[progress,setProgress]=useState({current:0,total:0,step:''});
 
-  const SUITE_VERSION='2.0.0';
-  const BASELINE_DATE='2026-02-18';
-  const TIER_ORDER=['T0','T1','T2'];
-  const TIER_TARGETS={T0:1,T1:1,T2:0.9};
-  const REQUIRED_PH_CORE_KEYS=['APP_VERSION','initDB','S','uid','notify','reqNotifyPerm','PRESETS','QUADS','CATS','shareItem','genICS','dlFile'];
+  const modelRef=useRef(null);
+  if(!modelRef.current)modelRef.current=createTestRunnerModel();
+  const runnerModel=modelRef.current;
+  const suiteManifest=runnerModel.getSuiteManifest();
+  const SUITE_VERSION=suiteManifest.suiteVersion;
+  const BASELINE_DATE=suiteManifest.baselineDate;
 
   const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
   const normalizeErr=(err)=>err&&err.message?err.message:String(err||'Unknown error');
@@ -680,7 +732,32 @@ const TestRunner=({onShowToast})=>{
     });
   };
 
-  const getTestCases=()=>[
+  const withSettingsHarness=async(cleanupRegistry,fn)=>{
+    const blockA=window.PH_BLOCK_A;
+    const blockC=window.PH_BLOCK_C;
+    assert(blockA&&blockA.ThemeProv,'PH_BLOCK_A.ThemeProv is unavailable');
+    assert(blockC&&blockC.AppDataProv&&blockC.SettingsSection,'Settings section exports unavailable');
+    return withDomFixture(cleanupRegistry,async mount=>{
+      function Harness(){
+        return React.createElement(
+          blockA.ThemeProv,
+          null,
+          React.createElement(
+            blockC.AppDataProv,
+            null,
+            React.createElement(blockC.SettingsSection,{desk:false})
+          )
+        );
+      }
+      const root=ReactDOM.createRoot(mount);
+      mount.__root=root;
+      root.render(React.createElement(Harness));
+      await waitFor(()=>mount.querySelectorAll('.more-sub-btn').length>=3,{timeout:3500,message:'Settings harness failed to mount'});
+      return fn(mount);
+    });
+  };
+
+  const buildTestCases=()=>[
     {
       id:'t0.shell.assets-loaded',
       name:'Shell links/scripts are present and loaded',
@@ -821,6 +898,47 @@ const TestRunner=({onShowToast})=>{
       area:'Boot Contracts',
       async run({assertEq}){
         assertEq(APP_VERSION,window.PH_CORE.APP_VERSION,'APP_VERSION must match PH_CORE.APP_VERSION');
+      }
+    },
+    {
+      id:'t0.contract.test-runner-lazy-api',
+      name:'PH_BLOCK_B exposes lazy loader APIs for test runner',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertEq}){
+        const blockB=window.PH_BLOCK_B;
+        assert(blockB,'PH_BLOCK_B missing');
+        assert(typeof blockB.getTestRunner==='function','PH_BLOCK_B.getTestRunner missing');
+        assert(typeof blockB.peekTestRunner==='function','PH_BLOCK_B.peekTestRunner missing');
+        assert(typeof blockB.createTestRunnerModel==='function','PH_BLOCK_B.createTestRunnerModel missing');
+        if(typeof blockB.__resetTestRunnerCache==='function')blockB.__resetTestRunnerCache();
+        assertEq(blockB.peekTestRunner(),null,'peekTestRunner should be empty after reset');
+      }
+    },
+    {
+      id:'t0.contract.test-runner-model-lazy-registry',
+      name:'Test runner model keeps manifest eager and test cases lazy',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertEq}){
+        const model=createTestRunnerModel();
+        const manifest=model.getSuiteManifest();
+        assert(typeof manifest.suiteVersion==='string'&&manifest.suiteVersion.length>0,'Manifest suiteVersion missing');
+        assert(typeof manifest.baselineDate==='string'&&manifest.baselineDate.length>0,'Manifest baselineDate missing');
+        assertEq(model.getLoadStats().loaded,false,'Model should start unloaded');
+        let buildCount=0;
+        const first=model.loadTestCases(()=>{
+          buildCount++;
+          return[{id:'stub',name:'Stub',tier:'T0',area:'Harness',run:async()=>{}}];
+        });
+        const second=model.loadTestCases(()=>{
+          buildCount++;
+          return[];
+        });
+        assertEq(buildCount,1,'loadTestCases should build only once');
+        assert(first===second,'loadTestCases should return cached registry');
+        assertEq(model.getLoadStats().loaded,true,'Model should report loaded after first build');
+        assertEq(model.getLoadStats().loadCount,1,'Model load count should be exactly one');
       }
     },
     {
@@ -1384,6 +1502,74 @@ const TestRunner=({onShowToast})=>{
       }
     },
     {
+      id:'t2.settings.test-runner-default-absent',
+      name:'Settings keeps test runner unmounted before first Test tab click',
+      tier:'T2',
+      area:'Settings UX',
+      async run({withStorageSnapshot,withSettingsHarness,assert}){
+        await withStorageSnapshot(async()=>{
+          if(window.PH_BLOCK_B&&typeof window.PH_BLOCK_B.__resetTestRunnerCache==='function')window.PH_BLOCK_B.__resetTestRunnerCache();
+          await withSettingsHarness(async mount=>{
+            assert(!mount.querySelector('[data-testid="test-runner-root"]'),'Test runner should not mount by default');
+            assert(!mount.querySelector('[data-testid="test-runner-loading"]'),'Loading marker should not show by default');
+            assert(!mount.querySelector('[data-testid="test-runner-error"]'),'Error marker should not show by default');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.settings.test-runner-first-click-lazy-load',
+      name:'Settings first Test click shows loader then mounts test runner',
+      tier:'T2',
+      area:'Settings UX',
+      async run({withStorageSnapshot,withSettingsHarness,waitFor,assert}){
+        await withStorageSnapshot(async()=>{
+          if(window.PH_BLOCK_B&&typeof window.PH_BLOCK_B.__resetTestRunnerCache==='function')window.PH_BLOCK_B.__resetTestRunnerCache();
+          await withSettingsHarness(async mount=>{
+            const testTab=Array.from(mount.querySelectorAll('.more-sub-btn')).find(btn=>((btn.textContent||'').includes('Test')));
+            assert(testTab,'Test sub-tab button missing');
+            testTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            let sawLoading=false;
+            await waitFor(()=>{
+              const loading=mount.querySelector('[data-testid="test-runner-loading"]');
+              if(loading)sawLoading=true;
+              return sawLoading||!!mount.querySelector('[data-testid="test-runner-root"]');
+            },{timeout:2400,message:'No lazy-load marker found after Test tab click'});
+            await waitFor(()=>mount.querySelector('[data-testid="test-runner-root"]'),{timeout:3600,message:'Test runner root did not mount'});
+            assert(sawLoading,'Expected loading marker during first lazy load');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.settings.test-runner-persists-after-tab-switch',
+      name:'Settings reuses loaded runner after switching away and back',
+      tier:'T2',
+      area:'Settings UX',
+      async run({withStorageSnapshot,withSettingsHarness,waitFor,assert,assertEq}){
+        await withStorageSnapshot(async()=>{
+          const blockB=window.PH_BLOCK_B;
+          if(blockB&&typeof blockB.__resetTestRunnerCache==='function')blockB.__resetTestRunnerCache();
+          await withSettingsHarness(async mount=>{
+            const findSubTab=(label)=>Array.from(mount.querySelectorAll('.more-sub-btn')).find(btn=>((btn.textContent||'').includes(label)));
+            const testTab=findSubTab('Test');
+            const helpTab=findSubTab('Explainer');
+            assert(testTab&&helpTab,'Settings sub-tabs are missing');
+            testTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.querySelector('[data-testid="test-runner-root"]'),{timeout:3600,message:'Initial test runner mount failed'});
+            helpTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.textContent.includes('Complete Guide'),{timeout:2000,message:'Help tab content did not render'});
+            testTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.querySelector('[data-testid="test-runner-root"]'),{timeout:2000,message:'Runner did not remount after switching back'});
+            assert(!mount.querySelector('[data-testid="test-runner-loading"]'),'Runner should be reused without loading on second open');
+            if(blockB&&typeof blockB.__getTestRunnerCacheStats==='function'){
+              assertEq(blockB.__getTestRunnerCacheStats().createCount,1,'Runner factory should initialize exactly once');
+            }
+          });
+        });
+      }
+    },
+    {
       id:'t2.layout.focus-review-responsive-markers',
       name:'Focus and Review sections keep responsive marker classes',
       tier:'T2',
@@ -1481,7 +1667,7 @@ const TestRunner=({onShowToast})=>{
     setResults(null);
     window.__PH_TEST_MODE=true;
 
-    const tests=getTestCases();
+    const tests=runnerModel.loadTestCases(buildTestCases);
     const invalidTierTests=tests.filter(t=>!TIER_ORDER.includes(t.tier));
     const duplicateIds=tests.map(t=>t.id).filter((id,idx,arr)=>arr.indexOf(id)!==idx);
     const t2Tests=tests.filter(t=>t.tier==='T2');
@@ -1515,6 +1701,7 @@ const TestRunner=({onShowToast})=>{
         withStorageSnapshot:(fn)=>withStorageSnapshot(cleanupRegistry,fn),
         withAppDataHarness:(fn)=>withAppDataHarness(cleanupRegistry,fn),
         withSectionHarness:(SectionComp,sectionProps,fn)=>withSectionHarness(cleanupRegistry,SectionComp,sectionProps,fn),
+        withSettingsHarness:(fn)=>withSettingsHarness(cleanupRegistry,fn),
         setInputValue,findByText,findButtonByText,delay
       };
 
@@ -1622,10 +1809,10 @@ const TestRunner=({onShowToast})=>{
   const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('Report copied to clipboard');};
   const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('Report downloaded');};
 
-  const suiteCounts=getTestCases().reduce((acc,t)=>{acc.total++;acc[t.tier]=(acc[t.tier]||0)+1;return acc;},{total:0,T0:0,T1:0,T2:0});
+  const suiteCounts=suiteManifest.counts;
 
   return(
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="test-runner-root">
       <div className="gcard rounded-2xl p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-2xl bg-lavender-100 flex items-center justify-center"><I.Test s={24} c="text-lavender-400"/></div>
@@ -1710,6 +1897,19 @@ const TestRunner=({onShowToast})=>{
   );
 };
 
+const TestRunner=(props)=>{
+  const[RunnerComp,setRunnerComp]=useState(()=>peekTestRunner());
+  useEffect(()=>{
+    let cancelled=false;
+    if(!RunnerComp){
+      getTestRunner().then(comp=>{if(!cancelled)setRunnerComp(()=>comp);}).catch(()=>{});
+    }
+    return()=>{cancelled=true;};
+  },[RunnerComp]);
+  if(!RunnerComp)return<div className="section-card" data-testid="test-runner-loading">Loading test suite...</div>;
+  return React.createElement(RunnerComp,props);
+};
+
 // Isolated FocusTimer Component with useReducer
 const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpdateFocus,onUpdateTodos,activeTaskId,activeTaskText,onTick})=>{
   const[state,dispatch]=React.useReducer((s,a)=>{
@@ -1783,7 +1983,12 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
     </div>
   );
 },(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
-window.PH_BLOCK_B=Object.freeze({Heatmap,Chart,TestRunner,FocusTimer});
+window.PH_BLOCK_B=Object.freeze({
+  Heatmap,Chart,TestRunner,FocusTimer,
+  getTestRunner,peekTestRunner,createTestRunnerModel,
+  __resetTestRunnerCache:__resetTestRunnerCacheForTests,
+  __getTestRunnerCacheStats
+});
 })();
 /* == END: Block B == */
 </script>
@@ -1799,7 +2004,7 @@ const{
   I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
   Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,StickyHeader,LinkPicker,EditModal,AboutModal
 }=PH_BLOCK_A_C;
-const{Heatmap,Chart,TestRunner,FocusTimer}=PH_BLOCK_B_C;
+const{Heatmap,Chart,TestRunner,FocusTimer,getTestRunner,peekTestRunner}=PH_BLOCK_B_C;
 // useAppData — shared persisted data state and CRUD handlers (v16.2 refactor Step 1)
 function useAppData(){
   // Data
@@ -2344,7 +2549,27 @@ function SettingsSection({desk}){
   const[moreSub,setMoreSub]=useState('settings');
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
+  const[testRunnerComp,setTestRunnerComp]=useState(()=>peekTestRunner());
+  const[isTestRunnerLoading,setIsTestRunnerLoading]=useState(false);
+  const[testRunnerError,setTestRunnerError]=useState(null);
   const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
+  const ensureTestRunnerLoaded=useCallback(async()=>{
+    if(testRunnerComp||isTestRunnerLoading)return;
+    setTestRunnerError(null);
+    setIsTestRunnerLoading(true);
+    try{
+      const runner=await getTestRunner();
+      setTestRunnerComp(()=>runner);
+    }catch(err){
+      setTestRunnerError(err&&err.message?err.message:'Failed to load test suite');
+    }finally{
+      setIsTestRunnerLoading(false);
+    }
+  },[testRunnerComp,isTestRunnerLoading]);
+  const onMoreSubSelect=useCallback((id)=>{
+    setMoreSub(id);
+    if(id==='test')ensureTestRunnerLoaded();
+  },[ensureTestRunnerLoaded]);
 
   const themeCard=<div className="section-card"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>;
   const timerCard=<div className="section-card"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>;
@@ -2364,7 +2589,7 @@ function SettingsSection({desk}){
 
   return(
     <div className="space-y-4">
-      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
+      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>onMoreSubSelect(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
       {moreSub==='settings'&&(
         desk?(
         <div className="flex gap-4">
@@ -2448,7 +2673,15 @@ function SettingsSection({desk}){
           </div>
         </div>
       )}
-      {moreSub==='test'&&<><TestRunner onShowToast={showT}/><div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div></>}
+      {moreSub==='test'&&(
+        <>
+          {isTestRunnerLoading&&<div className="section-card text-sm text-bark-500 dark:text-sand-200" data-testid="test-runner-loading">Loading test suite...</div>}
+          {!isTestRunnerLoading&&testRunnerError&&<div className="section-card text-sm text-terracotta-500 dark:text-terracotta-300" data-testid="test-runner-error">App failed to load tests: {testRunnerError}</div>}
+          {!isTestRunnerLoading&&testRunnerComp&&React.createElement(testRunnerComp,{onShowToast:showT})}
+          {!isTestRunnerLoading&&!testRunnerComp&&!testRunnerError&&<div className="section-card text-sm text-bark-500 dark:text-sand-200" data-testid="test-runner-loading">Loading test suite...</div>}
+          <div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div>
+        </>
+      )}
     </div>
   );
 }
