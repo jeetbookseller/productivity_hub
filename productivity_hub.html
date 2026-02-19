@@ -1078,6 +1078,7 @@ const TestRunnerInner=({onShowToast})=>{
       tier:'T1',
       area:'Focus Workflow',
       async run({withDomFixture,waitFor,findButtonByText,assert}){
+        await S.set('focusTimerState',undefined);
         await withDomFixture(async mount=>{
           const completed=[];
           const root=ReactDOM.createRoot(mount);
