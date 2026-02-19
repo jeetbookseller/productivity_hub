@@ -31,7 +31,11 @@
 - Expanded in-app suite coverage for lazy-load contracts and settings behavior:
   - Added `T0` contract tests for lazy API/model semantics
   - Added `T2` UX tests for first-click loading and remount reuse
-  - Test inventory increased to **41** total (`T0=11`, `T1=13`, `T2=17`)
+- Removed sticky-header top gap for workflow tabs (`Capture`, `Clarify`, `Focus`, `Confirm`, `Review`) across mobile/tablet/desktop while preserving top breathing space in `More`:
+  - Added conditional main content top-padding contract by active tab
+  - Added `data-testid="main-content-wrap"` for deterministic layout assertions
+  - Added `T2` layout tests for sticky tabs no-gap + `More` gap-preserved behavior
+  - Test inventory increased to **43** total (`T0=11`, `T1=13`, `T2=19`)
 - Suite baseline bumped:
   - suite version `2.1.0`
   - baseline date `2026-02-19`
@@ -198,7 +202,23 @@
 - Test cleanup: removed 7 stale/trivial tests, added 3 new tests, updated 1 side-by-side test
 - Tests: 59 -> 55
 
-### Phase 10: v16.x Refactor (v16.1 - v16.11) - Opus 4.6
+### Phase 10: v16.x Refactor + v17 Rollup (v16.1 - v17.0) - Opus 4.6
+
+#### v17.0-alpha
+- Added lazy-load in-app test runner architecture:
+  - `PH_BLOCK_B` exposes `getTestRunner`, `peekTestRunner`, `createTestRunnerModel`
+  - Test runner uses eager manifest + lazy cached test-case registry
+  - Settings Test tab initializes runner on first click and reuses it after tab switches
+- Added deterministic test runner runtime markers:
+  - `data-testid="test-runner-root"`
+  - `data-testid="test-runner-loading"`
+  - `data-testid="test-runner-error"`
+- Fixed extra top gap above sticky headers for workflow tabs across all breakpoints:
+  - Workflow tabs use zero top gap
+  - `More` keeps top breathing space
+- Added layout test selector:
+  - `data-testid="main-content-wrap"`
+- Tests: `41 -> 43`
 
 #### v16.10
 - StickyHeader + CSS class abstraction:
