@@ -545,7 +545,7 @@ const createTestRunnerModel=()=>{
     baselineDate:TEST_BASELINE_DATE,
     tierOrder:[...TIER_ORDER],
     tierTargets:{...TIER_TARGETS},
-    counts:Object.freeze({total:41,T0:11,T1:13,T2:17})
+    counts:Object.freeze({total:43,T0:11,T1:13,T2:19})
   });
   let cachedTests=null;
   let loadCount=0;
@@ -1567,6 +1567,63 @@ const TestRunnerInner=({onShowToast})=>{
             }
           });
         });
+      }
+    },
+    {
+      id:'t2.layout.sticky-tabs-no-top-gap-all-breakpoints',
+      name:'Sticky-header tabs use zero top gap across breakpoints',
+      tier:'T2',
+      area:'Layout UX',
+      async run({waitFor,assert}){
+        const wrap=document.querySelector('[data-testid="main-content-wrap"]');
+        assert(wrap,'Main content wrapper not found');
+        const tabButtons=Array.from(document.querySelectorAll('[data-testid="bottom-tab-bar"] .tab-bar-inner button'));
+        assert(tabButtons.length===6,'Expected six primary tab buttons');
+        const clickTabByIndex=(idx)=>{
+          const btn=tabButtons[idx];
+          assert(btn,`Missing tab button at index ${idx}`);
+          btn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+        };
+        const stickyTabIndexes=[0,1,2,3,4];
+        for(const idx of stickyTabIndexes){
+          clickTabByIndex(idx);
+          await waitFor(()=>{
+            const cls=wrap.className||'';
+            return cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0');
+          },{timeout:1200,message:`Expected zero top gap classes for tab index ${idx}`});
+        }
+      }
+    },
+    {
+      id:'t2.layout.more-top-gap-preserved-all-breakpoints',
+      name:'More tab keeps top gap and flips correctly with sticky tabs',
+      tier:'T2',
+      area:'Layout UX',
+      async run({waitFor,assert}){
+        const wrap=document.querySelector('[data-testid="main-content-wrap"]');
+        assert(wrap,'Main content wrapper not found');
+        const tabButtons=Array.from(document.querySelectorAll('[data-testid="bottom-tab-bar"] .tab-bar-inner button'));
+        assert(tabButtons.length===6,'Expected six primary tab buttons');
+        const clickTabByIndex=(idx)=>{
+          const btn=tabButtons[idx];
+          assert(btn,`Missing tab button at index ${idx}`);
+          btn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+        };
+        clickTabByIndex(5);
+        await waitFor(()=>{
+          const cls=wrap.className||'';
+          return cls.includes('pt-4')&&cls.includes('md:pt-6')&&cls.includes('xl:pt-6')&&!cls.includes('md:pt-0')&&!cls.includes('xl:pt-0');
+        },{timeout:1200,message:'Expected More top-gap classes'});
+        clickTabByIndex(0);
+        await waitFor(()=>{
+          const cls=wrap.className||'';
+          return cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0');
+        },{timeout:1200,message:'Expected sticky-tab zero top-gap classes after leaving More'});
+        clickTabByIndex(5);
+        await waitFor(()=>{
+          const cls=wrap.className||'';
+          return cls.includes('pt-4')&&cls.includes('md:pt-6')&&cls.includes('xl:pt-6');
+        },{timeout:1200,message:'Expected More top-gap classes after switching back'});
       }
     },
     {
@@ -2705,6 +2762,7 @@ const{
   Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,StickyHeader,LinkPicker,EditModal,AboutModal
 }=PH_BLOCK_A_D;
 const{AppDataProv,useApp,CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection}=PH_BLOCK_C_D;
+const STICKY_HEADER_TAB_IDS=new Set(['notes','todos','focus','lists','review']);
 // Main App — thin layout shell (sidebar/tab-bar + content area) (v16.2 refactor Step 9)
 function App(){
   const desk=useDesk();
@@ -2765,6 +2823,8 @@ function App(){
   const cancelBulkDelete=()=>setBulkConfirm(null);
   const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
+  const hasStickyHeaderTab=STICKY_HEADER_TAB_IDS.has(tab);
+  const mainContentTopPadClass=hasStickyHeaderTab?'pt-0 md:pt-0 xl:pt-0':'pt-4 md:pt-6 xl:pt-6';
   const bulkLabel=bulkConfirm?(bulkConfirm.section==='todos'?'task':bulkConfirm.section==='lists'?'item':'note'):null;
   const bulkCount=bulkConfirm?bulkConfirm.ids.size:0;
 
@@ -2799,7 +2859,7 @@ function App(){
           <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
           <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
         </div>
-        <div className="px-4 md:px-8 xl:px-8 py-4 md:py-6 xl:py-6 pb-28 md:pb-32 xl:pb-6 max-w-lg md:max-w-5xl xl:max-w-none mx-auto">
+        <div data-testid="main-content-wrap" className={`px-4 md:px-8 xl:px-8 ${mainContentTopPadClass} pb-28 md:pb-32 xl:pb-6 max-w-lg md:max-w-5xl xl:max-w-none mx-auto`}>
           <div key={tab} className="anim-in" data-testid="tab-content">
             {tab==='focus'&&<div className="max-w-2xl mx-auto xl:max-w-none"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>}
             {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
