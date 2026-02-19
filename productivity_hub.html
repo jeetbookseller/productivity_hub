@@ -2952,7 +2952,7 @@ function App(){
         </div>
         <nav className="flex-1 py-3 px-3 space-y-1 overflow-y-auto">
           {tabs.map(({id,Ic,l})=>{
-            const isFR=id==='focus'&&timerInfo.run;
+            const isFR=id==='focus'&&timerInfo.run&&tab!=='focus';
             return(
             <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab===id?'bg-sage-400/15 text-sage-600 dark:text-sage-300':'text-bark-500 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-bark-600/50'}`}>
               <Ic s={20}/>
@@ -2990,7 +2990,7 @@ function App(){
       <div data-testid="bottom-tab-bar" className="fixed bottom-0 left-0 right-0 glass border-t border-sand-200/50 dark:border-bark-500/30 xl:hidden" style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
         <div className="flex justify-around max-w-lg md:max-w-5xl mx-auto py-2 tab-bar-inner">
           {tabs.map(({id,Ic,l})=>{
-            const isFR=id==='focus'&&timerInfo.run;
+            const isFR=id==='focus'&&timerInfo.run&&tab!=='focus';
             return(
             <button key={id} onClick={()=>{setTab(id);if(selMode)exitSelMode();}} className={`flex-1 py-2 flex flex-col items-center gap-1 transition-all ${tab===id?'text-sage-500':'text-bark-400 dark:text-sand-200'}`}>
               <div className="relative"><Ic s={28}/>{isFR&&<span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${timerInfo.mode==='work'?'bg-sage-400':'bg-ocean-400'} animate-pulse`}/>}</div>
