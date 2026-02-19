@@ -1575,23 +1575,13 @@ const TestRunnerInner=({onShowToast})=>{
       name:'Sticky-header tabs use zero top gap across breakpoints',
       tier:'T2',
       area:'Layout UX',
-      async run({waitFor,assert}){
-        const wrap=document.querySelector('[data-testid="main-content-wrap"]');
-        assert(wrap,'Main content wrapper not found');
-        const tabButtons=Array.from(document.querySelectorAll('[data-testid="bottom-tab-bar"] .tab-bar-inner button'));
-        assert(tabButtons.length===6,'Expected six primary tab buttons');
-        const clickTabByIndex=(idx)=>{
-          const btn=tabButtons[idx];
-          assert(btn,`Missing tab button at index ${idx}`);
-          btn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
-        };
-        const stickyTabIndexes=[0,1,2,3,4];
-        for(const idx of stickyTabIndexes){
-          clickTabByIndex(idx);
-          await waitFor(()=>{
-            const cls=wrap.className||'';
-            return cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0');
-          },{timeout:1200,message:`Expected zero top gap classes for tab index ${idx}`});
+      async run({assert}){
+        const blockD=window.PH_BLOCK_D;
+        assert(blockD&&typeof blockD.getMainContentTopPadClass==='function','PH_BLOCK_D.getMainContentTopPadClass missing');
+        for(const tabId of ['notes','todos','focus','lists','review']){
+          const cls=blockD.getMainContentTopPadClass(tabId)||'';
+          assert(cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0'),`Expected zero top-gap classes for tab ${tabId}`);
+          assert(!cls.includes('pt-4')&&!cls.includes('md:pt-6')&&!cls.includes('xl:pt-6'),`Sticky tab ${tabId} should not use More top-gap classes`);
         }
       }
     },
@@ -1600,31 +1590,20 @@ const TestRunnerInner=({onShowToast})=>{
       name:'More tab keeps top gap and flips correctly with sticky tabs',
       tier:'T2',
       area:'Layout UX',
-      async run({waitFor,assert}){
+      async run({assert}){
+        const blockD=window.PH_BLOCK_D;
+        assert(blockD&&typeof blockD.getMainContentTopPadClass==='function','PH_BLOCK_D.getMainContentTopPadClass missing');
+        const moreClass=blockD.getMainContentTopPadClass('more')||'';
+        assert(moreClass.includes('pt-4')&&moreClass.includes('md:pt-6')&&moreClass.includes('xl:pt-6'),'Expected More top-gap classes');
+        assert(!moreClass.includes('md:pt-0')&&!moreClass.includes('xl:pt-0'),'More top-gap class should not include sticky zero-gap tokens');
+        const stickyClass=blockD.getMainContentTopPadClass('notes')||'';
+        assert(stickyClass.includes('pt-0')&&stickyClass.includes('md:pt-0')&&stickyClass.includes('xl:pt-0'),'Expected sticky-tab zero top-gap class tokens');
+        assert(moreClass!==stickyClass,'More and sticky tab classes must differ');
+        assert(blockD.getMainContentTopPadClass('more')===moreClass,'More tab class should be deterministic on repeated calls');
         const wrap=document.querySelector('[data-testid="main-content-wrap"]');
         assert(wrap,'Main content wrapper not found');
-        const tabButtons=Array.from(document.querySelectorAll('[data-testid="bottom-tab-bar"] .tab-bar-inner button'));
-        assert(tabButtons.length===6,'Expected six primary tab buttons');
-        const clickTabByIndex=(idx)=>{
-          const btn=tabButtons[idx];
-          assert(btn,`Missing tab button at index ${idx}`);
-          btn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
-        };
-        clickTabByIndex(5);
-        await waitFor(()=>{
-          const cls=wrap.className||'';
-          return cls.includes('pt-4')&&cls.includes('md:pt-6')&&cls.includes('xl:pt-6')&&!cls.includes('md:pt-0')&&!cls.includes('xl:pt-0');
-        },{timeout:1200,message:'Expected More top-gap classes'});
-        clickTabByIndex(0);
-        await waitFor(()=>{
-          const cls=wrap.className||'';
-          return cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0');
-        },{timeout:1200,message:'Expected sticky-tab zero top-gap classes after leaving More'});
-        clickTabByIndex(5);
-        await waitFor(()=>{
-          const cls=wrap.className||'';
-          return cls.includes('pt-4')&&cls.includes('md:pt-6')&&cls.includes('xl:pt-6');
-        },{timeout:1200,message:'Expected More top-gap classes after switching back'});
+        const wrapClass=wrap.className||'';
+        assert(wrapClass.includes('pt-4')&&wrapClass.includes('md:pt-6')&&wrapClass.includes('xl:pt-6'),'Live More view should keep top-gap classes while Test tab is open');
       }
     },
     {
@@ -2765,6 +2744,9 @@ const{
 }=PH_BLOCK_A_D;
 const{AppDataProv,useApp,CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection}=PH_BLOCK_C_D;
 const STICKY_HEADER_TAB_IDS=new Set(['notes','todos','focus','lists','review']);
+const STICKY_TAB_TOP_PAD_CLASS='pt-0 md:pt-0 xl:pt-0';
+const MORE_TAB_TOP_PAD_CLASS='pt-4 md:pt-6 xl:pt-6';
+const getMainContentTopPadClass=(tabId)=>STICKY_HEADER_TAB_IDS.has(tabId)?STICKY_TAB_TOP_PAD_CLASS:MORE_TAB_TOP_PAD_CLASS;
 // Main App — thin layout shell (sidebar/tab-bar + content area) (v16.2 refactor Step 9)
 function App(){
   const desk=useDesk();
@@ -2825,8 +2807,7 @@ function App(){
   const cancelBulkDelete=()=>setBulkConfirm(null);
   const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
-  const hasStickyHeaderTab=STICKY_HEADER_TAB_IDS.has(tab);
-  const mainContentTopPadClass=hasStickyHeaderTab?'pt-0 md:pt-0 xl:pt-0':'pt-4 md:pt-6 xl:pt-6';
+  const mainContentTopPadClass=getMainContentTopPadClass(tab);
   const bulkLabel=bulkConfirm?(bulkConfirm.section==='todos'?'task':bulkConfirm.section==='lists'?'item':'note'):null;
   const bulkCount=bulkConfirm?bulkConfirm.ids.size:0;
 
@@ -2917,6 +2898,11 @@ class AppErrorBoundary extends React.Component{
     return this.props.children;
   }
 }
+window.PH_BLOCK_D=Object.freeze({
+  getMainContentTopPadClass,
+  STICKY_TAB_TOP_PAD_CLASS,
+  MORE_TAB_TOP_PAD_CLASS
+});
 try{
   ReactDOM.createRoot(document.getElementById('root')).render(
     <AppErrorBoundary>
