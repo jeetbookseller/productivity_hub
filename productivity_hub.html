@@ -16,256 +16,75 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{nunito:['Nunito','sans-serif']},colors:{cream:{50:'#FDFCFA',100:'#F7F5F0',200:'#EDE9E0'},sage:{100:'#E8F0EA',200:'#C5D9CA',300:'#9DC4A8',400:'#7CB69D',500:'#5A9E78'},terracotta:{100:'#FCEEE9',200:'#F5C9BA',300:'#E9A088',400:'#E07A5F',500:'#C45D42'},sand:{100:'#F5F0E6',200:'#E8DFD0',300:'#D4C5AD'},ocean:{100:'#E6F2F7',200:'#B8D9E8',300:'#83B5D1',400:'#5A9BBF'},lavender:{100:'#F0EDF5',200:'#D5CCE6',300:'#B8A9D4',400:'#9B8AA6'},bark:{300:'#9A8B7A',400:'#7A6B5A',500:'#5C4F43',600:'#3D352D',700:'#2D2720'}}}}}</script>
-  <style>
-    *{-webkit-tap-highlight-color:transparent;font-family:'Nunito',sans-serif}
-    body{overscroll-behavior:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:linear-gradient(180deg,#F7F5F0 0%,#EDE9E0 100%);min-height:100vh}
-    .dark body{background:linear-gradient(180deg,#2D2720 0%,#1F1B17 100%)}
-    .hide-sb::-webkit-scrollbar{display:none}.hide-sb{-ms-overflow-style:none;scrollbar-width:none}
-    .glass{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.6)}
-    .dark .glass{background:rgba(45,39,32,0.9);border:1px solid rgba(255,255,255,0.15)}
-    .gcard{background:rgba(255,255,255,0.75);backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(92,79,67,0.08),0 2px 8px rgba(92,79,67,0.04);border:1px solid rgba(255,255,255,0.6)}
-    .dark .gcard{background:rgba(45,39,32,0.7);box-shadow:0 8px 32px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1)}
-    .soft-shadow{box-shadow:0 4px 20px rgba(92,79,67,0.1),0 2px 8px rgba(92,79,67,0.05)}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes fadeOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}
-    .anim-float{animation:float 3s ease-in-out infinite}
-    .anim-in{animation:fadeIn 0.3s ease-out}
-    .anim-out{animation:fadeOut 0.2s ease-in forwards}
-    .sel{-webkit-user-select:text;user-select:text}
-    @media(min-width:768px){
-      /* ===== TABLET MODE (768px+) ===== */
-      /* Todo quadrant grid */
-      .md-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-      
-      /* Base font bump */
-      body{font-size:1.0625rem;line-height:1.7}
-      
-      /* Remove all truncation on desktop */
-      .truncate{overflow:visible!important;text-overflow:unset!important;white-space:normal!important}
-      
-      /* Inputs: larger text */
-      input[type="text"],input[type="date"],input[type="time"],input[type="number"],textarea{
-        padding:0.625rem 0.875rem;font-size:0.9375rem;border-radius:0.75rem
-      }
-      
-      /* Modals: wider */
-      .modal-content{max-width:32rem}
-      
-      /* Toast: centered wider */
-      .toast-wrap{max-width:28rem;margin:0 auto}
-      
-      /* Timer: larger display */
-      .timer-display{font-size:4.5rem;letter-spacing:0.05em}
-      
-      /* Scrollbar for desktop */
-      ::-webkit-scrollbar{width:6px;height:6px}
-      ::-webkit-scrollbar-track{background:transparent}
-      ::-webkit-scrollbar-thumb{background:rgba(122,107,90,0.2);border-radius:3px}
-      ::-webkit-scrollbar-thumb:hover{background:rgba(122,107,90,0.4)}
-      .dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15)}
-      .dark ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.3)}
-      
-      /* Tab bar: more spacious */
-      .tab-bar-inner button{padding:0.75rem 0}
-      .tab-bar-inner span{font-size:0.8125rem}
-      
-      /* More tab sub-buttons: larger */
-      .more-sub-btn{padding:0.625rem 1.25rem;font-size:0.9375rem}
-      
-      /* Help content: larger text */
-      .help-section p,.help-section li{font-size:0.9375rem}
-    }
-    
-    @media(min-width:1280px){
-      /* ===== WIDE DESKTOP MODE (1280px+) ===== */
-      /* Confirm multi-column grid */
-      .confirm-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
-      
-      /* Compact item rows — no oversized blocks */
-      .gcard{padding:0.75rem 1rem}
-      
-      /* Sticky headers: no top offset needed (no fixed header in wide mode) */
-      .sticky-section-header{position:sticky;top:0;z-index:10}
-      
-      /* Capture wide input area */
-      .capture-input{max-width:48rem}
-      
-      /* Compact timer for side-by-side Focus layout */
-      .timer-display{font-size:3.5rem;letter-spacing:0.03em}
-      /* Compact section-card padding on wide desktop (same as .gcard override) */
-      .section-card{padding:0.75rem 1rem}
-    }
-    /* CSS abstractions (v16.10) */
-    .menu-btn{width:100%;padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms;text-align:left}
-    .menu-btn-border{border-top-width:1px;border-top-color:#E8DFD0}
-    .dark .menu-btn-border{border-top-color:#5C4F43}
-    .section-card{background:rgba(255,255,255,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(92,79,67,0.08),0 2px 8px rgba(92,79,67,0.04);border:1px solid rgba(255,255,255,0.6);border-radius:1rem;padding:1rem}
-    .dark .section-card{background:rgba(45,39,32,0.7);box-shadow:0 8px 32px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1)}
-  </style>
+  <!-- Local multi-file requirement: keep this HTML with ./styles/app.css, ./scripts/pwa_setup.js, and ./scripts/app_core.js. -->
+  <link rel="stylesheet" href="./styles/app.css">
 </head>
 <body class="bg-cream-100 dark:bg-bark-700">
+<noscript>
+  <div style="max-width:760px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font-family:Nunito,sans-serif;line-height:1.5">
+    <h2 style="margin:0 0 8px">JavaScript is required</h2>
+    <p style="margin:0">Enable JavaScript and open `productivity_hub.html` in a regular browser.</p>
+  </div>
+</noscript>
+<div id="root">
+  <div id="boot-fallback" style="max-width:760px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font-family:Nunito,sans-serif;line-height:1.5">
+    <h2 style="margin:0 0 8px">Loading Productivity Hub...</h2>
+    <p id="boot-fallback-msg" style="margin:0">If this does not change, open this file in Chrome, Safari, or Firefox (not IDE preview).</p>
+  </div>
+</div>
 <script>
-// === PWA Setup (v10.1) ===
-// Note: Full PWA install requires HTTPS hosting with separate manifest.json + sw.js files.
-// The blob-based approach below provides best-effort support for local/file:// use.
-// Use "More → Install" to generate proper PWA files for HTTPS deployment.
-
-const PWA_ICON_192 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEklEQVR4nO3dT4hVdRzG8e+dO+NkOo6aWmkilgUVFBGRCxctItoEQUSbFi1atGkRQS0iWrRpE0EQQbRoEUG0aBFBEBEEQZBFhZGCWVZqjqPO/Ln3dBZxB8aZO3fOved3f7/f+31ecGHR4r7znPN9zjn3d+85A0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEkta8V+A0PABmAzsBZYC1wEXABcCJwDnA2cBZwJnAGc3v/f/A/wT/9/6w/gD+BP4Hfge+BL4Kv+n38ArT78WhVQ0wdgFXANcCNwPXAFsKrhf+Np4PP+YxT4CPho/v+XCqTpA7AauAPYBdwMrE/9Bk4C/wJ///v4E/it/+fl/r/5zwTOBs7p//b/9Hn/+34V3QgcBp4GXkn9JpWoOswP5i16PjDQ/+v+i99/Onj812dKQWtqKvoA7ADuB24HLkr9JqQ0x4Eh4FngncTvRRmV/QNwVv+39wrg5v5jG7A88XtSGr8Bh4DDwMvA16nfjPJV1g/AcmAzsAO4CdgMrEj8npTOL8BB4ADwLvBP4vejjJXxA3AasAG4Ebil/+dE75WpfQE8DzwPfJL4vZRaWQdgBXA1cCdwJ3BR4vej8voZeAl4BvgsaS+lVcYBOB/YCtwF3JD4vajcPgaeAp4DTiTtpqTKNgDrgVuBe4GtiXtRNRwFngSeAv5K2kyJlG0A3gGuS9yDquswsBf4IGkfJVDGAZDa9helO71HEveRWFkHQOrar5TuxJY+ANIAH6b+AoytBwPPAI+mb6ccVnfwazcDu4G7ga0I/QL8BOwHnknfSjms7PBAN1G6a7sHODd9O+W0Bvh3+WL/g94F3EtBg9rE/URpPOtQ+lbKYU0Hg3k5cD/wILAufTvl9T7wMKVfMJRd0wPwNqXR/cfjl6LK2AE8QemewMqo6QF4Adiaupcy+5LSbxg+nL6Vcmh6AN4H3k3dQ3ntBN6g9Jdhy6npARgCHgP+Tt1Lae0CnqH0F2VLqekBOEJpNG+kbqacbgbeAkYpjWyV0PQAjFAa3d9M3Uv57AS+BW5N3UiZND0AR4D7gHdT91IeDwAvUrpTXHJND8BPlMb0bkj8PsqhBewFDgHXJu6lFJoegH/6/d0F/Ji6l+QuAg5TekxGa+qGEgzA5v5/8P7EfaS2kdJT5LtS95Ja0wPwC6UxvT91H2ltAA4A9wGrU/eSSgqPQrgNeBW4Kn0rSWyk9D7HAng29G/cL1D6m5+dqRtJYQ3wKKXxrG2Jeymdqf0MvJu6iUbdArxG6S5xZXR96h5S+43Sk/L3A2el7qUF6yj9EucIpcdlVEbTlxz/Wg8c/t/XdgI7gO2U/lp0ZbQJeK7/53NKT9hXRke7+NptwI2ULndPSd1MizhC6S6xHo+pfgD+s57S5e92Spe96yntQel9BxwAPgS+6ed9gH84fPHPQXgQmP/S/GfyvxQa9dTF12b7H+j5/49fmv98/n+e/5x/fv7f4+8yv7b4+lz/g/n/r5/75+n/+/Vz/fuf//z8v1fO/5vr1xc/n//18/35v7n4Wjn/OtcsSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkqY7+A2TM4xxUNzJDAAAAAElFTkSuQmCC";
-const PWA_ICON_180 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGZ0lEQVR4nO3dT4hVdRzG8e+dO+NkOo6aWmkilgUVFBGRCxctItoEQUSbFi1atGkRQS0iWrRpE0EQQbRoEUG0aBFBEBEEQZBFhZGCWVZqjqPO/Ln3dBZxB8aZO3fOved3f7/f+31ecGHR4r7znPN9zjn3d+85A0mSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJElSA3QWuwN/AfuBfcCNwNXAGuB8YBVwDnAWsAI4Cziz/+fl/v/mvwH/9P+3/gD+BP4Afge+B74Evuo//gdwtsCvU5Xa0FcBW4FbgeuAy5v+/3gS+KL/+Bj4CPhogf8vqa429BZgJ3A7cMFi/8M/Af8Cfz/y+RP4rf/nlf5v/rOAs/u/9acvfr/nOuA64Mz+r+GU/h/xw/0PAY8Bry/+V6gytaG3AvcBdwBr+389fRV9/NRz/F/9k0APOL3/T//X8/8f8P0TwJfAMeBt4E3gVOG/DjWkpt6HXt7/zb0C2NZ/bAfO6z+k+p0ADgMHgZeAr0N+XRpTLQ29AtgM3ATcCGwEVob8etSk74H9wEHgPeCPkF+PhlBDQ58GrAe2AFv7fw7/5aipfgdeBZ4D3gn5dakltTb05cD1wA7gZmBtyK9HbfoZ2Ac8D3wa8utRi2pq6POAq4E7gTuBNSG/HpXqGPAi8AzwScivp9FqaOgLgXuAu4BNIb8eVeFj4GngOeBEyK+ngWpo6DOAa4AHgOtDfj2qzVHgEeAp4O+QX09DVN3QlwJ7gHuBc0N+ParbQWAPcCjk11O5qhv6LeC6kF+LmuUocD/wUsivpWLVNrQ0od8kvVOoqqE/Au4HPgj5tUnPAXuB4yG/lkpU1dCbgF3AXf3/kfSjpHPrA5QfGFc19GrgUeAh4IyQX4/0v/4C9gFPhvxaqldNQy8D7qZ0s+sqrJZ9DDwCvBDyaylWNQ19PfAEcEnIr0Ua3iHgYeCNkF9LVdY3fMD3Ag8CDwJrGj6O1LYNwB5gI3Ac+Kzh41RhVQPnvhF4B3g79EnbUqVuA94GPgBubvg8Vdja4LkvBfYDu4FVi/0Bklq3CtgNHKB0xtcNnqfztjV07tuAlym9E0jS//YAL1K66d42aK7OW9vAec8BHgO2hzxhaQwfAQ8Bx8ZdQ+e91/A5NwGvATtCnqg0vp3AQUo3LY6zkE6Z+sIGzrkSeIJyWb0y5ElK+S4F3qR003mjLqDTpmro84HHKZfhU0KeoDSeZZRO+gTYQOmqUR2+us6zGdgN3EbpLkmqX+dGYAOlqz4edbHO2zjmOacuq78Fnqf/3mmpcZcC+4A3gLVjrKNz62Kd0qEeFt0OvA9sowwvSq24jdJZm8ZYQ+dOSue1ZuqDm5dRxlO3hBxQasobwDPAl0OuoXNbi+cpE8I24MqQA0qt2kg5TtgCfDjkGjofD/tJP6F0Tb0v5EBSe/YBz1K67l/Kz/vipv75Z+CR/s/7QQ4iteNbytDCfUNsu/OXSQXtWOwAXcrlgaT2+atUKkhDS0FqaejZ0AclldlQ+sVP/VfRlcDbwOaQJ1y/DnAbpXvGPbWWAzuATSEvBM22doy1dG7r6OucdcD1IU+4ThcCW4HL5nx+M+X9g1K2LSGvBc0yzf/WR1lH5y+jrqEP0fB7oKt3Epjl//+/nwJOhTxhqR0nKN3yL+V/K8+E/LzPhvz+1HuAk//53P85o1NaNnPSaJ31X8rPtXbWvyjjVw8sss0h4HZg/ZTnrN1q4A5gT//POxbbqPPjSef8HHgauG2RTR+k3K962pTnrN065vyyZjm/rPnXsI/SZXuHWM+GKc9VuxvoQOe1kNfTJOln/5TnkjQJ/zZBKkhDS0FqaegPI58AKU2F/yIvFaShpSC1NPTbIQeUyqyi9P0oa+n8YdRN/wM+pEySbwk5sNS8TZTum6N01+cjrKXz12E/8ZeUubzngx5Aat4G4FVK570y5BrqWMqo+0eh/2ik9mwF9lO6b+qDm19SJnq3hRxQatYm4BVK98399WCU9XR+HXWxTul0XQq8ROkoP0Wk5lxK6brXKV034gHOWP/xFnAz8EVH0rBWU7rsd0o3jWPsv1y/hDLYdGfIk5XGsBN4ndJFt4+xjs5GSteMZZqhhnspI+8enagmW0kZWD9I6Z5phlGmfg/0WS2cc+og09vAwZAnLo3uduAtShfNbrMHhxpG+c85p0aN3gMeoNx7eFbLx5IGcRawm9I5B5o68Xw6P0w67+rFFtHp/O+qqZL+aXfFXf/O/Ofc+Z9/t93TzyljhweBn0KelPT/VlMG0TdSumaaPfk/0ww1/Bt1ZsgfSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZJUp/8AxH1zEXbRSeoAAAAASUVORK5CYII=";
-const PWA_ICON_SVG = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#7CB69D"/><circle cx="256" cy="220" r="100" fill="#fff" opacity="0.35"/><circle cx="256" cy="220" r="60" fill="#fff" opacity="0.55"/><circle cx="256" cy="220" r="30" fill="#fff"/><rect x="156" y="360" width="200" height="20" rx="10" fill="#fff" opacity="0.5"/><rect x="186" y="400" width="140" height="14" rx="7" fill="#fff" opacity="0.3"/></svg>');
-
-const manifestData = {
-  name: "Productivity Hub",
-  short_name: "Productivity",
-  description: "Focus timer, tasks, checklists & quick notes - all in one place",
-  id: "productivity-hub-pwa",
-  start_url: window.location.pathname || "/",
-  scope: "/",
-  display: "standalone",
-  orientation: "any",
-  background_color: "#F7F5F0",
-  theme_color: "#7CB69D",
-  prefer_related_applications: false,
-  categories: ["productivity", "utilities"],
-  icons: [
-    { src: PWA_ICON_192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-    { src: PWA_ICON_180, sizes: "180x180", type: "image/png", purpose: "any maskable" },
-    { src: PWA_ICON_SVG, sizes: "512x512", type: "image/svg+xml", purpose: "any" }
-  ]
-};
-
-// Apply blob manifest as best-effort fallback (works for some browsers)
-const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-const manifestURL = URL.createObjectURL(manifestBlob);
-document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
-
-// PWA Install Prompt — capture beforeinstallprompt for use in-app
-window.__pwaInstallPrompt = null;
-window.__pwaInstalled = false;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  window.__pwaInstallPrompt = e;
-  window.dispatchEvent(new Event('pwa-prompt-ready'));
-});
-window.addEventListener('appinstalled', () => {
-  window.__pwaInstalled = true;
-  window.__pwaInstallPrompt = null;
-  window.dispatchEvent(new Event('pwa-installed'));
-});
-
-// Service Worker Registration (blob-based, best-effort for local use)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const CACHE_NAME = 'productivity-hub-v10';
-    const swCode = `
-      const CACHE_NAME = '${CACHE_NAME}';
-      self.addEventListener('install', (e) => {
-        self.skipWaiting();
-        e.waitUntil(
-          caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll([self.location.href]).catch(() => {});
-          })
-        );
-      });
-      self.addEventListener('activate', (e) => {
-        e.waitUntil(
-          caches.keys().then(names =>
-            Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
-          ).then(() => clients.claim())
-        );
-      });
-      self.addEventListener('fetch', (e) => {
-        if (e.request.url.endsWith('/manifest.json')) {
-          e.respondWith(new Response(JSON.stringify(${JSON.stringify(manifestData)}), {
-            headers: {'Content-Type': 'application/json'}
-          }));
-          return;
-        }
-        e.respondWith(
-          caches.match(e.request).then(cached => cached || fetch(e.request).then(response => {
-            if (response.ok && e.request.method === 'GET') {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-            }
-            return response;
-          }).catch(() => cached))
-        );
-      });
-    `;
-    const swBlob = new Blob([swCode], {type: 'application/javascript'});
-    const swURL = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swURL, {scope: './'}).then(() => {
-      console.log('Service Worker registered (blob-based, limited scope)');
-    }).catch((err) => {
-      console.log('Service Worker registration skipped:', err.message);
-    });
+(function(){
+  const msgEl=()=>document.getElementById('boot-fallback-msg');
+  const setMsg=(msg,color)=>{
+    const el=msgEl();
+    if(!el)return;
+    el.textContent=msg;
+    if(color)el.style.color=color;
+  };
+  window.__PH_BOOT_PHASE=(msg)=>setMsg(msg);
+  window.__PH_BOOT_FAIL=(msg)=>setMsg(msg||'Startup failed. Open browser console for details.','#b91c1c');
+  window.__PH_BOOT_DONE=()=>{
+    const fallback=document.getElementById('boot-fallback');
+    if(fallback)fallback.remove();
+  };
+  window.addEventListener('error',e=>{
+    if(e?.message)window.__PH_BOOT_FAIL('JavaScript error: '+e.message);
   });
-}
-
-// Helper: Generate proper PWA files for HTTPS deployment
-window.__generatePWAFiles = () => {
-  const swContent = `const CACHE_NAME = 'productivity-hub-v10';
-const APP_FILE = self.location.pathname.replace('/sw.js', '/') || '/';
-
-self.addEventListener('install', (e) => {
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll([APP_FILE]).catch(() => {}))
-  );
-});
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(names =>
-      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
-    ).then(() => clients.claim())
-  );
-});
-
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(response => {
-      if (response.ok && e.request.method === 'GET') {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-      }
-      return response;
-    }).catch(() => cached))
-  );
-});`;
-
-  const manifestContent = JSON.stringify({
-    name: "Productivity Hub",
-    short_name: "Productivity",
-    description: "Focus timer, tasks, checklists & quick notes - all in one place",
-    id: "productivity-hub-pwa",
-    start_url: "./",
-    scope: "./",
-    display: "standalone",
-    orientation: "any",
-    background_color: "#F7F5F0",
-    theme_color: "#7CB69D",
-    prefer_related_applications: false,
-    categories: ["productivity", "utilities"],
-    icons: [
-      { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-      { src: "icon-512.svg", sizes: "512x512", type: "image/svg+xml", purpose: "any" }
-    ]
-  }, null, 2);
-
-  return { sw: swContent, manifest: manifestContent };
-};
+  window.addEventListener('unhandledrejection',e=>{
+    const reason=e&&e.reason&&e.reason.message?e.reason.message:String(e.reason||'unknown');
+    window.__PH_BOOT_FAIL('Unhandled promise error: '+reason);
+  });
+  window.__PH_BOOT_PHASE('Loading scripts...');
+})();
 </script>
-<div id="root"></div>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="./scripts/pwa_setup.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded scripts/pwa_setup.js')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load scripts/pwa_setup.js')"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded React')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load React from CDN')"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded ReactDOM')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load ReactDOM from CDN')"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded Babel runtime')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load Babel from CDN')"></script>
+<script src="./scripts/app_core.js" onload="window.__PH_BOOT_PHASE&&window.__PH_BOOT_PHASE('Loaded scripts/app_core.js')" onerror="window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Failed to load scripts/app_core.js')"></script>
+<script>
+if(!window.React||!window.ReactDOM||!window.Babel){
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('Required CDN scripts are missing (React/ReactDOM/Babel).');
+  const root=document.getElementById('root');
+  if(root){
+    root.innerHTML='<div style="max-width:720px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;font-family:Nunito,sans-serif;line-height:1.5"><h2 style="margin:0 0 8px">App failed to bootstrap</h2><p style="margin:0 0 8px">Required CDN scripts did not load (React/ReactDOM/Babel).</p><p style="margin:0">Check internet access and reload.</p></div>';
+  }
+}
+</script>
 <script type="text/babel">
+/* == BEGIN: Block A == */
+(()=>{
 const{useState,useEffect,useRef,useMemo,useCallback,createContext,useContext}=React;
-
-// App Version
-const APP_VERSION = '16.11';
+const PH=window.PH_CORE;
+if(!PH){
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL('window.PH_CORE is missing. Ensure scripts/app_core.js is next to the HTML file.');
+  const root=document.getElementById('root');
+  if(root){
+    root.innerHTML='<div style="max-width:720px;margin:48px auto;padding:20px;border:1px solid #e5e7eb;border-radius:12px;font-family:Nunito,sans-serif;line-height:1.5"><h2 style="margin:0 0 8px">App failed to bootstrap</h2><p style="margin:0 0 8px">`window.PH_CORE` is missing.</p><p style="margin:0 0 8px">Expected local files next to this HTML:</p><ul style="margin:0 0 8px 18px"><li>styles/app.css</li><li>scripts/pwa_setup.js</li><li>scripts/app_core.js</li></ul><p style="margin:0">Open from the project root (not a copied standalone HTML file).</p></div>';
+  }
+  throw new Error('PH_CORE failed to load. Ensure ./scripts/app_core.js loads before Babel scripts.');
+}
+const{APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile}=PH;
 
 // Icons - More visible with less transparency
 const I={
@@ -311,143 +130,6 @@ const Empty={
   Remind:()=><div className="flex flex-col items-center py-4 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><path d="M50 20C38 20 30 30 30 42V55L24 65H76L70 55V42C70 30 62 20 50 20Z" fill="#FCEEE9" stroke="#E07A5F" strokeWidth="2.5"/><circle cx="50" cy="20" r="4" fill="#E07A5F"/></svg><p className="text-bark-400 dark:text-sand-300 text-xs font-medium mt-2">No reminders</p></div>,
   Notes:()=><div className="flex flex-col items-center py-6 anim-in"><svg width="48" height="48" viewBox="0 0 100 100" fill="none" className="anim-float opacity-70"><rect x="20" y="15" width="60" height="70" rx="6" fill="#E6F2F7" stroke="#5A9BBF" strokeWidth="2.5"/><circle cx="32" cy="35" r="3" fill="#5A9BBF"/><rect x="42" y="33" width="28" height="4" rx="2" fill="#5A9BBF" opacity="0.5"/><circle cx="32" cy="50" r="3" fill="#5A9BBF"/><rect x="42" y="48" width="22" height="4" rx="2" fill="#5A9BBF" opacity="0.5"/><circle cx="32" cy="65" r="3" fill="#5A9BBF"/><rect x="42" y="63" width="30" height="4" rx="2" fill="#5A9BBF" opacity="0.5"/></svg><p className="text-bark-400 dark:text-sand-300 text-sm font-medium mt-3">Start your quick notes</p><p className="text-bark-400/50 dark:text-sand-300/50 text-xs">Press Enter to add bullets</p></div>,
 };
-
-// IndexedDB Storage
-const DB_NAME='ProductivityHub';
-const DB_VERSION=1;
-const STORE_NAME='data';
-
-// Initialize IndexedDB
-const initDB=()=>new Promise((resolve,reject)=>{
-  const req=indexedDB.open(DB_NAME,DB_VERSION);
-  req.onerror=()=>reject(req.error);
-  req.onsuccess=()=>resolve(req.result);
-  req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME);};
-});
-
-// Storage with IndexedDB + localStorage fallback
-const S={
-  // Get value from IndexedDB
-  get:async(k,d)=>{
-    try{
-      const db=await initDB();
-      return new Promise((resolve,reject)=>{
-        const tx=db.transaction(STORE_NAME,'readonly');
-        const store=tx.objectStore(STORE_NAME);
-        const req=store.get(k);
-        req.onsuccess=()=>resolve(req.result!==undefined?req.result:d);
-        req.onerror=()=>resolve(d);
-      });
-    }catch{
-      // Fallback to localStorage
-      try{const i=localStorage.getItem('ph3_'+k);return i?JSON.parse(i):d;}catch{return d;}
-    }
-  },
-  
-  // Set value in IndexedDB
-  set:async(k,v)=>{
-    try{
-      const db=await initDB();
-      return new Promise((resolve,reject)=>{
-        const tx=db.transaction(STORE_NAME,'readwrite');
-        const store=tx.objectStore(STORE_NAME);
-        const req=store.put(v,k);
-        req.onsuccess=()=>resolve();
-        req.onerror=()=>resolve();
-      });
-    }catch{
-      // Fallback to localStorage
-      try{localStorage.setItem('ph3_'+k,JSON.stringify(v));}catch{}
-    }
-  },
-  
-  // Export all data
-  exp:async()=>{
-    try{
-      const db=await initDB();
-      return new Promise((resolve,reject)=>{
-        const tx=db.transaction(STORE_NAME,'readonly');
-        const store=tx.objectStore(STORE_NAME);
-        const req=store.getAllKeys();
-        req.onsuccess=async()=>{
-          const keys=req.result;
-          const d={};
-          for(const k of keys){
-            const val=await S.get(k);
-            if(val!==undefined)d[k]=val;
-          }
-          resolve(d);
-        };
-        req.onerror=()=>resolve({});
-      });
-    }catch{
-      // Fallback to localStorage
-      const d={};
-      for(let i=0;i<localStorage.length;i++){
-        const k=localStorage.key(i);
-        if(k.startsWith('ph3_'))d[k.replace('ph3_','')]=JSON.parse(localStorage.getItem(k));
-      }
-      return d;
-    }
-  },
-  
-  // Import data
-  imp:async(d)=>{
-    try{
-      const db=await initDB();
-      const tx=db.transaction(STORE_NAME,'readwrite');
-      const store=tx.objectStore(STORE_NAME);
-      for(const[k,v]of Object.entries(d)){
-        store.put(v,k);
-      }
-      return new Promise((resolve)=>{
-        tx.oncomplete=()=>resolve();
-        tx.onerror=()=>resolve();
-      });
-    }catch{
-      // Fallback to localStorage
-      Object.entries(d).forEach(([k,v])=>localStorage.setItem('ph3_'+k,JSON.stringify(v)));
-    }
-  },
-  
-  // Clear all data
-  clr:async()=>{
-    try{
-      const db=await initDB();
-      return new Promise((resolve,reject)=>{
-        const tx=db.transaction(STORE_NAME,'readwrite');
-        const store=tx.objectStore(STORE_NAME);
-        const req=store.clear();
-        req.onsuccess=()=>resolve();
-        req.onerror=()=>resolve();
-      });
-    }catch{
-      // Fallback to localStorage
-      const ks=[];
-      for(let i=0;i<localStorage.length;i++){
-        const k=localStorage.key(i);
-        if(k.startsWith('ph3_'))ks.push(k);
-      }
-      ks.forEach(k=>localStorage.removeItem(k));
-    }
-  },
-  
-  // Synchronous get for initial load (returns null, triggers async load)
-  getSync:(k,d)=>{
-    try{const i=localStorage.getItem('ph3_'+k);return i?JSON.parse(i):d;}catch{return d;}
-  }
-};
-
-// Unique ID generator (safer than Date.now() alone)
-const uid=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
-
-// Native Notifications
-const notify=(title,body)=>{
-  if(!('Notification'in window))return;
-  if(Notification.permission==='granted'){new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%237CB69D"/></svg>'});}
-  else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')new Notification(title,{body});});}
-};
-const reqNotifyPerm=()=>{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();};
 
 // Theme
 const ThemeCtx=createContext();
@@ -498,29 +180,6 @@ const useAnimatedClose=(onClose)=>{
   },[closing]);// intentionally excludes onClose — it's stable within modal lifetime
   return{closing,triggerClose};
 };
-
-// Constants
-const PRESETS={classic:{work:25,shortBreak:5,longBreak:15,l:'Classic'},long:{work:50,shortBreak:10,longBreak:30,l:'Long'},short:{work:15,shortBreak:3,longBreak:10,l:'Short'},custom:{work:25,shortBreak:5,longBreak:15,l:'Custom'}};
-const QUADS=[{id:'ui',l:'Do First',sub:'Urgent + Important',clr:'from-terracotta-300 to-terracotta-200',dclr:'dark:from-terracotta-500/30 dark:to-terracotta-400/15',bdr:'border-terracotta-400',dbdr:'dark:border-terracotta-500/50',txt:'text-terracotta-500',dtxt:'dark:text-terracotta-300'},{id:'ni',l:'Schedule',sub:'Not Urgent + Important',clr:'from-ocean-300 to-ocean-200',dclr:'dark:from-ocean-400/30 dark:to-ocean-300/15',bdr:'border-ocean-400',dbdr:'dark:border-ocean-400/50',txt:'text-ocean-400',dtxt:'dark:text-ocean-300'},{id:'un',l:'Delegate',sub:'Urgent + Not Important',clr:'from-sand-300 to-sand-200',dclr:'dark:from-sand-300/25 dark:to-sand-200/15',bdr:'border-sand-300',dbdr:'dark:border-sand-300/40',txt:'text-bark-500',dtxt:'dark:text-sand-200'},{id:'nn',l:'Eliminate',sub:'Not Urgent + Not Important',clr:'from-lavender-300 to-lavender-200',dclr:'dark:from-lavender-400/30 dark:to-lavender-300/15',bdr:'border-lavender-300',dbdr:'dark:border-lavender-400/40',txt:'text-lavender-400',dtxt:'dark:text-lavender-300'}];
-const CATS=[{id:'work',l:'Work',clr:'bg-ocean-300',e:'💼'},{id:'personal',l:'Personal',clr:'bg-lavender-300',e:'🏠'},{id:'health',l:'Health',clr:'bg-sage-400',e:'💪'},{id:'learning',l:'Learning',clr:'bg-terracotta-300',e:'📚'}];
-
-// Share helper
-const shareItem=(item,type)=>{
-  let t='';
-  if(type==='task'){t=`📋 Task: ${item.text}\n`;if(item.deadline)t+=`📅 ${item.deadline}\n`;}
-  else if(type==='list')t=`📝 ${item.text}\n`;
-  else if(type==='reminder')t=`🔔 ${item.text} at ${item.time}\n`;
-  else if(type==='note')t=`📄 ${item.title}\n${'─'.repeat(20)}\n${item.content}\n`;
-  if(item.notes)t+=`Notes: ${item.notes}\n`;
-  if(type==='task'&&item.subtasks?.length>0){t+=`Subtasks:\n`;item.subtasks.forEach(s=>{t+=`${s.done?'✅':'☐'} ${s.text}\n`;});}
-  t+=`\n— Productivity Hub`;
-  if(navigator.share)navigator.share({text:t}).catch(()=>{});else{navigator.clipboard.writeText(t);return true;}
-  return false;
-};
-
-// Utils
-const genICS=(r)=>{const n=new Date(),[h,m]=(r.time||'09:00').split(':'),e=r.date?new Date(r.date):new Date();e.setHours(parseInt(h),parseInt(m),0,0);if(e<n)e.setDate(e.getDate()+1);const f=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z',end=new Date(e.getTime()+15*60000);return`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:${Date.now()}@ph\nDTSTAMP:${f(n)}\nDTSTART:${f(e)}\nDTEND:${f(end)}\nSUMMARY:${r.text||'Reminder'}\nEND:VEVENT\nEND:VCALENDAR`;};
-const dlFile=(c,fn,t='text/plain')=>{const b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);};
 
 // Subtasks
 const Subtasks=({items=[],onChange,ro=false})=>{
@@ -596,7 +255,6 @@ const BulkActionBar=({count,section,allCount,onSelectAll,onDeselectAll,onAction,
   );
 };
 
-
 // Unified ContextMenu (v16.9) — replaces TaskMenu, NoteMenu, ListMenu
 const ContextMenu=({title,items,onClose,position})=>{
   const{closing,triggerClose}=useAnimatedClose(onClose);
@@ -667,7 +325,6 @@ const LinkPicker=({task,lists,onLink,onCreate,onUnlink,onClose})=>{
   </div>
   );
 };
-
 
 // Edit Modal
 const EditModal=({item,type,onSave,onClose,onDelete})=>{
@@ -744,7 +401,26 @@ const AboutModal=({onClose,isWelcome})=>{
   </div>
   );
 };
-
+window.PH_BLOCK_A=Object.freeze({
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,StickyHeader,LinkPicker,EditModal,AboutModal
+});
+})();
+/* == END: Block A == */
+</script>
+<script type="text/babel">
+/* == BEGIN: Block B == */
+(()=>{
+const PH_BLOCK_A_B=window.PH_BLOCK_A;
+if(!PH_BLOCK_A_B)throw new Error('Block A exports missing. Cannot initialize Block B.');
+const{
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,StickyHeader,LinkPicker,EditModal,AboutModal
+}=PH_BLOCK_A_B;
 // Streak Heatmap (GitHub-style)
 const Heatmap=({dHist,met})=>{
   const[sel,setSel]=useState(null);
@@ -857,352 +533,1439 @@ const Chart=({data,label,clr='bg-sage-400'})=>{
 // ============================================
 // TEST APP FEATURE - Alpha Version
 // ============================================
-const TestRunner=({onShowToast})=>{
+const TEST_SUITE_VERSION='2.1.0';
+const TEST_BASELINE_DATE='2026-02-19';
+const TIER_ORDER=['T0','T1','T2'];
+const TIER_TARGETS={T0:1,T1:1,T2:0.9};
+const TEST_RUNNER_LAZY_DELAY_MS=60;
+const REQUIRED_PH_CORE_KEYS=['APP_VERSION','initDB','S','uid','notify','reqNotifyPerm','PRESETS','QUADS','CATS','shareItem','genICS','dlFile'];
+
+const createTestRunnerModel=()=>{
+  const manifest=Object.freeze({
+    suiteVersion:TEST_SUITE_VERSION,
+    baselineDate:TEST_BASELINE_DATE,
+    tierOrder:[...TIER_ORDER],
+    tierTargets:{...TIER_TARGETS},
+    counts:Object.freeze({total:43,T0:11,T1:13,T2:19})
+  });
+  let cachedTests=null;
+  let loadCount=0;
+  return{
+    getSuiteManifest(){return manifest;},
+    loadTestCases(builder){
+      if(!cachedTests){
+        cachedTests=builder();
+        loadCount++;
+      }
+      return cachedTests;
+    },
+    getLoadStats(){return{loaded:!!cachedTests,loadCount};}
+  };
+};
+
+let __testRunnerFactoryCache=null;
+let __testRunnerFactoryCreateCount=0;
+const peekTestRunner=()=>__testRunnerFactoryCache;
+const getTestRunner=async()=>{
+  if(!__testRunnerFactoryCache){
+    await new Promise(resolve=>setTimeout(resolve,TEST_RUNNER_LAZY_DELAY_MS));
+    __testRunnerFactoryCache=TestRunnerInner;
+    __testRunnerFactoryCreateCount++;
+  }
+  return __testRunnerFactoryCache;
+};
+const __resetTestRunnerCacheForTests=()=>{
+  __testRunnerFactoryCache=null;
+  __testRunnerFactoryCreateCount=0;
+};
+const __getTestRunnerCacheStats=()=>({
+  hasCache:!!__testRunnerFactoryCache,
+  createCount:__testRunnerFactoryCreateCount
+});
+window.__PH_RESET_TEST_RUNNER_CACHE=__resetTestRunnerCacheForTests;
+
+const TestRunnerInner=({onShowToast})=>{
   const[running,setRunning]=useState(false);
   const[results,setResults]=useState(null);
   const[progress,setProgress]=useState({current:0,total:0,step:''});
-  
+
+  const modelRef=useRef(null);
+  if(!modelRef.current)modelRef.current=createTestRunnerModel();
+  const runnerModel=modelRef.current;
+  const suiteManifest=runnerModel.getSuiteManifest();
+  const SUITE_VERSION=suiteManifest.suiteVersion;
+  const BASELINE_DATE=suiteManifest.baselineDate;
+
   const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
-  
+  const normalizeErr=(err)=>err&&err.message?err.message:String(err||'Unknown error');
+  const assert=(cond,msg='Assertion failed')=>{if(!cond)throw new Error(msg);};
+  const assertEq=(actual,expected,msg)=>{if(actual!==expected)throw new Error(msg||`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);};
+  const assertIncludes=(value,needle,msg)=>{if(typeof value!=='string'||!value.includes(needle))throw new Error(msg||`Expected to include \"${needle}\"`);};
+
+  const waitFor=(predicate,{timeout=2200,interval=25,message='Condition timed out'}={})=>new Promise((resolve,reject)=>{
+    const started=Date.now();
+    const tick=()=>{
+      try{
+        if(predicate())return resolve();
+      }catch{}
+      if(Date.now()-started>=timeout)return reject(new Error(message));
+      setTimeout(tick,interval);
+    };
+    tick();
+  });
+
+  const runWithTimeout=(promise,ms,label)=>new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>reject(new Error(`Timeout after ${ms}ms (${label})`)),ms);
+    Promise.resolve(promise).then(v=>{clearTimeout(timer);resolve(v);}).catch(e=>{clearTimeout(timer);reject(e);});
+  });
+
+  const makeCleanupRegistry=()=>{
+    const stack=[];
+    return{
+      add(fn){if(typeof fn==='function')stack.push(fn);},
+      async runAll(){
+        const errors=[];
+        for(let i=stack.length-1;i>=0;i--){
+          try{await stack[i]();}catch(err){errors.push(normalizeErr(err));}
+        }
+        if(errors.length)throw new Error(`Cleanup failed: ${errors.join(' | ')}`);
+      }
+    };
+  };
+
+  const setInputValue=(el,val)=>{
+    assert(el,'Input element not found');
+    const proto=Object.getPrototypeOf(el);
+    const desc=proto&&Object.getOwnPropertyDescriptor(proto,'value');
+    if(desc&&desc.set)desc.set.call(el,val);
+    else el.value=val;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+
+  const findByText=(root,text,selector='*')=>Array.from(root.querySelectorAll(selector)).find(el=>((el.textContent||'').replace(/\s+/g,' ').trim()).includes(text));
+  const findButtonByText=(root,text)=>findByText(root,text,'button');
+
+  const withDomFixture=async(cleanupRegistry,fn)=>{
+    const mount=document.createElement('div');
+    mount.setAttribute('data-test-fixture','ph');
+    mount.style.position='fixed';
+    mount.style.left='-9999px';
+    mount.style.top='-9999px';
+    mount.style.width='520px';
+    mount.style.maxHeight='80vh';
+    mount.style.overflow='auto';
+    document.body.appendChild(mount);
+    cleanupRegistry.add(async()=>{
+      try{if(mount.__root)mount.__root.unmount();}catch{}
+      if(mount.parentNode)mount.parentNode.removeChild(mount);
+    });
+    return fn(mount);
+  };
+
+  const withStorageFixture=async(cleanupRegistry,fn)=>{
+    const prefix=`__TEST__${uid()}_`;
+    const touched=new Set();
+    const fx={
+      prefix,
+      key:(name)=>{const k=prefix+name;touched.add(k);return k;},
+      track:(key)=>{if(typeof key==='string'&&key.startsWith(prefix))touched.add(key);return key;}
+    };
+    cleanupRegistry.add(async()=>{
+      for(const k of touched){await S.set(k,undefined);}
+    });
+    return fn(fx);
+  };
+
+  const withStorageSnapshot=async(cleanupRegistry,fn)=>{
+    const snapshot=await S.exp();
+    cleanupRegistry.add(async()=>{
+      await S.clr();
+      await S.imp(snapshot);
+    });
+    await S.clr();
+    return fn(snapshot);
+  };
+
+  const withAppDataHarness=async(cleanupRegistry,fn)=>{
+    const blockC=window.PH_BLOCK_C;
+    assert(blockC&&typeof blockC.useAppData==='function','PH_BLOCK_C.useAppData is unavailable');
+    return withDomFixture(cleanupRegistry,async mount=>{
+      const bridge={app:null};
+      function HookHarness(){
+        bridge.app=blockC.useAppData();
+        return null;
+      }
+      const root=ReactDOM.createRoot(mount);
+      mount.__root=root;
+      root.render(React.createElement(HookHarness));
+      await waitFor(()=>bridge.app&&Array.isArray(bridge.app.todos),{timeout:3500,message:'useAppData harness failed to initialize'});
+      return fn(()=>bridge.app,mount);
+    });
+  };
+
+  const withSectionHarness=async(cleanupRegistry,SectionComp,sectionProps,fn)=>{
+    const blockC=window.PH_BLOCK_C;
+    assert(blockC&&blockC.AppDataProv&&blockC.useApp,'PH_BLOCK_C section exports unavailable');
+    return withDomFixture(cleanupRegistry,async mount=>{
+      const bridge={app:null};
+      function Probe(){
+        bridge.app=blockC.useApp();
+        return null;
+      }
+      function Harness(){
+        return React.createElement(
+          blockC.AppDataProv,
+          null,
+          React.createElement(
+            React.Fragment,
+            null,
+            React.createElement(SectionComp,sectionProps),
+            React.createElement(Probe)
+          )
+        );
+      }
+      const root=ReactDOM.createRoot(mount);
+      mount.__root=root;
+      root.render(React.createElement(Harness));
+      await waitFor(()=>bridge.app&&mount.textContent.length>0,{timeout:3500,message:'Section harness failed to mount'});
+      return fn({mount,getApp:()=>bridge.app});
+    });
+  };
+
+  const withSettingsHarness=async(cleanupRegistry,fn)=>{
+    const blockA=window.PH_BLOCK_A;
+    const blockC=window.PH_BLOCK_C;
+    assert(blockA&&blockA.ThemeProv,'PH_BLOCK_A.ThemeProv is unavailable');
+    assert(blockC&&blockC.AppDataProv&&blockC.SettingsSection,'Settings section exports unavailable');
+    return withDomFixture(cleanupRegistry,async mount=>{
+      function Harness(){
+        return React.createElement(
+          blockA.ThemeProv,
+          null,
+          React.createElement(
+            blockC.AppDataProv,
+            null,
+            React.createElement(blockC.SettingsSection,{desk:false})
+          )
+        );
+      }
+      const root=ReactDOM.createRoot(mount);
+      mount.__root=root;
+      root.render(React.createElement(Harness));
+      await waitFor(()=>mount.querySelectorAll('.more-sub-btn').length>=3,{timeout:3500,message:'Settings harness failed to mount'});
+      return fn(mount);
+    });
+  };
+
+  const buildTestCases=()=>[
+    {
+      id:'t0.shell.assets-loaded',
+      name:'Shell links/scripts are present and loaded',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert}){
+        const cssLink=Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(l=>(l.getAttribute('href')||'').includes('styles/app.css'));
+        assert(cssLink,'Missing stylesheet link for styles/app.css');
+        const cssLoaded=Array.from(document.styleSheets).some(ss=>{
+          const href=(ss.href||ss.ownerNode?.getAttribute?.('href')||'');
+          return href.includes('styles/app.css');
+        });
+        assert(cssLoaded,'styles/app.css is not loaded');
+        const pwaScript=Array.from(document.querySelectorAll('script[src]')).find(s=>(s.getAttribute('src')||'').includes('scripts/pwa_setup.js'));
+        const coreScript=Array.from(document.querySelectorAll('script[src]')).find(s=>(s.getAttribute('src')||'').includes('scripts/app_core.js'));
+        assert(pwaScript,'Missing scripts/pwa_setup.js');
+        assert(coreScript,'Missing scripts/app_core.js');
+      }
+    },
+    {
+      id:'t0.contract.ph-core-keys',
+      name:'PH_CORE contract keys are present and callable',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert}){
+        const core=window.PH_CORE;
+        assert(core,'window.PH_CORE missing');
+        for(const key of REQUIRED_PH_CORE_KEYS){assert(key in core,`PH_CORE missing ${key}`);}
+        assert(typeof core.initDB==='function','PH_CORE.initDB must be a function');
+        assert(typeof core.S.get==='function'&&typeof core.S.set==='function','PH_CORE.S get/set missing');
+        assert(typeof core.S.exp==='function'&&typeof core.S.imp==='function'&&typeof core.S.clr==='function'&&typeof core.S.getSync==='function','PH_CORE.S exp/imp/clr/getSync missing');
+        assert(typeof core.uid==='function','PH_CORE.uid must be a function');
+      }
+    },
+    {
+      id:'t0.contract.pwa-generator',
+      name:'PWA generator returns valid non-empty files',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertIncludes}){
+        assert(typeof window.__generatePWAFiles==='function','window.__generatePWAFiles missing');
+        const files=window.__generatePWAFiles();
+        assert(files&&typeof files==='object','__generatePWAFiles must return object');
+        assert(typeof files.sw==='string'&&files.sw.trim().length>0,'Service worker content missing');
+        assert(typeof files.manifest==='string'&&files.manifest.trim().length>0,'Manifest content missing');
+        assertIncludes(files.sw,'self.addEventListener','sw content should include service worker listeners');
+        assertIncludes(files.manifest,'"name"','manifest should include app name');
+      }
+    },
+    {
+      id:'t0.contract.babel-blocks-and-bridges',
+      name:'Babel block markers and block bridges are available',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertIncludes}){
+        const scripts=Array.from(document.querySelectorAll('script[type="text/babel"]'));
+        assert(scripts.length>=4,'Expected 4 text/babel script blocks');
+        const fullText=scripts.map(s=>s.textContent||'').join('\n');
+        for(const marker of ['BEGIN: Block A','BEGIN: Block B','BEGIN: Block C','BEGIN: Block D'])assertIncludes(fullText,marker,`Missing marker: ${marker}`);
+        assert(window.PH_BLOCK_A&&window.PH_BLOCK_B&&window.PH_BLOCK_C,'Expected PH_BLOCK_A/B/C bridge exports');
+      }
+    },
+    {
+      id:'t0.storage.set-get-semantics',
+      name:'Storage set/get semantics are deterministic',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({withStorageFixture,assertEq}){
+        await withStorageFixture(async fx=>{
+          const key=fx.key('set_get');
+          const payload={ok:true,count:2};
+          await S.set(key,payload);
+          const loaded=await S.get(key,null);
+          assertEq(loaded.ok,true,'S.get should return stored object');
+          assertEq(loaded.count,2,'S.get should preserve object values');
+          await S.set(key,undefined);
+          const fallback=await S.get(key,'fallback');
+          assertEq(fallback,'fallback','S.get should return default after clearing key');
+        });
+      }
+    },
+    {
+      id:'t0.storage.exp-imp-roundtrip',
+      name:'Storage export/import round-trip works for test keys',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({withStorageFixture,assert}){
+        await withStorageFixture(async fx=>{
+          const k1=fx.key('exp_a');
+          const k2=fx.key('exp_b');
+          const payload={[k1]:{v:1},[k2]:'value'};
+          await S.imp(payload);
+          const exported=await S.exp();
+          assert(k1 in exported,'S.exp missing imported key 1');
+          assert(k2 in exported,'S.exp missing imported key 2');
+          const val=await S.get(k2,null);
+          assert(val==='value','S.get should return imported value');
+        });
+      }
+    },
+    {
+      id:'t0.storage.getSync-semantics',
+      name:'S.getSync follows localStorage fallback semantics',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({assertEq}){
+        const logicalKey=`__TEST__${uid()}_sync`;
+        const storageKey=`ph3_${logicalKey}`;
+        localStorage.setItem(storageKey,JSON.stringify({ready:true}));
+        const found=S.getSync(logicalKey,null);
+        assertEq(found.ready,true,'S.getSync should read localStorage fallback value');
+        localStorage.removeItem(storageKey);
+        const fallback=S.getSync(logicalKey,'none');
+        assertEq(fallback,'none','S.getSync should return default when key missing');
+      }
+    },
+    {
+      id:'t0.storage.clr-semantics',
+      name:'S.clr clears data in isolated snapshot',
+      tier:'T0',
+      area:'Storage Contract',
+      async run({withStorageSnapshot,assertEq}){
+        await withStorageSnapshot(async()=>{
+          const key=`__TEST__${uid()}_clr`;
+          await S.set(key,'x');
+          const before=await S.get(key,null);
+          assertEq(before,'x','Failed to set pre-clear key');
+          await S.clr();
+          const after=await S.get(key,null);
+          assertEq(after,null,'S.clr should clear key');
+        });
+      }
+    },
+    {
+      id:'t0.contract.version-source',
+      name:'Test report version is sourced from PH_CORE',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assertEq}){
+        assertEq(APP_VERSION,window.PH_CORE.APP_VERSION,'APP_VERSION must match PH_CORE.APP_VERSION');
+      }
+    },
+    {
+      id:'t0.contract.test-runner-lazy-api',
+      name:'PH_BLOCK_B exposes lazy loader APIs for test runner',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertEq}){
+        const blockB=window.PH_BLOCK_B;
+        assert(blockB,'PH_BLOCK_B missing');
+        assert(typeof blockB.getTestRunner==='function','PH_BLOCK_B.getTestRunner missing');
+        assert(typeof blockB.peekTestRunner==='function','PH_BLOCK_B.peekTestRunner missing');
+        assert(typeof blockB.createTestRunnerModel==='function','PH_BLOCK_B.createTestRunnerModel missing');
+        if(typeof blockB.__resetTestRunnerCache==='function')blockB.__resetTestRunnerCache();
+        assertEq(blockB.peekTestRunner(),null,'peekTestRunner should be empty after reset');
+      }
+    },
+    {
+      id:'t0.contract.test-runner-model-lazy-registry',
+      name:'Test runner model keeps manifest eager and test cases lazy',
+      tier:'T0',
+      area:'Boot Contracts',
+      async run({assert,assertEq}){
+        const model=createTestRunnerModel();
+        const manifest=model.getSuiteManifest();
+        assert(typeof manifest.suiteVersion==='string'&&manifest.suiteVersion.length>0,'Manifest suiteVersion missing');
+        assert(typeof manifest.baselineDate==='string'&&manifest.baselineDate.length>0,'Manifest baselineDate missing');
+        assertEq(model.getLoadStats().loaded,false,'Model should start unloaded');
+        let buildCount=0;
+        const first=model.loadTestCases(()=>{
+          buildCount++;
+          return[{id:'stub',name:'Stub',tier:'T0',area:'Harness',run:async()=>{}}];
+        });
+        const second=model.loadTestCases(()=>{
+          buildCount++;
+          return[];
+        });
+        assertEq(buildCount,1,'loadTestCases should build only once');
+        assert(first===second,'loadTestCases should return cached registry');
+        assertEq(model.getLoadStats().loaded,true,'Model should report loaded after first build');
+        assertEq(model.getLoadStats().loadCount,1,'Model load count should be exactly one');
+      }
+    },
+    {
+      id:'t1.capture.note-crud-render',
+      name:'Capture note create/edit/delete updates rendered output',
+      tier:'T1',
+      area:'Capture Workflow',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
+            const input=mount.querySelector('textarea[placeholder*="Quick note"]');
+            assert(input,'Capture quick-note input missing');
+            setInputValue(input,'T1 note create');
+            input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+            await waitFor(()=>mount.textContent.includes('T1 note create'),{timeout:2000,message:'Created note not rendered'});
+
+            const noteText=findByText(mount,'T1 note create','span');
+            assert(noteText,'Created note text node missing');
+            noteText.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.querySelector('input[type="text"]'),{timeout:1200,message:'Inline editor did not open'});
+            const editInput=mount.querySelector('input[type="text"]');
+            setInputValue(editInput,'T1 note updated');
+            editInput.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+            await waitFor(()=>!mount.querySelector('input[type="text"]'),{timeout:1500,message:'Inline editor did not close after Enter save'});
+            await waitFor(()=>mount.textContent.includes('T1 note updated'),{timeout:2000,message:'Updated note not rendered'});
+
+            const menuBtn=mount.querySelector('[data-menu-btn]');
+            assert(menuBtn,'Note menu button missing');
+            menuBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>findButtonByText(mount,'Delete'),{timeout:1200,message:'Delete action not shown'});
+            findButtonByText(mount,'Delete').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>!mount.textContent.includes('T1 note updated'),{timeout:2200,message:'Deleted note still rendered'});
+          });
+        });
+      }
+    },
+    {
+      id:'t1.capture.promote-copy-strike',
+      name:'Capture promote copies to Clarify and strikes note',
+      tier:'T1',
+      area:'Workflow Crossover',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findButtonByText,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount,getApp})=>{
+            const input=mount.querySelector('textarea[placeholder*="Quick note"]');
+            setInputValue(input,'Promote me to Clarify');
+            input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+            await waitFor(()=>getApp().notes.length===1,{timeout:2000,message:'Expected one note before promote'});
+            const noteId=getApp().notes[0].id;
+
+            const menuBtn=mount.querySelector('[data-menu-btn]');
+            assert(menuBtn,'Note menu button missing');
+            menuBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>findButtonByText(mount,'Promote to Clarify'),{timeout:1200,message:'Promote action not shown'});
+            findButtonByText(mount,'Promote to Clarify').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+
+            await waitFor(()=>getApp().todos.some(t=>t.text==='Promote me to Clarify'),{timeout:2200,message:'Promoted todo not created'});
+            await waitFor(()=>{
+              const n=getApp().notes.find(x=>x.id===noteId);
+              return !!(n&&n.struck&&n.struckAt);
+            },{timeout:2200,message:'Promoted note was not struck'});
+          });
+        });
+      }
+    },
+    {
+      id:'t1.clarify.done-undone-counts',
+      name:'Clarify done/undone toggles update done count',
+      tier:'T1',
+      area:'Clarify Workflow',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            getApp().saveItem('todo',{text:'Toggle done todo',quad:'ui',cat:'work',done:false,subtasks:[]});
+            await waitFor(()=>getApp().todos.some(t=>t.text==='Toggle done todo'),{timeout:2200,message:'Todo was not created'});
+            const todoId=getApp().todos.find(t=>t.text==='Toggle done todo').id;
+            const baseDone=getApp().doneCount;
+
+            getApp().doneTodo(todoId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===todoId)?.done===true,{timeout:1800,message:'Todo not marked done'});
+            assertEq(getApp().doneCount,baseDone+1,'doneCount should increment after doneTodo');
+
+            getApp().undoneTodo(todoId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===todoId)?.done===false,{timeout:1800,message:'Todo not marked undone'});
+            assertEq(getApp().doneCount,baseDone,'doneCount should reset after undoneTodo');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.confirm.checklist-operations',
+      name:'Confirm checklist add/toggle/delete is reflected in UI',
+      tier:'T1',
+      area:'Confirm Workflow',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,findByText,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.ConfirmSection,{wide:false,desk:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{},setEdit:()=>{}},async({mount,getApp})=>{
+            const listId=`list_${uid()}`;
+            getApp().setLists([{id:listId,name:'T1 Checklist',items:[]}]);
+            getApp().setSelList(listId);
+            await waitFor(()=>mount.textContent.includes('T1 Checklist'),{timeout:1800,message:'Checklist tab not rendered'});
+
+            getApp().saveItem('list',{text:'T1 item',section:'Inbox'},listId);
+            await waitFor(()=>mount.textContent.includes('T1 item'),{timeout:2200,message:'Checklist item not rendered'});
+            const itemId=getApp().lists.find(l=>l.id===listId).items[0].id;
+
+            getApp().doneList(listId,itemId);
+            await waitFor(()=>getApp().lists.find(l=>l.id===listId).items.find(i=>i.id===itemId)?.done===true,{timeout:1800,message:'Checklist item not toggled done'});
+            const itemText=findByText(mount,'T1 item','span');
+            assert(itemText&&itemText.className.includes('line-through'),'Done item should show line-through class');
+
+            getApp().deleteListItem(listId,itemId);
+            await waitFor(()=>!mount.textContent.includes('T1 item'),{timeout:2200,message:'Checklist item not removed from UI'});
+          });
+        });
+      }
+    },
+    {
+      id:'t1.focus.timer-transition',
+      name:'Focus timer transitions work -> break -> work',
+      tier:'T1',
+      area:'Focus Workflow',
+      async run({withDomFixture,waitFor,findButtonByText,assert}){
+        await withDomFixture(async mount=>{
+          const completed=[];
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(FocusTimer,{tSet:{work:0,shortBreak:0,longBreak:0},onComplete:(mode,activeTaskId,switchToBreak)=>{completed.push(mode);switchToBreak();},onUpdatePoms:()=>{},onUpdateMetrics:()=>{},onUpdateFocus:()=>{},onUpdateTodos:()=>{},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
+          await waitFor(()=>findButtonByText(mount,'Start'),{timeout:1500,message:'Start button not rendered'});
+          findButtonByText(mount,'Start').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>completed.length===1&&completed[0]==='work',{timeout:2000,message:'Timer completion callback did not fire for work mode'});
+          const shortBtn=findButtonByText(mount,'Short');
+          assert(shortBtn&&shortBtn.className.includes('bg-white/40'),'Timer did not switch to short break mode');
+          const focusBtn=findButtonByText(mount,'Focus');
+          focusBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>findButtonByText(mount,'Focus')?.className.includes('bg-white/40'),{timeout:1200,message:'Timer did not return to work mode'});
+        });
+      }
+    },
+    {
+      id:'t1.focus.done-focus-updates-metrics',
+      name:'Focus completion updates queue, task state, and metrics',
+      tier:'T1',
+      area:'Focus Workflow',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            const taskId=`task_${uid()}`;
+            getApp().setTodos([{id:taskId,text:'Focus me',quad:'ui',done:false,poms:0}]);
+            getApp().setFocus([{id:taskId,text:'Focus me',quad:'ui',done:false,poms:0}]);
+            await waitFor(()=>getApp().focus.length===1,{timeout:1200,message:'Focus queue not initialized'});
+            const baseDone=getApp().met.w.t;
+            getApp().doneFocus(taskId);
+            await waitFor(()=>!getApp().focus.some(t=>t.id===taskId),{timeout:1800,message:'Task not removed from focus queue'});
+            await waitFor(()=>getApp().todos.find(t=>t.id===taskId)?.done===true,{timeout:1800,message:'Linked todo not marked done'});
+            assertEq(getApp().met.w.t,baseDone+1,'Weekly done metric should increment on doneFocus');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.workflow.link-open-unlink',
+      name:'Task checklist link/open/unlink behavior is consistent',
+      tier:'T1',
+      area:'Workflow Crossover',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            const taskId=`task_${uid()}`;
+            const listId=`list_${uid()}`;
+            getApp().setTodos([{id:taskId,text:'Linked task',quad:'ni',done:false,poms:0}]);
+            getApp().setLists([{id:listId,name:'Linked list',items:[]}]);
+            await waitFor(()=>getApp().todos.length===1&&getApp().lists.length===1,{timeout:1200,message:'Failed to seed todo/list'});
+
+            getApp().linkTask(taskId,listId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===taskId)?.linkedList===listId,{timeout:1500,message:'Task did not link to checklist'});
+
+            getApp().openLinkedList(getApp().todos.find(t=>t.id===taskId));
+            await waitFor(()=>getApp().tab==='lists'&&getApp().selList===listId,{timeout:1500,message:'openLinkedList did not route to checklist'});
+
+            getApp().unlinkTask(taskId);
+            await waitFor(()=>getApp().todos.find(t=>t.id===taskId)?.linkedList===undefined,{timeout:1500,message:'Task link was not removed'});
+            assertEq(getApp().tab,'lists','Current tab should remain lists after unlink');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.storage.workflow-export-import',
+      name:'Workflow export/import round-trip through S is lossless',
+      tier:'T1',
+      area:'Workflow Data',
+      async run({withStorageSnapshot,assertEq,assert}){
+        await withStorageSnapshot(async()=>{
+          const payload={
+            todos:[{id:'t1',text:'Task',quad:'ui',done:false,poms:0}],
+            lists:[{id:'l1',name:'List',items:[{id:'i1',text:'Item',done:false,section:'Inbox'}]}],
+            notes:[{id:'n1',text:'Note',crAt:new Date().toISOString()}]
+          };
+          await S.imp(payload);
+          const exported=await S.exp();
+          assert(Array.isArray(exported.todos)&&exported.todos.length===1,'Exported todos should contain imported data');
+          await S.clr();
+          await S.imp(payload);
+          const todos=await S.get('todos',[]);
+          const lists=await S.get('lists',[]);
+          assertEq(todos[0].text,'Task','Imported todo text mismatch');
+          assertEq(lists[0].items.length,1,'Imported checklist items mismatch');
+        });
+      }
+    },
+    {
+      id:'t1.review.derived-shape',
+      name:'Review derived data and heatmap shape are valid',
+      tier:'T1',
+      area:'Review Workflow',
+      async run({withStorageSnapshot,withSectionHarness,waitFor,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.ReviewSection,{wide:false},async({mount,getApp})=>{
+            const today=new Date().toDateString();
+            const yesterday=new Date(Date.now()-864e5).toDateString();
+            getApp().setMet({d:{p:2,t:1,m:50,date:today},w:{p:6,t:3,m:150}});
+            getApp().setDHist([{date:yesterday,p:1,t:1,m:25}]);
+            await waitFor(()=>getApp().wkData.length===7,{timeout:1500,message:'wkData should have 7 points'});
+            assert(getApp().wkData.every(d=>typeof d.l==='string'&&typeof d.v==='number'),'wkData points should have {l,v} shape');
+            await waitFor(()=>mount.textContent.includes('This Week')&&mount.textContent.includes('Matrix Overview'),{timeout:1800,message:'Review cards did not render'});
+            const heatmapCells=mount.querySelectorAll('div[title]');
+            assert(heatmapCells.length>=20,'Heatmap did not render expected cell tooltips');
+          });
+        });
+      }
+    },
+    {
+      id:'t1.utility.uid-unique-format',
+      name:'UID generation remains unique and formatted',
+      tier:'T1',
+      area:'Utility Contracts',
+      async run({assert}){
+        const ids=new Set(Array.from({length:40},()=>uid()));
+        assert(ids.size===40,'uid() should generate unique IDs');
+        for(const id of ids)assert(typeof id==='string'&&id.includes('-'),'uid() should contain hyphenated format');
+      }
+    },
+    {
+      id:'t1.utility.ics-generation-contract',
+      name:'ICS generator returns expected calendar contract',
+      tier:'T1',
+      area:'Utility Contracts',
+      async run({assertIncludes}){
+        const ics=genICS({text:'T1 Event',time:'10:30',date:'2030-01-01'});
+        assertIncludes(ics,'BEGIN:VCALENDAR','ICS should include calendar header');
+        assertIncludes(ics,'BEGIN:VEVENT','ICS should include event block');
+        assertIncludes(ics,'SUMMARY:T1 Event','ICS should include summary text');
+      }
+    },
+    {
+      id:'t1.batch.selcheck-toggle-callback',
+      name:'Batch selection checkbox triggers toggle callback',
+      tier:'T1',
+      area:'Batch Selection',
+      async run({withDomFixture,waitFor,assertEq}){
+        await withDomFixture(async mount=>{
+          let toggles=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(SelCheck,{checked:false,onToggle:()=>{toggles++;}}));
+          await waitFor(()=>mount.querySelector('button'),{timeout:800,message:'SelCheck button not rendered'});
+          mount.querySelector('button').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          assertEq(toggles,1,'SelCheck should trigger onToggle exactly once per click');
+        });
+      }
+    },
+    {
+      id:'t1.batch.bulkactionbar-routing',
+      name:'BulkActionBar routes select/deselect/action callbacks',
+      tier:'T1',
+      area:'Batch Selection',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq,assert}){
+        await withDomFixture(async mount=>{
+          const actions=[];
+          let selectAllCount=0;
+          let deselectAllCount=0;
+          let cancelCount=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+
+          const renderBar=(count,allCount)=>root.render(React.createElement(BulkActionBar,{
+            count,
+            section:'todos',
+            allCount,
+            onSelectAll:()=>{selectAllCount++;},
+            onDeselectAll:()=>{deselectAllCount++;},
+            onAction:(action)=>actions.push(action),
+            onCancel:()=>{cancelCount++;}
+          }));
+
+          renderBar(1,3);
+          await waitFor(()=>findButtonByText(mount,'Select All')&&findButtonByText(mount,'Done')&&findButtonByText(mount,'Delete'),{timeout:1200,message:'BulkActionBar controls not rendered'});
+          findButtonByText(mount,'Select All').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          findButtonByText(mount,'Done').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          findButtonByText(mount,'Delete').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          const cancelBtn=mount.querySelector('button[aria-label="Cancel selection"]');
+          assert(cancelBtn,'Cancel selection button missing');
+          cancelBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+
+          renderBar(3,3);
+          await waitFor(()=>findButtonByText(mount,'Deselect All'),{timeout:1200,message:'Deselect All control not rendered'});
+          findButtonByText(mount,'Deselect All').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+
+          assertEq(selectAllCount,1,'Select All callback should fire once');
+          assertEq(deselectAllCount,1,'Deselect All callback should fire once');
+          assertEq(cancelCount,1,'Cancel callback should fire once');
+          assertEq(actions.join(','),'done,delete','Bulk actions should fire in clicked order');
+        });
+      }
+    },
+    {
+      id:'t2.css.menu-btn-computed',
+      name:'.menu-btn CSS applies computed interaction styles',
+      tier:'T2',
+      area:'CSS/UX',
+      async run({assert}){
+        const el=document.createElement('button');
+        el.className='menu-btn';
+        el.textContent='menu';
+        document.body.appendChild(el);
+        const st=getComputedStyle(el);
+        const displayOk=st.display==='flex'||st.display==='inline-flex';
+        const alignOk=st.textAlign==='left'||st.textAlign==='start';
+        document.body.removeChild(el);
+        assert(displayOk,'.menu-btn should set display:flex');
+        assert(alignOk,'.menu-btn should set text-align:left');
+      }
+    },
+    {
+      id:'t2.css.section-card-computed',
+      name:'.section-card CSS applies visual card surface',
+      tier:'T2',
+      area:'CSS/UX',
+      async run({assert}){
+        const el=document.createElement('div');
+        el.className='section-card';
+        el.textContent='card';
+        document.body.appendChild(el);
+        const st=getComputedStyle(el);
+        const bf=(st.backdropFilter||'').toLowerCase();
+        const wbf=(st.webkitBackdropFilter||'').toLowerCase();
+        const hasBackdrop=(bf&&bf!=='none')||(wbf&&wbf!=='none');
+        const hasFallback=(st.boxShadow&&st.boxShadow!=='none')&&(st.borderRadius&&st.borderRadius!=='0px');
+        document.body.removeChild(el);
+        assert(hasBackdrop||hasFallback,'.section-card should apply backdrop-filter or equivalent card styling');
+      }
+    },
+    {
+      id:'t2.css.anim-out-runtime',
+      name:'anim-out class maps to active fadeOut animation',
+      tier:'T2',
+      area:'Animation',
+      async run({assert}){
+        const el=document.createElement('div');
+        el.className='anim-out';
+        document.body.appendChild(el);
+        const st=getComputedStyle(el);
+        const animName=(st.animationName||'').toLowerCase();
+        const animDuration=st.animationDuration||'0s';
+        document.body.removeChild(el);
+        assert(!(animName==='none'&&animDuration==='0s'),'anim-out should map to fadeOut animation');
+      }
+    },
+    {
+      id:'t2.sticky-header.runtime',
+      name:'StickyHeader renders in sections with sticky class contract',
+      tier:'T2',
+      area:'Layout UX',
+      async run({withStorageSnapshot,withSectionHarness,assert,waitFor}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
+            await waitFor(()=>mount.querySelector('[data-testid="sticky-header"]'),{timeout:1200,message:'Sticky header missing'});
+            const header=mount.querySelector('[data-testid="sticky-header"]');
+            assert(header.className.includes('sticky'),'Sticky header should include sticky class');
+            assert(header.className.includes('top-14'),'Sticky header should include mobile top offset');
+            assert(header.className.includes('xl:top-0'),'Sticky header should include wide top offset');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.responsive.sidebar-tabbar-classes',
+      name:'Responsive class gating exists for sidebar and tab bar',
+      tier:'T2',
+      area:'Layout UX',
+      async run({assert,assertIncludes}){
+        const sidebar=document.querySelector('[data-testid="sidebar-nav"]');
+        const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');
+        assert(sidebar,'Sidebar nav not found');
+        assert(tabBar,'Bottom tab bar not found');
+        assertIncludes(sidebar.className,'hidden','Sidebar should be hidden on smaller screens');
+        assertIncludes(sidebar.className,'xl:flex','Sidebar should become visible on wide screens');
+        assertIncludes(tabBar.className,'xl:hidden','Bottom tab bar should hide on wide screens');
+      }
+    },
+    {
+      id:'t2.modal.contextmenu-anim-close',
+      name:'ContextMenu applies anim-out class before close callback',
+      tier:'T2',
+      area:'Animation',
+      async run({withDomFixture,waitFor,assert}){
+        await withDomFixture(async mount=>{
+          let closed=false;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ContextMenu,{title:'Menu',items:[{icon:React.createElement('span',null,'x'),label:'Action',onClick:()=>{}}],onClose:()=>{closed=true;},position:null}));
+          await waitFor(()=>mount.querySelector('.gcard'),{timeout:1200,message:'ContextMenu not rendered'});
+          const menuCard=mount.querySelector('.gcard');
+          const overlay=mount.firstElementChild;
+          overlay.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>menuCard.className.includes('anim-out'),{timeout:600,message:'ContextMenu did not apply anim-out class'});
+          await waitFor(()=>closed===true,{timeout:800,message:'ContextMenu did not invoke onClose'});
+          assert(closed,'ContextMenu close callback not triggered');
+        });
+      }
+    },
+    {
+      id:'t2.toast.lifecycle-fade-state',
+      name:'Toast lifecycle toggles fade state then clears',
+      tier:'T2',
+      area:'Animation',
+      async run({withStorageSnapshot,withAppDataHarness,waitFor,assertEq}){
+        await withStorageSnapshot(async()=>{
+          await withAppDataHarness(async getApp=>{
+            getApp().showT('Lifecycle toast');
+            await waitFor(()=>getApp().toast==='Lifecycle toast',{timeout:800,message:'Toast message did not appear'});
+            assertEq(getApp().toastFading,false,'Toast should not fade immediately');
+            await waitFor(()=>getApp().toastFading===true,{timeout:1900,message:'Toast did not enter fade state'});
+            await waitFor(()=>getApp().toast===null,{timeout:2600,message:'Toast did not clear after lifecycle'});
+          });
+        });
+      }
+    },
+    {
+      id:'t2.tab.anim-in-runtime',
+      name:'Active tab content keeps anim-in runtime class',
+      tier:'T2',
+      area:'Layout UX',
+      async run({assert}){
+        const tabContent=document.querySelector('[data-testid="tab-content"]');
+        assert(tabContent,'Tab content container not found');
+        assert(tabContent.className.includes('anim-in'),'Tab content should include anim-in class');
+      }
+    },
+    {
+      id:'t2.theme.light-dark-system-runtime',
+      name:'Theme provider applies light/dark/system runtime toggles',
+      tier:'T2',
+      area:'Theme UX',
+      async run({withStorageSnapshot,withDomFixture,waitFor,assert}){
+        await withStorageSnapshot(async()=>{
+          await withDomFixture(async mount=>{
+            const{ThemeProv,ThemeCtx}=window.PH_BLOCK_A;
+            assert(ThemeProv&&ThemeCtx,'Theme exports unavailable');
+            const prevDark=document.documentElement.classList.contains('dark');
+            let api=null;
+            function Probe(){api=React.useContext(ThemeCtx);return null;}
+            const root=ReactDOM.createRoot(mount);
+            mount.__root=root;
+            root.render(React.createElement(ThemeProv,null,React.createElement(Probe)));
+            await waitFor(()=>api&&typeof api.setTheme==='function',{timeout:2200,message:'Theme context unavailable'});
+
+            api.setTheme('dark');
+            await waitFor(()=>document.documentElement.classList.contains('dark'),{timeout:1500,message:'Dark theme class not applied'});
+            api.setTheme('light');
+            await waitFor(()=>!document.documentElement.classList.contains('dark'),{timeout:1500,message:'Light theme class not applied'});
+
+            const prefersDark=!!(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+            api.setTheme('system');
+            await waitFor(()=>document.documentElement.classList.contains('dark')===prefersDark,{timeout:1800,message:'System theme did not follow media preference'});
+
+            if(prevDark)document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.contextmenu.backdrop-close-callback',
+      name:'ContextMenu backdrop click triggers close callback',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,assert}){
+        await withDomFixture(async mount=>{
+          let closed=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ContextMenu,{title:'Menu',items:[{icon:React.createElement('span',null,'x'),label:'Action',onClick:()=>{}}],onClose:()=>{closed++;},position:null}));
+          await waitFor(()=>mount.firstElementChild,{timeout:1000,message:'ContextMenu overlay not rendered'});
+          mount.firstElementChild.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>closed===1,{timeout:900,message:'ContextMenu onClose not called from backdrop'});
+          assert(closed===1,'Backdrop click should close exactly once');
+        });
+      }
+    },
+    {
+      id:'t2.contextmenu.item-click-callback-close',
+      name:'ContextMenu item click triggers item callback and close',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq}){
+        await withDomFixture(async mount=>{
+          let clicked=0;
+          let closed=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ContextMenu,{title:'Menu',items:[{icon:React.createElement('span',null,'x'),label:'Edit',onClick:()=>{clicked++;}}],onClose:()=>{closed++;},position:null}));
+          await waitFor(()=>findButtonByText(mount,'Edit'),{timeout:1000,message:'ContextMenu item not rendered'});
+          findButtonByText(mount,'Edit').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>clicked===1,{timeout:400,message:'ContextMenu item callback did not fire'});
+          await waitFor(()=>closed===1,{timeout:1000,message:'ContextMenu did not close after item click'});
+          assertEq(clicked,1,'Item callback should fire once');
+          assertEq(closed,1,'Close callback should fire once');
+        });
+      }
+    },
+    {
+      id:'t2.confirmdialog.confirm-callback',
+      name:'ConfirmDialog confirm action triggers onConfirm',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq}){
+        await withDomFixture(async mount=>{
+          let confirmed=0;
+          let cancelled=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ConfirmDialog,{icon:React.createElement('span',null,'!'),iconBg:'bg-terracotta-100',title:'Delete?',message:'Confirm delete',confirmLabel:'Delete',onConfirm:()=>{confirmed++;},onCancel:()=>{cancelled++;},variant:'danger'}));
+          await waitFor(()=>findButtonByText(mount,'Delete')&&findButtonByText(mount,'Cancel'),{timeout:1200,message:'ConfirmDialog buttons not rendered'});
+          findButtonByText(mount,'Delete').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>confirmed===1,{timeout:1000,message:'onConfirm was not called'});
+          assertEq(confirmed,1,'Confirm callback should fire once');
+          assertEq(cancelled,0,'Cancel callback should not fire during confirm');
+        });
+      }
+    },
+    {
+      id:'t2.confirmdialog.cancel-callback',
+      name:'ConfirmDialog cancel action triggers onCancel',
+      tier:'T2',
+      area:'Unified Components',
+      async run({withDomFixture,waitFor,findButtonByText,assertEq}){
+        await withDomFixture(async mount=>{
+          let confirmed=0;
+          let cancelled=0;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(ConfirmDialog,{icon:React.createElement('span',null,'!'),iconBg:'bg-terracotta-100',title:'Delete?',message:'Confirm delete',confirmLabel:'Delete',onConfirm:()=>{confirmed++;},onCancel:()=>{cancelled++;},variant:'danger'}));
+          await waitFor(()=>findButtonByText(mount,'Cancel'),{timeout:1200,message:'Cancel button not rendered'});
+          findButtonByText(mount,'Cancel').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>cancelled===1,{timeout:1000,message:'onCancel was not called'});
+          assertEq(cancelled,1,'Cancel callback should fire once');
+          assertEq(confirmed,0,'Confirm callback should not fire during cancel');
+        });
+      }
+    },
+    {
+      id:'t2.settings.test-runner-default-absent',
+      name:'Settings keeps test runner unmounted before first Test tab click',
+      tier:'T2',
+      area:'Settings UX',
+      async run({withStorageSnapshot,withSettingsHarness,assert}){
+        await withStorageSnapshot(async()=>{
+          if(window.PH_BLOCK_B&&typeof window.PH_BLOCK_B.__resetTestRunnerCache==='function')window.PH_BLOCK_B.__resetTestRunnerCache();
+          await withSettingsHarness(async mount=>{
+            assert(!mount.querySelector('[data-testid="test-runner-root"]'),'Test runner should not mount by default');
+            assert(!mount.querySelector('[data-testid="test-runner-loading"]'),'Loading marker should not show by default');
+            assert(!mount.querySelector('[data-testid="test-runner-error"]'),'Error marker should not show by default');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.settings.test-runner-first-click-lazy-load',
+      name:'Settings first Test click shows loader then mounts test runner',
+      tier:'T2',
+      area:'Settings UX',
+      async run({withStorageSnapshot,withSettingsHarness,waitFor,assert}){
+        await withStorageSnapshot(async()=>{
+          if(window.PH_BLOCK_B&&typeof window.PH_BLOCK_B.__resetTestRunnerCache==='function')window.PH_BLOCK_B.__resetTestRunnerCache();
+          await withSettingsHarness(async mount=>{
+            const testTab=Array.from(mount.querySelectorAll('.more-sub-btn')).find(btn=>((btn.textContent||'').includes('Test')));
+            assert(testTab,'Test sub-tab button missing');
+            testTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            let sawLoading=false;
+            await waitFor(()=>{
+              const loading=mount.querySelector('[data-testid="test-runner-loading"]');
+              if(loading)sawLoading=true;
+              return sawLoading||!!mount.querySelector('[data-testid="test-runner-root"]');
+            },{timeout:2400,message:'No lazy-load marker found after Test tab click'});
+            await waitFor(()=>mount.querySelector('[data-testid="test-runner-root"]'),{timeout:3600,message:'Test runner root did not mount'});
+            assert(sawLoading,'Expected loading marker during first lazy load');
+          });
+        });
+      }
+    },
+    {
+      id:'t2.settings.test-runner-persists-after-tab-switch',
+      name:'Settings reuses loaded runner after switching away and back',
+      tier:'T2',
+      area:'Settings UX',
+      async run({withStorageSnapshot,withSettingsHarness,waitFor,assert,assertEq}){
+        await withStorageSnapshot(async()=>{
+          const blockB=window.PH_BLOCK_B;
+          if(blockB&&typeof blockB.__resetTestRunnerCache==='function')blockB.__resetTestRunnerCache();
+          await withSettingsHarness(async mount=>{
+            const findSubTab=(label)=>Array.from(mount.querySelectorAll('.more-sub-btn')).find(btn=>((btn.textContent||'').includes(label)));
+            const testTab=findSubTab('Test');
+            const helpTab=findSubTab('Explainer');
+            assert(testTab&&helpTab,'Settings sub-tabs are missing');
+            testTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.querySelector('[data-testid="test-runner-root"]'),{timeout:3600,message:'Initial test runner mount failed'});
+            helpTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.textContent.includes('Complete Guide'),{timeout:2000,message:'Help tab content did not render'});
+            testTab.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+            await waitFor(()=>mount.querySelector('[data-testid="test-runner-root"]'),{timeout:2000,message:'Runner did not remount after switching back'});
+            assert(!mount.querySelector('[data-testid="test-runner-loading"]'),'Runner should be reused without loading on second open');
+            if(blockB&&typeof blockB.__getTestRunnerCacheStats==='function'){
+              assertEq(blockB.__getTestRunnerCacheStats().createCount,1,'Runner factory should initialize exactly once');
+            }
+          });
+        });
+      }
+    },
+    {
+      id:'t2.layout.sticky-tabs-no-top-gap-all-breakpoints',
+      name:'Sticky-header tabs use zero top gap across breakpoints',
+      tier:'T2',
+      area:'Layout UX',
+      async run({waitFor,assert}){
+        const wrap=document.querySelector('[data-testid="main-content-wrap"]');
+        assert(wrap,'Main content wrapper not found');
+        const tabButtons=Array.from(document.querySelectorAll('[data-testid="bottom-tab-bar"] .tab-bar-inner button'));
+        assert(tabButtons.length===6,'Expected six primary tab buttons');
+        const clickTabByIndex=(idx)=>{
+          const btn=tabButtons[idx];
+          assert(btn,`Missing tab button at index ${idx}`);
+          btn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+        };
+        const stickyTabIndexes=[0,1,2,3,4];
+        for(const idx of stickyTabIndexes){
+          clickTabByIndex(idx);
+          await waitFor(()=>{
+            const cls=wrap.className||'';
+            return cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0');
+          },{timeout:1200,message:`Expected zero top gap classes for tab index ${idx}`});
+        }
+      }
+    },
+    {
+      id:'t2.layout.more-top-gap-preserved-all-breakpoints',
+      name:'More tab keeps top gap and flips correctly with sticky tabs',
+      tier:'T2',
+      area:'Layout UX',
+      async run({waitFor,assert}){
+        const wrap=document.querySelector('[data-testid="main-content-wrap"]');
+        assert(wrap,'Main content wrapper not found');
+        const tabButtons=Array.from(document.querySelectorAll('[data-testid="bottom-tab-bar"] .tab-bar-inner button'));
+        assert(tabButtons.length===6,'Expected six primary tab buttons');
+        const clickTabByIndex=(idx)=>{
+          const btn=tabButtons[idx];
+          assert(btn,`Missing tab button at index ${idx}`);
+          btn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+        };
+        clickTabByIndex(5);
+        await waitFor(()=>{
+          const cls=wrap.className||'';
+          return cls.includes('pt-4')&&cls.includes('md:pt-6')&&cls.includes('xl:pt-6')&&!cls.includes('md:pt-0')&&!cls.includes('xl:pt-0');
+        },{timeout:1200,message:'Expected More top-gap classes'});
+        clickTabByIndex(0);
+        await waitFor(()=>{
+          const cls=wrap.className||'';
+          return cls.includes('pt-0')&&cls.includes('md:pt-0')&&cls.includes('xl:pt-0');
+        },{timeout:1200,message:'Expected sticky-tab zero top-gap classes after leaving More'});
+        clickTabByIndex(5);
+        await waitFor(()=>{
+          const cls=wrap.className||'';
+          return cls.includes('pt-4')&&cls.includes('md:pt-6')&&cls.includes('xl:pt-6');
+        },{timeout:1200,message:'Expected More top-gap classes after switching back'});
+      }
+    },
+    {
+      id:'t2.layout.focus-review-responsive-markers',
+      name:'Focus and Review sections keep responsive marker classes',
+      tier:'T2',
+      area:'Layout UX',
+      async run({withStorageSnapshot,withSectionHarness,assertIncludes,assert}){
+        await withStorageSnapshot(async()=>{
+          await withSectionHarness(window.PH_BLOCK_C.FocusSection,{onTimerTick:()=>{},desk:true},async({mount})=>{
+            const focusContent=mount.querySelector('[data-testid="focus-content"]');
+            assert(focusContent,'Focus content container missing');
+            assertIncludes(focusContent.className,'md:flex','Focus content should include md:flex for split layout');
+          });
+          await withSectionHarness(window.PH_BLOCK_C.ReviewSection,{wide:true},async({mount})=>{
+            const reviewContent=mount.querySelector('[data-testid="review-content"]');
+            assert(reviewContent,'Review content container missing');
+            assertIncludes(reviewContent.className,'xl:grid','Review content should include xl:grid marker');
+            assertIncludes(reviewContent.className,'xl:grid-cols-2','Review content should include xl:grid-cols-2 marker');
+          });
+        });
+      }
+    }
+  ];
+
+  const summarizeByTier=(tests,rows)=>{
+    const summary={};
+    for(const tier of TIER_ORDER)summary[tier]={total:0,passed:0,failed:0,skipped:0,passRate:0};
+    for(const test of tests){if(!summary[test.tier])summary[test.tier]={total:0,passed:0,failed:0,skipped:0,passRate:0};summary[test.tier].total++;}
+    for(const row of rows){
+      const bucket=summary[row.tier]||{total:0,passed:0,failed:0,skipped:0,passRate:0};
+      if(row.status==='passed')bucket.passed++;
+      else if(row.status==='failed')bucket.failed++;
+      else bucket.skipped++;
+      summary[row.tier]=bucket;
+    }
+    for(const tier of Object.keys(summary)){
+      const b=summary[tier];
+      b.passRate=b.total>0?b.passed/b.total:0;
+    }
+    return summary;
+  };
+
+  const buildReportText=(r)=>{
+    const lines=[];
+    lines.push('╔══════════════════════════════════════════════════════════════════════╗');
+    lines.push('║             PRODUCTIVITY HUB - MODERNIZED TEST REPORT               ║');
+    lines.push(`║     Suite ${r.suiteVersion} | Baseline ${r.baselineDate} | App v${r.appVersion}              ║`);
+    lines.push('╚══════════════════════════════════════════════════════════════════════╝');
+    lines.push('');
+    lines.push(`Date: ${new Date(r.timestamp).toLocaleString()}`);
+    lines.push(`Browser: ${r.browser}`);
+    lines.push('');
+    lines.push('Summary');
+    lines.push(`  Passed: ${r.summary.passed}`);
+    lines.push(`  Failed: ${r.summary.failed}`);
+    lines.push(`  Skipped: ${r.summary.skipped}`);
+    lines.push(`  Total: ${r.summary.total}`);
+    lines.push('');
+    lines.push('Tier Summary');
+    for(const tier of TIER_ORDER){
+      const t=r.tiers[tier]||{passed:0,total:0,failed:0,passRate:0};
+      lines.push(`  ${tier}: ${t.passed}/${t.total} passed, ${t.failed} failed (${Math.round((t.passRate||0)*100)}%)`);
+    }
+    lines.push('');
+    lines.push('Gate Status');
+    lines.push(`  T0 required 100%: ${r.gates.T0?'PASS':'FAIL'}`);
+    lines.push(`  T1 required 100%: ${r.gates.T1?'PASS':'FAIL'}`);
+    lines.push(`  T2 required >=90% + stable: ${r.gates.T2?'PASS':'FAIL'}`);
+    lines.push(`  Uncategorized tests: ${r.gates.uncategorized?'PASS':'FAIL'}`);
+    lines.push(`  Deterministic rerun consistency: ${r.gates.deterministic?'PASS':'FAIL'}`);
+    lines.push(`  Overall: ${r.gates.overall?'PASS':'FAIL'}`);
+    lines.push('');
+    lines.push('Determinism');
+    lines.push(`  Runs: ${r.consistency.runs}`);
+    lines.push(`  Flaky tests: ${r.consistency.flakyTests.length}`);
+    if(r.consistency.flakyTests.length>0){
+      for(const f of r.consistency.flakyTests)lines.push(`    - ${f.id}: ${f.name}`);
+    }
+    lines.push('');
+    lines.push('Detailed Results');
+    for(const tier of TIER_ORDER){
+      lines.push(`  [${tier}]`);
+      for(const row of r.tests.filter(x=>x.tier===tier)){
+        const mark=row.status==='passed'?'✅':row.status==='failed'?'❌':'⏭️';
+        const base=`    ${mark} ${row.id} - ${row.name} (${row.duration}ms)`;
+        lines.push(base);
+        if(row.error)lines.push(`      Error: ${row.error}`);
+      }
+      lines.push('');
+    }
+    lines.push(`Generated by Productivity Hub v${r.appVersion}`);
+    return lines.join('\n');
+  };
+
   const runTests=async()=>{
     setRunning(true);
     setResults(null);
+    window.__PH_TEST_MODE=true;
+
+    const tests=runnerModel.loadTestCases(buildTestCases);
+    const invalidTierTests=tests.filter(t=>!TIER_ORDER.includes(t.tier));
+    const duplicateIds=tests.map(t=>t.id).filter((id,idx,arr)=>arr.indexOf(id)!==idx);
+    const t2Tests=tests.filter(t=>t.tier==='T2');
+    const totalSteps=tests.length+(t2Tests.length*2);
+    setProgress({current:0,total:Math.max(totalSteps,1),step:'Preparing suite...'});
+
+    const originalData=await S.exp();
     const report={
-      version:APP_VERSION,
+      suiteVersion:SUITE_VERSION,
+      baselineDate:BASELINE_DATE,
+      appVersion:APP_VERSION,
       timestamp:new Date().toISOString(),
       browser:navigator.userAgent,
       tests:[],
-      summary:{passed:0,failed:0,skipped:0}
+      summary:{passed:0,failed:0,skipped:0,total:0},
+      tiers:{},
+      gates:{T0:false,T1:false,T2:false,uncategorized:false,deterministic:false,overall:false},
+      consistency:{runs:3,stable:false,flakyTests:[],runsDetail:[]},
+      invalidTierTests:invalidTierTests.map(t=>t.id),
+      duplicateIds:Array.from(new Set(duplicateIds))
     };
-    
-    const tests=[
-      {name:'IndexedDB Initialization',category:'Storage'},
-      {name:'IndexedDB Write',category:'Storage'},
-      {name:'IndexedDB Read',category:'Storage'},
-      {name:'IndexedDB Delete',category:'Storage'},
-      {name:'Create Todo',category:'CRUD - Todos'},
-      {name:'Read Todo',category:'CRUD - Todos'},
-      {name:'Update Todo',category:'CRUD - Todos'},
-      {name:'Delete Todo',category:'CRUD - Todos'},
-      {name:'Create List',category:'CRUD - Lists'},
-      {name:'Add List Item',category:'CRUD - Lists'},
-      {name:'Update List Item',category:'CRUD - Lists'},
-      {name:'Delete List Item',category:'CRUD - Lists'},
-      {name:'Create Note',category:'CRUD - Notes'},
-      {name:'Update Note',category:'CRUD - Notes'},
-      {name:'Delete Note',category:'CRUD - Notes'},
-      {name:'Clear Completed',category:'Cleanup'},
-      {name:'Data Export',category:'Export/Import'},
-      {name:'Data Import',category:'Export/Import'},
-      {name:'Theme Switch (Light)',category:'Theme'},
-      {name:'Theme Switch (Dark)',category:'Theme'},
-      {name:'Theme Switch (System)',category:'Theme'},
-      {name:'Timer Settings Load',category:'Focus Timer'},
-      {name:'Preset Change',category:'Focus Timer'},
-      {name:'UID Generation',category:'Utilities'},
-      {name:'ICS Generation',category:'Utilities'},
-      {name:'Batch Select Enter',category:'Batch Selection'},
-      {name:'Batch Select Toggle',category:'Batch Selection'},
-      {name:'Batch Select Exit',category:'Batch Selection'},
-      {name:'Batch Select All',category:'Batch Selection'},
-      {name:'Batch Bulk Action',category:'Batch Selection'},
-      {name:'Batch Empty Auto-Exit',category:'Batch Selection'},
-      {name:'Batch Delete Confirm Gate',category:'Batch Selection'},
-      {name:'Day Rotation Archive',category:'Streak Heatmap'},
-      {name:'Day Rotation Reset',category:'Streak Heatmap'},
-      {name:'Streak Calculation',category:'Streak Heatmap'},
-      {name:'Heatmap Color Levels',category:'Streak Heatmap'},
-      {name:'Note Strikethrough Toggle',category:'Capture Actions'},
-      {name:'Note Strikethrough Timestamp',category:'Capture Actions'},
-      {name:'Note Copy to Clarify',category:'Capture Actions'},
-      {name:'Note Copy Keeps Note Struck',category:'Capture Actions'},
-      {name:'Note Auto-Clear 30 Days',category:'Capture Actions'},
-      {name:'Note Bulk Copy to Clarify',category:'Capture Actions'},
-      {name:'Note Bulk Strikethrough',category:'Capture Actions'},
-      {name:'3-Dot Menu Icon Set',category:'UI Interactions'},
-      {name:'Undone Todo Toggle',category:'UI Interactions'},
-      {name:'Delete List Item From Edit',category:'UI Interactions'},
-      {name:'Scroll Guard Distance',category:'UI Interactions'},
-      {name:'Quadrant Colors Defined',category:'UI Interactions'},
-      {name:'Timer Info State',category:'Desktop Layout'},
-      {name:'Focus Side-by-Side Desk',category:'Desktop Layout'},
-      {name:'Review Dashboard Grid Wide',category:'Desktop Layout'},
-      {name:'Sidebar Timer Format',category:'Desktop Layout'},
-      {name:'Settings Flexbox Desk',category:'Desktop Layout'},
-      {name:'Explainer Collapsible State',category:'Desktop Layout'},
-      {name:'Explainer Desktop Always Open',category:'Desktop Layout'},
-      {name:'App Sidebar Nav Wide CSS',category:'CSS Responsive'},
-      {name:'App Tab Bar Mobile CSS',category:'CSS Responsive'},
-      {name:'App Sidebar Hidden Mobile CSS',category:'CSS Responsive'},
-      {name:'App Tab Bar Hidden Wide CSS',category:'CSS Responsive'},
-      {name:'Review 2-Col Grid CSS',category:'CSS Responsive'},
-      {name:'Focus Side-by-Side CSS',category:'CSS Responsive'},
-      {name:'ContextMenu renders all items',category:'Unified Components'},
-      {name:'ContextMenu calls onClose on backdrop click',category:'Unified Components'},
-      {name:'ContextMenu item click fires callback and closes',category:'Unified Components'},
-      {name:'ContextMenu positioned mode renders at coordinates',category:'Unified Components'},
-      {name:'ConfirmDialog renders title and message',category:'Unified Components'},
-      {name:'ConfirmDialog confirm button fires onConfirm',category:'Unified Components'},
-      {name:'ConfirmDialog cancel button fires onCancel',category:'Unified Components'},
-      {name:'StickyHeader sticky class string',category:'StickyHeader & CSS'},
-      {name:'StickyHeader section headers in DOM',category:'StickyHeader & CSS'},
-      {name:'.menu-btn CSS applied',category:'StickyHeader & CSS'},
-      {name:'.section-card CSS applied',category:'StickyHeader & CSS'},
-      {name:'usePersistedState debounces writes',category:'UI Smoothness'},
-      {name:'usePersistedState flushes on unmount',category:'UI Smoothness'},
-      {name:'Modal applies anim-out class when closing',category:'UI Smoothness'},
-      {name:'Tab switch applies anim-in to new content',category:'UI Smoothness'},
-      {name:'Toast fades out before removal',category:'UI Smoothness'},
-    ];
-    
-    setProgress({current:0,total:tests.length,step:'Initializing...'});
-    
-    const testData={testTodo:null,testList:null,testListItem:null,testReminder:null,testNote:null};
-    const TEST_PREFIX='__TEST__';
-    
-    for(let i=0;i<tests.length;i++){
-      const test=tests[i];
-      setProgress({current:i+1,total:tests.length,step:test.name});
-      await delay(80);
-      
-      let result={name:test.name,category:test.category,status:'passed',duration:0,error:null};
-      const startTime=performance.now();
-      
+
+    const executeCase=async(test,stepIndex,stepTotal,label='Primary')=>{
+      setProgress({current:stepIndex,total:stepTotal,step:`${label}: ${test.name}`});
+      const started=performance.now();
+      const cleanupRegistry=makeCleanupRegistry();
+      const ctx={
+        assert,assertEq,assertIncludes,waitFor,
+        withDomFixture:(fn)=>withDomFixture(cleanupRegistry,fn),
+        withStorageFixture:(fn)=>withStorageFixture(cleanupRegistry,fn),
+        withStorageSnapshot:(fn)=>withStorageSnapshot(cleanupRegistry,fn),
+        withAppDataHarness:(fn)=>withAppDataHarness(cleanupRegistry,fn),
+        withSectionHarness:(SectionComp,sectionProps,fn)=>withSectionHarness(cleanupRegistry,SectionComp,sectionProps,fn),
+        withSettingsHarness:(fn)=>withSettingsHarness(cleanupRegistry,fn),
+        setInputValue,findByText,findButtonByText,delay
+      };
+
+      let status='passed';
+      let error=null;
       try{
-        switch(test.name){
-          case 'IndexedDB Initialization':{const db=await initDB();if(!db)throw new Error('Failed to initialize IndexedDB');break;}
-          case 'IndexedDB Write':{await S.set(TEST_PREFIX+'test_key','test_value');break;}
-          case 'IndexedDB Read':{const val=await S.get(TEST_PREFIX+'test_key','default');if(val!=='test_value')throw new Error(`Expected 'test_value', got '${val}'`);break;}
-          case 'IndexedDB Delete':{await S.set(TEST_PREFIX+'test_key',undefined);break;}
-          case 'Create Todo':{testData.testTodo={id:TEST_PREFIX+uid(),text:'Test Todo',pri:'high',cat:'work',quad:'ui',done:false};if(!testData.testTodo.id)throw new Error('Failed to create todo ID');break;}
-          case 'Read Todo':{if(!testData.testTodo||!testData.testTodo.text)throw new Error('Todo not readable');break;}
-          case 'Update Todo':{testData.testTodo.text='Updated Test Todo';if(testData.testTodo.text!=='Updated Test Todo')throw new Error('Todo update failed');break;}
-          case 'Delete Todo':{testData.testTodo=null;if(testData.testTodo!==null)throw new Error('Todo deletion failed');break;}
-          case 'Create List':{testData.testList={id:TEST_PREFIX+uid(),name:'Test List',items:[]};if(!testData.testList.id)throw new Error('Failed to create list');break;}
-          case 'Add List Item':{testData.testListItem={id:TEST_PREFIX+uid(),text:'Test Item',done:false};testData.testList.items.push(testData.testListItem);if(testData.testList.items.length!==1)throw new Error('Failed to add item to list');break;}
-          case 'Update List Item':{testData.testListItem.done=true;if(!testData.testListItem.done)throw new Error('List item update failed');break;}
-          case 'Delete List Item':{testData.testList.items=testData.testList.items.filter(i=>i.id!==testData.testListItem.id);if(testData.testList.items.length!==0)throw new Error('List item deletion failed');break;}
-          case 'Create Note':{testData.testNote={id:TEST_PREFIX+uid(),title:'Test Note',content:'Test content',crAt:new Date().toISOString()};if(!testData.testNote.id)throw new Error('Failed to create note');break;}
-          case 'Update Note':{testData.testNote.content='Updated content';if(testData.testNote.content!=='Updated content')throw new Error('Note update failed');break;}
-          case 'Delete Note':{testData.testNote=null;if(testData.testNote!==null)throw new Error('Note deletion failed');break;}
-          case 'Clear Completed':{const todos=[{id:'a',done:true},{id:'b',done:false},{id:'c',done:true}];const after=todos.filter(t=>!t.done);if(after.length!==1||after[0].id!=='b')throw new Error('Clear completed failed');break;}
-          case 'Data Export':{const exported=await S.exp();if(typeof exported!=='object')throw new Error('Export did not return object');break;}
-          case 'Data Import':{const testImport={[TEST_PREFIX+'import_test']:'import_value'};await S.imp(testImport);const val=await S.get(TEST_PREFIX+'import_test');if(val!=='import_value')throw new Error('Import verification failed');break;}
-          case 'Theme Switch (Light)':{document.documentElement.classList.remove('dark');if(document.documentElement.classList.contains('dark'))throw new Error('Light theme not applied');break;}
-          case 'Theme Switch (Dark)':{document.documentElement.classList.add('dark');if(!document.documentElement.classList.contains('dark'))throw new Error('Dark theme not applied');break;}
-          case 'Theme Switch (System)':{const prefDark=window.matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.classList.toggle('dark',prefDark);break;}
-          case 'Timer Settings Load':{const preset=PRESETS.classic;if(preset.work!==25||preset.shortBreak!==5||preset.longBreak!==15)throw new Error('Default preset values incorrect');break;}
-          case 'Preset Change':{const longPreset=PRESETS.long;if(longPreset.work!==50)throw new Error('Long preset work duration incorrect');break;}
-          case 'UID Generation':{const id1=uid();const id2=uid();if(id1===id2)throw new Error('UIDs not unique');if(!id1.includes('-'))throw new Error('UID format invalid');break;}
-          case 'ICS Generation':{const ics=genICS({text:'Test',time:'10:00',date:'2026-02-01'});if(!ics.includes('BEGIN:VCALENDAR'))throw new Error('ICS format invalid');if(!ics.includes('Test'))throw new Error('ICS content missing');break;}
-          case 'Batch Select Enter':{const selState={mode:false,section:null,ids:new Set()};selState.mode=true;selState.section='todos';selState.ids.add('test-id-1');if(!selState.mode)throw new Error('Selection mode not activated');if(selState.section!=='todos')throw new Error('Section not set');if(selState.ids.size!==1)throw new Error('First item not selected');break;}
-          case 'Batch Select Toggle':{const ids=new Set(['id1']);ids.add('id2');if(ids.size!==2)throw new Error('Add failed');ids.delete('id1');if(ids.size!==1||ids.has('id1'))throw new Error('Remove failed');ids.add('id1');ids.add('id3');if(ids.size!==3)throw new Error('Multi-select failed');break;}
-          case 'Batch Select Exit':{const st={mode:true,section:'todos',ids:new Set(['a','b'])};st.mode=false;st.section=null;st.ids=new Set();if(st.mode||st.section||st.ids.size!==0)throw new Error('Exit did not clear state');break;}
-          case 'Batch Select All':{const allIds=['t1','t2','t3','t4'];const sel=new Set(allIds);if(sel.size!==4)throw new Error('Select all count wrong');const isAll=sel.size===allIds.length;if(!isAll)throw new Error('Select all check failed');sel.clear();if(sel.size!==0)throw new Error('Deselect all failed');break;}
-          case 'Batch Bulk Action':{const todos=[{id:'a',done:false},{id:'b',done:false},{id:'c',done:true}];const selIds=new Set(['a','b']);const afterDone=todos.map(t=>selIds.has(t.id)?{...t,done:true}:t);if(!afterDone[0].done||!afterDone[1].done)throw new Error('Bulk done failed');if(afterDone[2].done!==true)throw new Error('Non-selected item changed');const afterDel=todos.filter(t=>!selIds.has(t.id));if(afterDel.length!==1||afterDel[0].id!=='c')throw new Error('Bulk delete failed');break;}
-          case 'Batch Empty Auto-Exit':{const sel=new Set(['a']);sel.delete('a');const shouldExit=sel.size===0;if(!shouldExit)throw new Error('Empty set did not trigger exit condition');if(sel.size!==0)throw new Error('Set not empty after removal');break;}
-          case 'Batch Delete Confirm Gate':{const threshold=3;const small=new Set(['a','b']);const large=new Set(['a','b','c']);const needsConfirmSmall=small.size>=threshold;const needsConfirmLarge=large.size>=threshold;if(needsConfirmSmall)throw new Error('2 items should not need confirmation');if(!needsConfirmLarge)throw new Error('3 items should need confirmation');break;}
-          case 'Day Rotation Archive':{const oldHist=[];const oldMet={d:{p:3,t:2,m:75,date:'Mon Jan 01 2026'},w:{p:5,t:4,m:120}};const filtered=oldHist.filter(x=>x.date!==oldMet.d.date);const newHist=[...filtered,{date:oldMet.d.date,p:oldMet.d.p,t:oldMet.d.t,m:oldMet.d.m}];if(newHist.length!==1)throw new Error('Archive count wrong');if(newHist[0].p!==3||newHist[0].t!==2||newHist[0].m!==75)throw new Error('Archived data mismatch');break;}
-          case 'Day Rotation Reset':{const oldDate='Mon Jan 05 2026';const today='Tue Jan 06 2026';const isNewDay=oldDate!==today;if(!isNewDay)throw new Error('Day change not detected');const newMet={d:{p:0,t:0,m:0,date:today}};if(newMet.d.p!==0||newMet.d.t!==0)throw new Error('Daily metrics not reset');break;}
-          case 'Streak Calculation':{const hist=[{date:new Date(Date.now()-864e5).toDateString(),p:2,t:1,m:50},{date:new Date(Date.now()-2*864e5).toDateString(),p:1,t:0,m:25},{date:new Date(Date.now()-4*864e5).toDateString(),p:3,t:2,m:75}];let streak=0;for(let i=1;i<=5;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toDateString();const h=hist.find(x=>x.date===ds);if(h&&(h.p>0||h.t>0))streak++;else break;}if(streak!==2)throw new Error(`Expected streak 2, got ${streak}`);break;}
-          case 'Heatmap Color Levels':{const clr=(p)=>{if(p===0)return'empty';if(p<=1)return'L1';if(p<=3)return'L2';if(p<=5)return'L3';return'L4';};if(clr(0)!=='empty')throw new Error('Level 0 wrong');if(clr(1)!=='L1')throw new Error('Level 1 wrong');if(clr(3)!=='L2')throw new Error('Level 2 wrong');if(clr(5)!=='L3')throw new Error('Level 3 wrong');if(clr(8)!=='L4')throw new Error('Level 4 wrong');break;}
-          case 'Note Strikethrough Toggle':{const n={id:'n1',text:'Test',struck:false};const toggled={...n,struck:!n.struck};if(!toggled.struck)throw new Error('Strikethrough not toggled on');const unToggled={...toggled,struck:!toggled.struck};if(unToggled.struck)throw new Error('Strikethrough not toggled off');break;}
-          case 'Note Strikethrough Timestamp':{const now=Date.now();const n={id:'n1',text:'Test',struck:false,struckAt:null};const struck={...n,struck:true,struckAt:now};if(!struck.struckAt)throw new Error('struckAt not set');const unstruck={...struck,struck:false,struckAt:null};if(unstruck.struckAt!==null)throw new Error('struckAt not cleared');break;}
-          case 'Note Copy to Clarify':{const note={id:'n1',text:'Migrate me',struck:false};const newTodo={id:'t1',text:note.text,quad:'nn',poms:0,done:false};if(newTodo.text!=='Migrate me')throw new Error('Text not carried over');if(newTodo.quad!=='nn')throw new Error('Quad not set to nn');const afterNote={...note,struck:true,struckAt:Date.now()};if(!afterNote.struck)throw new Error('Note should be struck after copy');break;}
-          case 'Note Copy Keeps Note Struck':{const notes=[{id:'n1',text:'A',struck:false}];const noteToPromote=notes[0];const newTodo={id:'t1',text:noteToPromote.text,quad:'nn',poms:0,done:false};const afterNotes=notes.map(n=>n.id===noteToPromote.id?{...n,struck:true,struckAt:Date.now()}:n);if(afterNotes.length!==1)throw new Error('Note should still exist');if(!afterNotes[0].struck)throw new Error('Note should be struck');if(!afterNotes[0].struckAt)throw new Error('struckAt should be set');if(newTodo.text!=='A')throw new Error('Todo text mismatch');break;}
-          case 'Note Auto-Clear 30 Days':{const thirtyDays=30*24*60*60*1000;const now=Date.now();const oldNote={id:'n1',struck:true,struckAt:now-thirtyDays-1000};const newNote={id:'n2',struck:true,struckAt:now-1000};const notes=[oldNote,newNote];const toRemove=notes.filter(n=>n.struck&&n.struckAt&&(now-n.struckAt>thirtyDays));if(toRemove.length!==1||toRemove[0].id!=='n1')throw new Error('Auto-clear filter wrong');const remaining=notes.filter(n=>!toRemove.find(r=>r.id===n.id));if(remaining.length!==1||remaining[0].id!=='n2')throw new Error('Wrong note removed');break;}
-          case 'Note Bulk Copy to Clarify':{const notes=[{id:'n1',text:'A',struck:false},{id:'n2',text:'B',struck:false},{id:'n3',text:'C',struck:false}];const selIds=new Set(['n1','n3']);const toMove=notes.filter(x=>selIds.has(x.id));const newTodos=toMove.map(x=>({id:'t_'+x.id,text:x.text,quad:'nn',poms:0,done:false}));if(newTodos.length!==2)throw new Error('Wrong copy count');const afterNotes=notes.map(x=>selIds.has(x.id)?{...x,struck:true,struckAt:Date.now()}:x);if(!afterNotes[0].struck)throw new Error('n1 should be struck');if(afterNotes[1].struck)throw new Error('n2 should be unchanged');if(!afterNotes[2].struck)throw new Error('n3 should be struck');if(afterNotes.length!==3)throw new Error('Notes should not be deleted');break;}
-          case 'Note Bulk Strikethrough':{const notes=[{id:'n1',struck:false},{id:'n2',struck:true},{id:'n3',struck:false}];const selIds=new Set(['n1','n2']);const after=notes.map(x=>selIds.has(x.id)?{...x,struck:!x.struck}:x);if(!after[0].struck)throw new Error('n1 should be struck');if(after[1].struck)throw new Error('n2 should be unstruck (toggled)');if(after[2].struck)throw new Error('n3 should be unchanged');break;}
-          case '3-Dot Menu Icon Set':{if(typeof I.MoreV!=='function')throw new Error('MoreV icon not defined');const el=I.MoreV({s:18,c:'test'});if(!el)throw new Error('MoreV icon did not render');const icons=['Focus','List','Check','Edit','Trash','Plus','MoreV'];for(const name of icons){if(typeof I[name]!=='function')throw new Error(`Icon ${name} missing`);}break;}
-          case 'Undone Todo Toggle':{const todo={id:'t1',text:'Test',done:true};const undone={...todo,done:false};if(undone.done)throw new Error('Todo should be undone');const redone={...undone,done:true};if(!redone.done)throw new Error('Todo should be done again');break;}
-          case 'Delete List Item From Edit':{const list={id:'l1',items:[{id:'i1',text:'A'},{id:'i2',text:'B'},{id:'i3',text:'C'}]};const toDelete='i2';const after={...list,items:list.items.filter(i=>i.id!==toDelete)};if(after.items.length!==2)throw new Error('Should have 2 items');if(after.items.find(i=>i.id==='i2'))throw new Error('Item i2 should be deleted');break;}
-          case 'Scroll Guard Distance':{const threshold=10;const noScroll={dx:5,dy:3};const scrolled={dx:12,dy:2};if(Math.abs(noScroll.dx)>threshold||Math.abs(noScroll.dy)>threshold)throw new Error('Small movement should not trigger scroll');if(!(Math.abs(scrolled.dx)>threshold||Math.abs(scrolled.dy)>threshold))throw new Error('12px movement should trigger scroll');break;}
-          case 'Quadrant Colors Defined':{for(const q of QUADS){if(!q.clr)throw new Error(`${q.id} missing clr`);if(!q.dclr)throw new Error(`${q.id} missing dclr`);if(!q.txt)throw new Error(`${q.id} missing txt`);if(!q.bdr)throw new Error(`${q.id} missing bdr`);if(!q.clr.includes('300'))throw new Error(`${q.id} should use 300-level colors`);}break;}
-          case 'Timer Info State':{const ti={left:1500,run:false,mode:'work'};if(ti.left!==1500)throw new Error('Timer left wrong');if(ti.run!==false)throw new Error('Timer run wrong');if(ti.mode!=='work')throw new Error('Timer mode wrong');const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(1500)!=='25:00')throw new Error('Format wrong: '+fmtSB(1500));if(fmtSB(63)!=='1:03')throw new Error('Format 63s wrong');break;}
-          case 'Focus Side-by-Side Desk':{const cls='md:flex md:gap-6 md:items-start';if(!cls.includes('md:flex'))throw new Error('Focus should use md:flex for CSS responsive');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6');break;}
-          case 'Review Dashboard Grid Wide':{const cls='space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0';if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should use xl:grid-cols-2 for CSS responsive');if(!cls.includes('space-y-4'))throw new Error('Review should stack on mobile with space-y-4');break;}
-          case 'Sidebar Timer Format':{const fmtSB=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};if(fmtSB(0)!=='0:00')throw new Error('0s format wrong');if(fmtSB(59)!=='0:59')throw new Error('59s wrong');if(fmtSB(600)!=='10:00')throw new Error('600s wrong');const run=true;const mode='work';const label=run?fmtSB(1200):'Focus';if(label!=='20:00')throw new Error('Running label should show time');const notRun=false;const label2=notRun?fmtSB(1200):'Focus';if(label2!=='Focus')throw new Error('Not running should show Focus');break;}
-          case 'Settings Flexbox Desk':{const desk=true;const expected='flex gap-4';const mobile=false;const mExpected='space-y-4';if(!expected.includes('flex'))throw new Error('Desk settings should use flexbox');if(mExpected.includes('flex'))throw new Error('Mobile settings should not use flexbox');if(!expected.includes('gap-4'))throw new Error('Desk should have gap');break;}
-          case 'Explainer Collapsible State':{const helpExp={};const toggleHelp=(k,s)=>({...s,[k]:!s[k]});const after=toggleHelp('wf',helpExp);if(!after.wf)throw new Error('Toggle should open section');const after2=toggleHelp('wf',after);if(after2.wf)throw new Error('Toggle should close section');break;}
-          case 'Explainer Desktop Always Open':{const desk=true;const helpExp={};const isOpen=desk||helpExp.wf;if(!isOpen)throw new Error('Desktop should always show explainer content');const mobile=false;const mOpen=mobile||helpExp.wf;if(mOpen)throw new Error('Mobile with closed state should hide content');break;}
-          case 'App Sidebar Nav Wide CSS':{const sidebar=document.querySelector('[data-testid="sidebar-nav"]');if(!sidebar)throw new Error('Sidebar nav element not found');const cls=sidebar.className;if(!cls.includes('xl:flex'))throw new Error('Sidebar should have xl:flex class');if(!cls.includes('xl:flex-col'))throw new Error('Sidebar should have xl:flex-col class');break;}
-          case 'App Tab Bar Mobile CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden class to hide on wide');break;}
-          case 'App Sidebar Hidden Mobile CSS':{const sidebar=document.querySelector('[data-testid="sidebar-nav"]');if(!sidebar)throw new Error('Sidebar nav element not found');const cls=sidebar.className;if(!cls.includes('hidden'))throw new Error('Sidebar should have hidden class for mobile');break;}
-          case 'App Tab Bar Hidden Wide CSS':{const tabBar=document.querySelector('[data-testid="bottom-tab-bar"]');if(!tabBar)throw new Error('Bottom tab bar element not found');const cls=tabBar.className;if(!cls.includes('xl:hidden'))throw new Error('Tab bar should have xl:hidden to hide at 1280px+');break;}
-          case 'Review 2-Col Grid CSS':{const cls='space-y-4 xl:grid xl:grid-cols-2 xl:gap-4 xl:space-y-0';if(!cls.includes('xl:grid'))throw new Error('Review should have xl:grid class');if(!cls.includes('xl:grid-cols-2'))throw new Error('Review should have xl:grid-cols-2 class');if(!cls.includes('xl:space-y-0'))throw new Error('Review should have xl:space-y-0 to reset stack on wide');break;}
-          case 'Focus Side-by-Side CSS':{const cls='md:flex md:gap-6 md:items-start';if(!cls.includes('md:flex'))throw new Error('Focus should have md:flex class for tablet+');if(!cls.includes('md:gap-6'))throw new Error('Focus should have md:gap-6 class');break;}
-          case 'ContextMenu renders all items':{const items=[{icon:'edit',label:'Edit',onClick:()=>{},variant:'default'},{icon:'focus',label:'Focus',onClick:()=>{},variant:'default',borderTop:true},{icon:'trash',label:'Delete',onClick:()=>{},variant:'danger',borderTop:true}];if(items.length!==3)throw new Error('Expected 3 items');if(items[2].variant!=='danger')throw new Error('Third item should be danger variant');if(!items[1].borderTop)throw new Error('Second item should have borderTop');const rendered=items.map(i=>({label:i.label,hasBorder:!!i.borderTop,isDanger:i.variant==='danger'}));if(rendered.length!==3)throw new Error('Rendered count mismatch');if(rendered[0].hasBorder)throw new Error('First item should not have border');break;}
-          case 'ContextMenu calls onClose on backdrop click':{let closed=false;const onClose=()=>{closed=true;};onClose();if(!closed)throw new Error('onClose not called on backdrop click');break;}
-          case 'ContextMenu item click fires callback and closes':{let clicked=false;let closed=false;const item={label:'Edit',onClick:()=>{clicked=true;},variant:'default'};const onClose=()=>{closed=true;};item.onClick();onClose();if(!clicked)throw new Error('onClick not fired');if(!closed)throw new Error('onClose not fired after click');break;}
-          case 'ContextMenu positioned mode renders at coordinates':{const position={x:150,y:200};const hasPosition=!!position;if(!hasPosition)throw new Error('Position should be truthy');const style={position:'absolute',top:position.y,left:position.x};if(style.top!==200)throw new Error('Top should be 200');if(style.left!==150)throw new Error('Left should be 150');const noPos=null;const isCentered=!noPos;if(!isCentered)throw new Error('No position should mean centered mode');break;}
-          case 'ConfirmDialog renders title and message':{const props={title:'Delete "Shopping"?',message:'This will permanently delete the checklist.',confirmLabel:'Delete',variant:'danger'};if(!props.title.includes('Delete'))throw new Error('Title missing');if(!props.message.includes('permanently'))throw new Error('Message missing');if(props.variant!=='danger')throw new Error('Variant should be danger');const infoProps={title:'Cannot Delete',message:'You need at least one checklist.',variant:'info'};if(infoProps.variant!=='info')throw new Error('Info variant wrong');break;}
-          case 'ConfirmDialog confirm button fires onConfirm':{let confirmed=false;const onConfirm=()=>{confirmed=true;};onConfirm();if(!confirmed)throw new Error('onConfirm not fired');break;}
-          case 'ConfirmDialog cancel button fires onCancel':{let cancelled=false;const onCancel=()=>{cancelled=true;};onCancel();if(!cancelled)throw new Error('onCancel not fired');break;}
-          case 'StickyHeader sticky class string':{const cls='sticky top-14 md:top-16 xl:top-0 -mx-4 md:-mx-8 z-10 glass px-4 md:px-6 py-3 md:py-4 mb-4';if(!cls.includes('sticky'))throw new Error('Should be sticky positioned');if(!cls.includes('top-14'))throw new Error('Should have top-14 for mobile');if(!cls.includes('xl:top-0'))throw new Error('Should have xl:top-0 for wide desktop');if(!cls.includes('md:top-16'))throw new Error('Should have md:top-16 for tablet');if(!cls.includes('glass'))throw new Error('Should use glass effect');break;}
-          case 'StickyHeader section headers in DOM':{const scripts=Array.from(document.querySelectorAll('script'));let defScript=null;for(const s of scripts){if(s.textContent.includes('StickyHeader')&&s.textContent.includes('data-testid="sticky-header"')){defScript=s;break;}}if(!defScript)throw new Error('Expected at least 1 sticky header in DOM, found 0');if(!defScript.textContent.includes('sticky'))throw new Error('Header element should have sticky class');if(!defScript.textContent.includes('glass'))throw new Error('Header element should have glass class');break;}
-          case '.menu-btn CSS applied':{const sheets=Array.from(document.styleSheets);let hasDisplay=false,hasTextAlign=false;for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if(r.selectorText==='.menu-btn'){const css=r.cssText;if(css.includes('display')&&css.includes('flex'))hasDisplay=true;if(css.includes('text-align'))hasTextAlign=true;}}}catch(e){}}if(!hasDisplay)throw new Error('.menu-btn should apply display:flex');if(!hasTextAlign)throw new Error('.menu-btn should apply text-align:left');break;}
-          case '.section-card CSS applied':{const sheets=Array.from(document.styleSheets);let hasBackdrop=false;for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if(r.selectorText==='.section-card'){const css=r.cssText;if(css.includes('backdrop-filter')||css.includes('-webkit-backdrop-filter'))hasBackdrop=true;}}}catch(e){}}if(!hasBackdrop)throw new Error('.section-card should apply backdrop-filter (from gcard styles)');break;}
-          case 'usePersistedState debounces writes':{
-            // Simulate debounce: 5 rapid state changes should produce only 1 write after settling
-            const writes=[];let timerRef={current:null};
-            const debouncedSet=(val)=>{clearTimeout(timerRef.current);timerRef.current=setTimeout(()=>writes.push(val),300);};
-            debouncedSet(1);debouncedSet(2);debouncedSet(3);debouncedSet(4);debouncedSet(5);
-            await delay(450);
-            if(writes.length!==1)throw new Error(`Expected 1 debounced write after 5 rapid sets, got ${writes.length}`);
-            if(writes[0]!==5)throw new Error(`Expected final value 5, got ${writes[0]}`);
-            break;}
-          case 'usePersistedState flushes on unmount':{
-            // Simulate: debounced write timer runs to completion (flush before cleanup)
-            const testKey=TEST_PREFIX+'debounce_flush';
-            let written=false;
-            let timerRef={current:null};
-            timerRef.current=setTimeout(async()=>{await S.set(testKey,'flush_val');written=true;},100);
-            await delay(250);
-            if(!written)throw new Error('Debounced write should complete within timeout');
-            const val=await S.get(testKey,'missing');
-            if(val!=='flush_val')throw new Error(`Expected 'flush_val', got '${val}'`);
-            await S.set(testKey,undefined);
-            break;}
-          case 'Modal applies anim-out class when closing':{
-            // Verify .anim-out class exists in CSS with fadeOut animation
-            const sheets=Array.from(document.styleSheets);
-            let hasAnimOut=false;
-            for(const sheet of sheets){try{const rules=Array.from(sheet.cssRules||[]);for(const r of rules){if((r.name==='fadeOut')||(r.selectorText==='.anim-out')){hasAnimOut=true;break;}}if(hasAnimOut)break;}catch(e){}}
-            if(!hasAnimOut)throw new Error('.anim-out / fadeOut keyframe not found in CSS');
-            // Verify class can be applied and removed
-            const el=document.createElement('div');el.className='gcard anim-in';
-            document.body.appendChild(el);
-            el.classList.add('anim-out');
-            if(!el.classList.contains('anim-out'))throw new Error('anim-out class not applied');
-            document.body.removeChild(el);
-            break;}
-          case 'Tab switch applies anim-in to new content':{
-            // Verify tab content wrapper uses anim-in for fade-in on switch
-            const tabContent=document.querySelector('[data-testid="tab-content"]');
-            if(!tabContent)throw new Error('Tab content wrapper with data-testid="tab-content" not found');
-            if(!tabContent.className.includes('anim-in'))throw new Error('Tab content wrapper should have anim-in class');
-            break;}
-          case 'Toast fades out before removal':{
-            // Verify toast implementation uses transition-opacity and opacity-0 for fade-out
-            const scripts=Array.from(document.querySelectorAll('script'));
-            let hasTransitionOpacity=false,hasOpacityZero=false;
-            for(const s of scripts){if(s.textContent.includes('transition-opacity'))hasTransitionOpacity=true;if(s.textContent.includes('opacity-0'))hasOpacityZero=true;}
-            if(!hasTransitionOpacity)throw new Error('Toast should use transition-opacity for fade-out');
-            if(!hasOpacityZero)throw new Error('opacity-0 class should make element invisible');
-            break;}
-          default:result.status='skipped';report.summary.skipped++;
-        }
-        if(result.status==='passed')report.summary.passed++;
+        await runWithTimeout(Promise.resolve(test.run(ctx)),test.timeoutMs||7000,test.id);
       }catch(err){
-        result.status='failed';
-        result.error=err.message;
-        report.summary.failed++;
+        status='failed';
+        error=normalizeErr(err);
       }
-      
-      result.duration=Math.round(performance.now()-startTime);
-      report.tests.push(result);
+
+      try{
+        if(typeof test.cleanup==='function')await test.cleanup(ctx);
+      }catch(err){
+        status='failed';
+        const extra=`cleanup hook: ${normalizeErr(err)}`;
+        error=error?`${error} | ${extra}`:extra;
+      }
+
+      try{await cleanupRegistry.runAll();}
+      catch(err){
+        status='failed';
+        error=error?`${error} | ${normalizeErr(err)}`:normalizeErr(err);
+      }
+
+      return{id:test.id,name:test.name,tier:test.tier,area:test.area,status,error,duration:Math.round(performance.now()-started)};
+    };
+
+    const runCaseList=async(caseList,offset,label)=>{
+      const out=[];
+      for(let i=0;i<caseList.length;i++){
+        out.push(await executeCase(caseList[i],offset+i+1,totalSteps,label));
+      }
+      return out;
+    };
+
+    try{
+      const primaryRows=await runCaseList(tests,0,'Primary');
+      report.tests=primaryRows;
+
+      const baselineT2=new Map(primaryRows.filter(r=>r.tier==='T2').map(r=>[r.id,r.status]));
+      const flakyMap=new Map();
+      const run2=await runCaseList(t2Tests,tests.length,'Consistency #2');
+      const run3=await runCaseList(t2Tests,tests.length+t2Tests.length,'Consistency #3');
+      report.consistency.runsDetail=[run2,run3];
+      for(const row of [...run2,...run3]){
+        const baseline=baselineT2.get(row.id);
+        if(baseline&&baseline!==row.status){
+          if(!flakyMap.has(row.id))flakyMap.set(row.id,{id:row.id,name:row.name});
+        }
+      }
+      report.consistency.flakyTests=[...flakyMap.values()];
+      report.consistency.stable=report.consistency.flakyTests.length===0;
+
+      report.summary={
+        passed:primaryRows.filter(r=>r.status==='passed').length,
+        failed:primaryRows.filter(r=>r.status==='failed').length,
+        skipped:primaryRows.filter(r=>r.status==='skipped').length,
+        total:primaryRows.length
+      };
+      report.tiers=summarizeByTier(tests,primaryRows);
+
+      const t0=report.tiers.T0||{failed:0,total:0,passRate:0};
+      const t1=report.tiers.T1||{failed:0,total:0,passRate:0};
+      const t2=report.tiers.T2||{failed:0,total:0,passRate:0};
+      report.gates={
+        T0:t0.total>0&&t0.failed===0,
+        T1:t1.total>0&&t1.failed===0,
+        T2:t2.total>0&&t2.passRate>=TIER_TARGETS.T2&&report.consistency.flakyTests.length===0,
+        uncategorized:invalidTierTests.length===0&&report.duplicateIds.length===0,
+        deterministic:report.consistency.stable,
+        overall:false
+      };
+      report.gates.overall=report.gates.T0&&report.gates.T1&&report.gates.T2&&report.gates.uncategorized&&report.gates.deterministic;
+
+      setProgress({current:totalSteps,total:totalSteps,step:'Final cleanup...'});
+      await delay(120);
+
+      const afterData=await S.exp();
+      for(const key of Object.keys(afterData))if(key.startsWith('__TEST__'))await S.set(key,undefined);
+      await S.clr();
+      await S.imp(originalData);
+      document.documentElement.classList.remove('dark');
+
+      setResults(report);
+      onShowToast(`${report.gates.overall?'✅':'⚠️'} Suite complete: ${report.summary.passed}/${report.summary.total} passed`);
+    }catch(err){
+      const msg=normalizeErr(err);
+      report.summary.failed=report.summary.failed+1;
+      report.tests.push({id:'suite.runtime',name:'Suite runtime execution',tier:'T0',area:'Harness',status:'failed',error:msg,duration:0});
+      setResults(report);
+      onShowToast(`❌ Test suite error: ${msg}`);
+      try{
+        await S.clr();
+        await S.imp(originalData);
+      }catch{}
+    }finally{
+      window.__PH_TEST_MODE=false;
+      setRunning(false);
     }
-    
-    setProgress({current:tests.length,total:tests.length,step:'Cleaning up...'});
-    await delay(200);
-    
-    const allData=await S.exp();
-    for(const key of Object.keys(allData)){
-      if(key.startsWith(TEST_PREFIX)){await S.set(key,undefined);}
-    }
-    document.documentElement.classList.remove('dark');
-    
-    setResults(report);
-    setRunning(false);
-    onShowToast(`✅ Tests complete: ${report.summary.passed} passed, ${report.summary.failed} failed`);
   };
-  
-  const generateReport=()=>{
-    if(!results)return'';
-    let report=`
-╔═══════════════════════════════════════════════════════════════╗
-║          PRODUCTIVITY HUB - TEST REPORT                       ║
-║                    Version ${results.version}                            ║
-╚═══════════════════════════════════════════════════════════════╝
 
-📅 Date: ${new Date(results.timestamp).toLocaleString()}
-🌐 Browser: ${results.browser.slice(0,60)}...
+  const generateReport=()=>results?buildReportText(results):'';
+  const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('Report copied to clipboard');};
+  const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('Report downloaded');};
 
-═══════════════════════════════════════════════════════════════
-                         SUMMARY
-═══════════════════════════════════════════════════════════════
+  const suiteCounts=suiteManifest.counts;
 
-  ✅ Passed:  ${results.summary.passed}
-  ❌ Failed:  ${results.summary.failed}
-  ⏭️  Skipped: ${results.summary.skipped}
-  ━━━━━━━━━━━━━━━━━━━
-  📊 Total:   ${results.tests.length}
-
-═══════════════════════════════════════════════════════════════
-                      DETAILED RESULTS
-═══════════════════════════════════════════════════════════════
-`;
-    const categories={};
-    results.tests.forEach(t=>{if(!categories[t.category])categories[t.category]=[];categories[t.category].push(t);});
-    for(const[cat,tests]of Object.entries(categories)){
-      report+=`\n┌─ ${cat} ${'─'.repeat(Math.max(0,55-cat.length))}┐\n`;
-      tests.forEach(t=>{
-        const icon=t.status==='passed'?'✅':t.status==='failed'?'❌':'⏭️';
-        report+=`│ ${icon} ${t.status.toUpperCase().padEnd(7)} ${t.name.padEnd(35)} ${t.duration}ms`;
-        if(t.error)report+=`\n│    └─ Error: ${t.error}`;
-        report+='\n';
-      });
-      report+=`└${'─'.repeat(60)}┘\n`;
-    }
-    report+=`\n═══════════════════════════════════════════════════════════════\n                         END OF REPORT\n═══════════════════════════════════════════════════════════════\nGenerated by Productivity Hub v${APP_VERSION}\n`;
-    return report;
-  };
-  
-  const copyReport=()=>{navigator.clipboard.writeText(generateReport());onShowToast('📋 Report copied!');};
-  const downloadReport=()=>{dlFile(generateReport(),`productivity-hub-test-report-${new Date().toISOString().split('T')[0]}.txt`,'text/plain');onShowToast('📥 Report downloaded!');};
-  
   return(
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="test-runner-root">
       <div className="gcard rounded-2xl p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-2xl bg-lavender-100 flex items-center justify-center"><I.Test s={24} c="text-lavender-400"/></div>
-          <div><h3 className="font-bold text-bark-600 dark:text-sand-100">App Test Suite</h3><p className="text-xs text-bark-400 dark:text-sand-300">Validate all features are working correctly</p></div>
+          <div>
+            <h3 className="font-bold text-bark-600 dark:text-sand-100">Tiered Test Suite</h3>
+            <p className="text-xs text-bark-400 dark:text-sand-300">Suite {SUITE_VERSION} • Baseline {BASELINE_DATE} • file:// deterministic gate</p>
+          </div>
         </div>
+
         <div className="bg-terracotta-50 dark:bg-terracotta-400/10 border border-terracotta-200 dark:border-terracotta-400/30 rounded-xl p-3 mb-4">
-          <div className="flex items-start gap-2"><span className="text-lg">⚠️</span><div><p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Alpha Feature</p><p className="text-xs text-bark-500 dark:text-sand-200">Tests use isolated data and clean up automatically. Your data is safe.</p></div></div>
+          <div className="flex items-start gap-2">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <p className="text-sm font-semibold text-terracotta-600 dark:text-terracotta-300">Modernized In-App Runner</p>
+              <p className="text-xs text-bark-500 dark:text-sand-200">T0/T1 require 100%, T2 requires ≥90% and zero flaky rerun variance across 3 runs.</p>
+            </div>
+          </div>
         </div>
+
         {running?(
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm"><span className="text-bark-500 dark:text-sand-200">{progress.step}</span><span className="font-semibold text-sage-500">{progress.current}/{progress.total}</span></div>
-            <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden"><div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${(progress.current/progress.total)*100}%`}}/></div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-bark-500 dark:text-sand-200">{progress.step}</span>
+              <span className="font-semibold text-sage-500">{progress.current}/{progress.total}</span>
+            </div>
+            <div className="h-2 bg-sand-200 dark:bg-bark-600 rounded-full overflow-hidden">
+              <div className="h-full bg-sage-400 rounded-full transition-all duration-300" style={{width:`${progress.total?((progress.current/progress.total)*100):0}%`}}/>
+            </div>
           </div>
         ):(
-          <button onClick={runTests} className="w-full py-3 bg-lavender-400 hover:bg-lavender-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><I.Play s={20}/>Run All Tests</button>
+          <button onClick={runTests} className="w-full py-3 bg-lavender-400 hover:bg-lavender-500 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><I.Play s={20}/>Run Tiered Suite</button>
         )}
       </div>
+
       {results&&(
-        <div className="gcard rounded-2xl p-5">
-          <h4 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📊 Test Results</h4>
-          <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="gcard rounded-2xl p-5 space-y-4">
+          <h4 className="font-bold text-bark-600 dark:text-sand-100">Test Results</h4>
+
+          <div className="grid grid-cols-3 gap-3">
             <div className="bg-sage-100 dark:bg-sage-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-sage-600 dark:text-sage-300">{results.summary.passed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Passed</div></div>
             <div className="bg-terracotta-100 dark:bg-terracotta-400/20 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-terracotta-500 dark:text-terracotta-300">{results.summary.failed}</div><div className="text-xs text-bark-500 dark:text-sand-200">Failed</div></div>
-            <div className="bg-sand-200 dark:bg-bark-500/30 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-bark-500 dark:text-sand-200">{results.summary.skipped}</div><div className="text-xs text-bark-500 dark:text-sand-200">Skipped</div></div>
+            <div className="bg-sand-200 dark:bg-bark-500/30 rounded-xl p-3 text-center"><div className="text-2xl font-bold text-bark-500 dark:text-sand-200">{results.summary.total}</div><div className="text-xs text-bark-500 dark:text-sand-200">Total</div></div>
           </div>
-          {results.summary.failed>0&&(<div className="bg-terracotta-50 dark:bg-terracotta-400/10 rounded-xl p-3 mb-4"><h5 className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-2">❌ Failed Tests:</h5><ul className="space-y-1">{results.tests.filter(t=>t.status==='failed').map((t,i)=>(<li key={i} className="text-xs text-bark-500 dark:text-sand-200">• {t.name}: <span className="text-terracotta-500">{t.error}</span></li>))}</ul></div>)}
+
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            {TIER_ORDER.map(tier=>{
+              const t=results.tiers[tier]||{passed:0,total:0,failed:0,passRate:0};
+              return <div key={tier} className="section-card"><div className="font-bold text-bark-600 dark:text-sand-100">{tier}</div><div className="text-bark-500 dark:text-sand-200">{t.passed}/{t.total} passed</div><div className="text-bark-400/70 dark:text-sand-300/70">{Math.round((t.passRate||0)*100)}%</div></div>;
+            })}
+          </div>
+
+          <div className={`rounded-xl p-3 border ${results.gates.overall?'bg-sage-50 dark:bg-sage-400/10 border-sage-300 dark:border-sage-500/40':'bg-terracotta-50 dark:bg-terracotta-400/10 border-terracotta-300 dark:border-terracotta-500/40'}`}>
+            <div className="text-sm font-semibold text-bark-600 dark:text-sand-100">Gate Status: {results.gates.overall?'PASS':'FAIL'}</div>
+            <div className="text-xs text-bark-500 dark:text-sand-200 mt-1">T0 {results.gates.T0?'✓':'✗'} • T1 {results.gates.T1?'✓':'✗'} • T2 {results.gates.T2?'✓':'✗'} • Determinism {results.gates.deterministic?'✓':'✗'} • Flaky {results.consistency.flakyTests.length}</div>
+          </div>
+
+          {results.summary.failed>0&&(
+            <div className="bg-terracotta-50 dark:bg-terracotta-400/10 rounded-xl p-3">
+              <h5 className="font-semibold text-terracotta-600 dark:text-terracotta-300 text-sm mb-2">Failed Tests</h5>
+              <ul className="space-y-1">
+                {results.tests.filter(t=>t.status==='failed').map(t=><li key={t.id} className="text-xs text-bark-500 dark:text-sand-200">• <span className="font-semibold">{t.id}</span>: {t.error}</li>)}
+              </ul>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button onClick={copyReport} className="flex-1 py-2.5 bg-ocean-100 text-ocean-500 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Copy s={16}/>Copy Report</button>
             <button onClick={downloadReport} className="flex-1 py-2.5 bg-sage-100 text-sage-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-1"><I.Download s={16}/>Download</button>
           </div>
         </div>
       )}
+
       <div className="section-card">
-        <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">📋 Tests Included:</h4>
+        <h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-2">Coverage Model</h4>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-bark-500 dark:text-sand-200">
-          <div>• IndexedDB Storage</div><div>• CRUD Operations</div><div>• Export/Import</div><div>• Theme Switching</div><div>• Focus Timer Settings</div><div>• Utility Functions</div><div>• Data Validation</div><div>• Streak Heatmap</div>
+          <div>• Total tests: {suiteCounts.total}</div><div>• T0 Contract/Boot: {suiteCounts.T0}</div>
+          <div>• T1 Core Workflow: {suiteCounts.T1}</div><div>• T2 UX/Quality: {suiteCounts.T2}</div>
+          <div>• Suite version: {SUITE_VERSION}</div><div>• Baseline date: {BASELINE_DATE}</div>
         </div>
       </div>
     </div>
   );
+};
+
+const TestRunner=(props)=>{
+  const[RunnerComp,setRunnerComp]=useState(()=>peekTestRunner());
+  useEffect(()=>{
+    let cancelled=false;
+    if(!RunnerComp){
+      getTestRunner().then(comp=>{if(!cancelled)setRunnerComp(()=>comp);}).catch(()=>{});
+    }
+    return()=>{cancelled=true;};
+  },[RunnerComp]);
+  if(!RunnerComp)return<div className="section-card" data-testid="test-runner-loading">Loading test suite...</div>;
+  return React.createElement(RunnerComp,props);
 };
 
 // Isolated FocusTimer Component with useReducer
@@ -1231,14 +1994,17 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
   }).current;
   
   const timerDone=useRef(()=>{
+    const isTestMode=!!window.__PH_TEST_MODE;
     dispatch({type:'SET_RUN',run:false});
-    if('vibrate'in navigator)navigator.vibrate([200,100,200]);
-    try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=700;o.start();o.stop(c.currentTime+0.4);}catch{}
+    if(!isTestMode){
+      if('vibrate'in navigator)navigator.vibrate([200,100,200]);
+      try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=700;o.start();o.stop(c.currentTime+0.4);}catch{}
+    }
     if(mode==='work'){
       onComplete(mode,activeTaskId,()=>switchMode(onUpdatePoms()%4===0?'longBreak':'shortBreak'));
     }else{
       switchMode('work');
-      notify('☀️ Break Complete!','Ready to focus again?');
+      if(!isTestMode)notify('☀️ Break Complete!','Ready to focus again?');
     }
   }).current;
   
@@ -1267,7 +2033,7 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
         <div className="text-7xl md:text-8xl font-extrabold text-center mb-3 md:mb-5 text-white drop-shadow-sm tracking-tight timer-display">{fmt(left)}</div>
         {activeTaskText&&<div className="text-center text-white/90 text-sm mb-4 font-medium sel">🎯 {activeTaskText}</div>}
         <div className="flex justify-center gap-3">
-          <button onClick={()=>{if(!run)reqNotifyPerm();dispatch({type:'TOGGLE_RUN'});}} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
+          <button onClick={()=>dispatch({type:'TOGGLE_RUN'})} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
           <button onClick={()=>switchMode(mode)} aria-label="Reset timer" className="p-3 bg-white/30 rounded-2xl text-white"><I.Reset s={24}/></button>
         </div>
         <div className="flex items-center justify-center gap-2 mt-4"><span className="text-sm text-white/80 font-medium">Keep awake</span><button onClick={()=>dispatch({type:'SET_WAKE',wake:!wake})} aria-label={wake?'Disable keep awake':'Enable keep awake'} className={`w-11 h-6 rounded-full transition-colors p-0.5 ${wake?'bg-white/40':'bg-black/20'}`}><div className={`w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${wake?'translate-x-5':'translate-x-0'}`}/></button></div>
@@ -1275,7 +2041,28 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
     </div>
   );
 },(prev,next)=>prev.tSet===next.tSet&&prev.activeTaskId===next.activeTaskId&&prev.activeTaskText===next.activeTaskText&&prev.onTick===next.onTick);
-
+window.PH_BLOCK_B=Object.freeze({
+  Heatmap,Chart,TestRunner,FocusTimer,
+  getTestRunner,peekTestRunner,createTestRunnerModel,
+  __resetTestRunnerCache:__resetTestRunnerCacheForTests,
+  __getTestRunnerCacheStats
+});
+})();
+/* == END: Block B == */
+</script>
+<script type="text/babel">
+/* == BEGIN: Block C == */
+(()=>{
+const PH_BLOCK_A_C=window.PH_BLOCK_A;
+const PH_BLOCK_B_C=window.PH_BLOCK_B;
+if(!PH_BLOCK_A_C||!PH_BLOCK_B_C)throw new Error('Block A/B exports missing. Cannot initialize Block C.');
+const{
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,StickyHeader,LinkPicker,EditModal,AboutModal
+}=PH_BLOCK_A_C;
+const{Heatmap,Chart,TestRunner,FocusTimer,getTestRunner,peekTestRunner}=PH_BLOCK_B_C;
 // useAppData — shared persisted data state and CRUD handlers (v16.2 refactor Step 1)
 function useAppData(){
   // Data
@@ -1820,12 +2607,33 @@ function SettingsSection({desk}){
   const[moreSub,setMoreSub]=useState('settings');
   const[settExp,setSettExp]=useState({});
   const[helpExp,setHelpExp]=useState({});
+  const[testRunnerComp,setTestRunnerComp]=useState(()=>peekTestRunner());
+  const[isTestRunnerLoading,setIsTestRunnerLoading]=useState(false);
+  const[testRunnerError,setTestRunnerError]=useState(null);
   const toggleHelp=(k)=>setHelpExp(s=>({...s,[k]:!s[k]}));
+  const ensureTestRunnerLoaded=useCallback(async()=>{
+    if(testRunnerComp||isTestRunnerLoading)return;
+    setTestRunnerError(null);
+    setIsTestRunnerLoading(true);
+    try{
+      const runner=await getTestRunner();
+      setTestRunnerComp(()=>runner);
+    }catch(err){
+      setTestRunnerError(err&&err.message?err.message:'Failed to load test suite');
+    }finally{
+      setIsTestRunnerLoading(false);
+    }
+  },[testRunnerComp,isTestRunnerLoading]);
+  const onMoreSubSelect=useCallback((id)=>{
+    setMoreSub(id);
+    if(id==='test')ensureTestRunnerLoaded();
+  },[ensureTestRunnerLoaded]);
 
   const themeCard=<div className="section-card"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Sun s={20} c="text-terracotta-400"/>Theme</h3><div className="flex gap-2">{[{id:'light',i:<I.Sun s={18}/>,l:'Light'},{id:'dark',i:<I.Moon s={18}/>,l:'Dark'},{id:'system',i:<I.Phone s={18}/>,l:'System'}].map(t=><button key={t.id} onClick={()=>setTheme(t.id)} className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 ${theme===t.id?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{t.i}{t.l}</button>)}</div></div>;
   const timerCard=<div className="section-card"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100 flex items-center gap-2"><I.Focus s={20} c="text-sage-500"/>Timer Duration</h3><div className="space-y-2">{Object.entries(PRESETS).map(([k,p])=><button key={k} onClick={()=>setPreset(k)} className={`w-full py-3 rounded-xl font-semibold transition-all text-left px-4 ${preset===k?'bg-sage-400 text-white':'bg-sand-100 dark:bg-bark-600 text-bark-600 dark:text-sand-100'}`}>{p.l} ({p.work}/{p.shortBreak}/{p.longBreak})</button>)}</div>{preset==='custom'&&<div className="mt-4 space-y-3">{[{k:'work',l:'Focus (min)'},{k:'shortBreak',l:'Short Break'},{k:'longBreak',l:'Long Break'}].map(({k,l})=><div key={k} className="flex items-center justify-between"><span className="text-bark-500/70 dark:text-sand-300 font-medium">{l}</span><input type="number" min="1" max="120" value={customT[k]} onChange={e=>setCustomT({...customT,[k]:parseInt(e.target.value)||1})} className="w-20 bg-sand-100 dark:bg-bark-600 rounded-xl px-3 py-2 text-center text-bark-600 dark:text-sand-100 font-semibold"/></div>)}</div>}</div>;
   const dataCard=<div className="section-card"><h3 className="font-bold mb-3 text-bark-600 dark:text-sand-100">💾 Data</h3><div className="space-y-2"><button onClick={async()=>{const data=await S.exp();dlFile(JSON.stringify(data,null,2),`backup-${new Date().toISOString().split('T')[0]}.json`,'application/json');showT('💾 Saved!');}} className="w-full py-3 bg-ocean-100 text-ocean-400 rounded-xl font-semibold">📤 Export Backup</button><label className="w-full py-3 bg-sage-100 text-sage-600 rounded-xl font-semibold flex items-center justify-center cursor-pointer">📥 Import Backup<input type="file" accept=".json" onChange={async e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{try{await S.imp(JSON.parse(ev.target.result));showT('✅ Done!');setTimeout(()=>location.reload(),1000);}catch{showT('❌ Error');}};r.readAsText(f);}} className="hidden"/></label><button onClick={async()=>{if(confirm('Reset all data?')){await S.clr();location.reload();}}} className="w-full py-3 bg-terracotta-100 text-terracotta-500 rounded-xl font-semibold">🗑 Reset All</button></div></div>;
-  const installCard=<div className="section-card"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div></div>;
+  const installScopeNote=<div className="bg-sand-100 dark:bg-bark-600/50 rounded-xl p-3"><p className="text-xs text-bark-500 dark:text-sand-200 leading-relaxed"><span className="font-semibold text-bark-600 dark:text-sand-100">Note:</span> `file://` mode uses a limited blob service worker fallback. For reliable install and offline support, deploy on HTTPS with `manifest.json` and `sw.js`.</p></div>;
+  const installCard=<div className="section-card"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">📲 Install as App</h3><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div>{installScopeNote}</div></div>;
   const deskModeCard=<div className="section-card"><h3 className="font-bold text-bark-600 dark:text-sand-100 mb-3">🖥️ Desktop Mode</h3><p className="text-sm text-bark-500 dark:text-sand-200 mb-2">At 768px+ the app uses tablet layout. At 1280px+ a full desktop layout with sidebar.</p><div className="space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div></div>;
 
   const helpSection=(key,title,content)=>(
@@ -1840,7 +2648,7 @@ function SettingsSection({desk}){
 
   return(
     <div className="space-y-4">
-      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>setMoreSub(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
+      <div className="flex gap-2 md:gap-3 overflow-x-auto hide-sb">{[{id:'settings',l:'⚙️ Settings'},{id:'help',l:'📖 Explainer'},{id:'test',l:'🧪 Test'}].map(t=><button key={t.id} onClick={()=>onMoreSubSelect(t.id)} className={`px-4 md:px-5 py-2 md:py-2.5 rounded-2xl whitespace-nowrap font-semibold transition-all md:text-base more-sub-btn ${moreSub===t.id?'bg-sage-400 text-white soft-shadow':'gcard text-bark-600 dark:text-sand-100'}`}>{t.l}</button>)}</div>
       {moreSub==='settings'&&(
         desk?(
         <div className="flex gap-4">
@@ -1850,7 +2658,7 @@ function SettingsSection({desk}){
         ):(
         <div className="space-y-4">
           {themeCard}{timerCard}{dataCard}
-          <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div></div>}</div>
+          <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,pwa:!s.pwa}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">📲 Install as App</h3>{settExp.pwa?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.pwa&&<div className="px-4 pb-4 space-y-2"><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🍎 iOS:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Safari → Share → Add to Home Screen</span></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">🤖 Android:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome → ⋮ → Add to Home screen</span></div><div className="bg-lavender-50 dark:bg-bark-600/50 rounded-xl p-3"><span className="font-semibold text-bark-600 dark:text-sand-100">💻 Desktop:</span><span className="text-sm text-bark-500 dark:text-sand-200 ml-2">Chrome/Edge → Install icon in URL bar</span></div>{installScopeNote}</div>}</div>
           <div className="gcard rounded-2xl overflow-hidden"><button onClick={()=>setSettExp(s=>({...s,desk:!s.desk}))} className="w-full p-4 flex items-center justify-between"><h3 className="font-bold text-bark-600 dark:text-sand-100">🖥️ Desktop Mode</h3>{settExp.desk?<I.Up s={16} c="text-bark-400 dark:text-sand-300"/>:<I.Down s={16} c="text-bark-400 dark:text-sand-300"/>}</button>{settExp.desk&&<div className="px-4 pb-4 space-y-2"><p className="text-sm text-bark-500 dark:text-sand-200 mb-1">At 1280px+, the app uses a desktop-optimized layout.</p><div className="bg-sage-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Layouts</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Sidebar replaces bottom tab bar</li><li>• Focus: timer + queue side-by-side</li><li>• Clarify/Confirm: 2-column grids</li><li>• Review: 2-column dashboard</li></ul></div><div className="bg-ocean-50 dark:bg-bark-600/50 rounded-xl p-3"><h4 className="font-semibold text-bark-600 dark:text-sand-100 text-sm mb-1">Interactions</h4><ul className="text-xs text-bark-500 dark:text-sand-200 space-y-0.5"><li>• Right-click → action menu on any item</li><li>• Drag-and-drop in Focus Queue & matrix</li><li>• Live timer countdown in Focus tab label</li></ul></div></div>}</div>
         </div>
         )
@@ -1924,11 +2732,39 @@ function SettingsSection({desk}){
           </div>
         </div>
       )}
-      {moreSub==='test'&&<><TestRunner onShowToast={showT}/><div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div></>}
+      {moreSub==='test'&&(
+        <>
+          {isTestRunnerLoading&&<div className="section-card text-sm text-bark-500 dark:text-sand-200" data-testid="test-runner-loading">Loading test suite...</div>}
+          {!isTestRunnerLoading&&testRunnerError&&<div className="section-card text-sm text-terracotta-500 dark:text-terracotta-300" data-testid="test-runner-error">App failed to load tests: {testRunnerError}</div>}
+          {!isTestRunnerLoading&&testRunnerComp&&React.createElement(testRunnerComp,{onShowToast:showT})}
+          {!isTestRunnerLoading&&!testRunnerComp&&!testRunnerError&&<div className="section-card text-sm text-bark-500 dark:text-sand-200" data-testid="test-runner-loading">Loading test suite...</div>}
+          <div className="text-center pt-4"><span className="text-xs font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-3 py-1 rounded-full">v{APP_VERSION}</span></div>
+        </>
+      )}
     </div>
   );
 }
-
+window.PH_BLOCK_C=Object.freeze({
+  useAppData,AppDataCtx,AppDataProv,useApp,
+  CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection
+});
+})();
+/* == END: Block C == */
+</script>
+<script type="text/babel">
+/* == BEGIN: Block D == */
+(()=>{
+const PH_BLOCK_A_D=window.PH_BLOCK_A;
+const PH_BLOCK_C_D=window.PH_BLOCK_C;
+if(!PH_BLOCK_A_D||!PH_BLOCK_C_D)throw new Error('Block A/C exports missing. Cannot initialize Block D.');
+const{
+  useState,useEffect,useRef,useMemo,useCallback,createContext,useContext,
+  APP_VERSION,initDB,S,uid,notify,reqNotifyPerm,PRESETS,QUADS,CATS,shareItem,genICS,dlFile,
+  I,Empty,ThemeCtx,ThemeProv,useDesk,useWide,usePersistedState,useAnimatedClose,
+  Subtasks,QuickAdd,SelCheck,BulkActionBar,ContextMenu,ConfirmDialog,StickyHeader,LinkPicker,EditModal,AboutModal
+}=PH_BLOCK_A_D;
+const{AppDataProv,useApp,CaptureSection,ClarifySection,FocusSection,ConfirmSection,ReviewSection,SettingsSection}=PH_BLOCK_C_D;
+const STICKY_HEADER_TAB_IDS=new Set(['notes','todos','focus','lists','review']);
 // Main App — thin layout shell (sidebar/tab-bar + content area) (v16.2 refactor Step 9)
 function App(){
   const desk=useDesk();
@@ -1989,6 +2825,8 @@ function App(){
   const cancelBulkDelete=()=>setBulkConfirm(null);
   const[linkPicker,setLinkPicker]=useState(null);
   const tabs=[{id:'notes',Ic:I.Notes,l:'Capture'},{id:'todos',Ic:I.Check,l:'Clarify'},{id:'focus',Ic:I.Focus,l:'Focus'},{id:'lists',Ic:I.List,l:'Confirm'},{id:'review',Ic:I.Review,l:'Review'},{id:'more',Ic:I.Settings,l:'More'}];
+  const hasStickyHeaderTab=STICKY_HEADER_TAB_IDS.has(tab);
+  const mainContentTopPadClass=hasStickyHeaderTab?'pt-0 md:pt-0 xl:pt-0':'pt-4 md:pt-6 xl:pt-6';
   const bulkLabel=bulkConfirm?(bulkConfirm.section==='todos'?'task':bulkConfirm.section==='lists'?'item':'note'):null;
   const bulkCount=bulkConfirm?bulkConfirm.ids.size:0;
 
@@ -2023,7 +2861,7 @@ function App(){
           <h1 className="text-xl md:text-2xl font-extrabold text-center text-bark-600 dark:text-sand-100">Productivity Hub <span className="text-xs md:text-sm font-normal text-lavender-400 bg-lavender-100 dark:bg-lavender-400/20 px-2 py-0.5 rounded-full ml-1">α</span></h1>
           <button onClick={()=>setShowHelp(true)} aria-label="Show help" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-bark-400 dark:text-sand-300 hover:text-sage-500 transition-colors"><I.Help s={26}/></button>
         </div>
-        <div className="px-4 md:px-8 xl:px-8 py-4 md:py-6 xl:py-6 pb-28 md:pb-32 xl:pb-6 max-w-lg md:max-w-5xl xl:max-w-none mx-auto">
+        <div data-testid="main-content-wrap" className={`px-4 md:px-8 xl:px-8 ${mainContentTopPadClass} pb-28 md:pb-32 xl:pb-6 max-w-lg md:max-w-5xl xl:max-w-none mx-auto`}>
           <div key={tab} className="anim-in" data-testid="tab-content">
             {tab==='focus'&&<div className="max-w-2xl mx-auto xl:max-w-none"><FocusSection wide={wide} desk={desk} onTimerTick={onTimerTick}/></div>}
             {tab==='lists'&&<ConfirmSection wide={wide} desk={desk} selMode={selMode} selSection={selSection} selIds={selIds} toggleSelId={toggleSelId} enterSelMode={enterSelMode} exitSelMode={exitSelMode} setEdit={setEdit}/>}
@@ -2059,7 +2897,38 @@ function App(){
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>);
+class AppErrorBoundary extends React.Component{
+  constructor(props){super(props);this.state={err:null};}
+  static getDerivedStateFromError(err){return{err};}
+  componentDidCatch(err){
+    window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render failed: ${err?.message||err}`);
+  }
+  render(){
+    if(this.state.err){
+      const msg=this.state.err?.message||String(this.state.err);
+      return(
+        <div style={{maxWidth:'760px',margin:'48px auto',padding:'20px',border:'1px solid #e5e7eb',borderRadius:'12px',background:'#fff',fontFamily:'Nunito,sans-serif',lineHeight:'1.5'}}>
+          <h2 style={{margin:'0 0 8px'}}>App failed to render</h2>
+          <p style={{margin:'0 0 8px'}}>A runtime error occurred while rendering React components.</p>
+          <p style={{margin:0,color:'#b91c1c',fontFamily:'monospace',fontSize:'12px',whiteSpace:'pre-wrap'}}>{msg}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+try{
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <AppErrorBoundary>
+      <ThemeProv><AppDataProv><App/></AppDataProv></ThemeProv>
+    </AppErrorBoundary>
+  );
+}catch(err){
+  window.__PH_BOOT_FAIL&&window.__PH_BOOT_FAIL(`Render bootstrap failed: ${err.message||err}`);
+  throw err;
+}
+})();
+/* == END: Block D == */
 </script>
 </body>
 </html>
