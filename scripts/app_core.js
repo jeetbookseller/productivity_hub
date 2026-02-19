@@ -1,6 +1,6 @@
 // Core runtime extracted from productivity_hub.html
 // App Version
-const APP_VERSION = '16.11';
+const APP_VERSION = '17.0';
 
 // IndexedDB Storage
 const DB_NAME='ProductivityHub';
