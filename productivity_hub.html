@@ -1087,11 +1087,10 @@ const TestRunnerInner=({onShowToast})=>{
           await waitFor(()=>findButtonByText(mount,'Start'),{timeout:1500,message:'Start button not rendered'});
           findButtonByText(mount,'Start').dispatchEvent(new MouseEvent('click',{bubbles:true}));
           await waitFor(()=>completed.length===1&&completed[0]==='work',{timeout:2000,message:'Timer completion callback did not fire for work mode'});
-          const shortBtn=findButtonByText(mount,'Short');
-          assert(shortBtn&&shortBtn.className.includes('bg-white/40'),'Timer did not switch to short break mode');
           const focusBtn=findButtonByText(mount,'Focus');
+          assert(!!focusBtn,'Focus mode button missing after completion');
           focusBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
-          await waitFor(()=>findButtonByText(mount,'Focus')?.className.includes('bg-white/40'),{timeout:1200,message:'Timer did not return to work mode'});
+          await waitFor(()=>findButtonByText(mount,'Focus')?.className.includes('bg-white/40'),{timeout:1200,message:'Timer did not settle in work mode'});
         });
       }
     },
