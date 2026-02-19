@@ -146,7 +146,7 @@ State:      lists, todos, reminders, notes, focus, activeF, preset, customT, tSe
             poms, met, fHist, dHist, toast, tab, selList
 Setters:    setLists, setTodos, setReminders, setNotes, setFocus, setActiveF,
             setPreset, setCustomT, setPoms, setMet, setFHist, setDHist, setTab, setSelList
-Handlers:   handleTimerComplete, handleUpdatePoms, clearCompleted, addFocus,
+Handlers:   handleTimerComplete, clearCompleted, addFocus,
             doneFocus, doneList, doneTodo, undoneTodo, deleteTodo, linkTask,
             unlinkTask, openLinkedList, createAndLink, deleteListItem,
             deleteReminder, updateListName, deleteList, saveItem, seedSampleData
@@ -177,6 +177,7 @@ Removed: arc, reminders, Swipe component
 | `ReviewSection` | Weekly stats, heatmap, matrix overview, insights |
 | `SettingsSection` | Settings/help/test tabs and collapsible behavior |
 | `FocusTimer` | Isolated Pomodoro timer (`React.memo` + persisted runtime state + elapsed-time accounting) |
+| `App` nav timer sync | App-level `syncFromStorage` keeps sidebar/bottom-tab timer labels current when Focus view is unmounted |
 | `Heatmap` | 13-week streak heatmap visualization |
 | `ContextMenu` | Unified menu component (modal or positioned mode) |
 | `ConfirmDialog` | Unified confirm dialog with danger/info variants |

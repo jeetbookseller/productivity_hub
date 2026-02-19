@@ -18,6 +18,7 @@
 
 ### Release Focus
 - Completed timer reliability + logging remediation (TDD-driven):
+  - App-level nav sync keeps sidebar/bottom-tab countdown live while Focus tab is inactive (reads persisted `focusTimerState`)
   - Focus timer runtime now persists across remounts/tab switches via `focusTimerState`
   - Focus completion logs pomodoros immediately (not gated on break completion)
   - Focus minutes are logged from actual elapsed duration (floored minutes), not preset length
