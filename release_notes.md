@@ -49,6 +49,7 @@
 - Suite baseline bumped:
   - suite version `2.1.0`
   - baseline date `2026-02-19`
+  - latest deterministic gate report: `45/45` passing, overall `PASS`
 - Documentation sync completed:
   - `README.md`, `technical_details.md`, and `release_notes.md` aligned to `v17.0-Alpha`
 

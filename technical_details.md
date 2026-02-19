@@ -214,6 +214,7 @@ Removed: arc, reminders, Swipe component
   - Suite version: `2.1.0`
   - Baseline date: `2026-02-19`
   - Total tests: `45` (`T0=11`, `T1=15`, `T2=19`)
+  - Latest recorded gate run: `45/45` pass, `0` flaky tests, overall gate `PASS`
 
 ### CSS Architecture
 ```text
