@@ -2013,7 +2013,13 @@ const FocusTimer=React.memo(({tSet,onComplete,activeTaskId,activeTaskText,onTick
   const timerStoreKey='focusTimerState';
   const[state,setState]=usePersistedState(timerStoreKey,{mode:'work',left:getDurationSec('work'),run:false,wake:true,endAt:null,startAt:null,elapsed:0});
   const{mode,left,run,wake,endAt,startAt,elapsed}=state;
+  const stateRef=useRef(state);
   const wakeRef=useRef(null);
+
+  useEffect(()=>{stateRef.current=state;},[state]);
+
+  // Ensure latest timer state is flushed even if unmount happens before debounced storage write.
+  useEffect(()=>()=>{S.set(timerStoreKey,stateRef.current);},[timerStoreKey]);
 
   useEffect(()=>{
     setState(prev=>{
