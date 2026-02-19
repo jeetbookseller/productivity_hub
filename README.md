@@ -8,6 +8,10 @@ Technical details: https://jeetbookseller.github.io/productivity_hub/technical_d
 
 Release notes: https://jeetbookseller.github.io/productivity_hub/release_notes.md
 
+### Local Run + Install Note
+- `productivity_hub.html` is not standalone. Keep these relative files together: `styles/app.css`, `scripts/pwa_setup.js`, `scripts/app_core.js`.
+- `file://` mode uses a blob-based PWA fallback with limited service worker scope. For reliable install/offline behavior, deploy over HTTPS with real `manifest.json` and `sw.js`.
+
 ### Full Feature Set
 - Capture (Bullet Journal + 3-dot NoteMenu with Copy Text + right-click + bulk select + copy+strike to Clarify + auto-clear) -> Clarify (Eisenhower + 3-dot TaskMenu + right-click + tap done/undone + drag desktop) -> Focus (Pomodoro + Queue + side-by-side tablet+ + sidebar timer) -> Confirm (Checklists + 3-dot edit+delete + right-click + tap-done + 2-col desktop) -> Review (Stats + Streak Heatmap + Insights + 2-col dashboard wide)
 - Unified: 3-dot + right-click on all items, header checkbox (left) for bulk select, no long-press, no swipe
