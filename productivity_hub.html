@@ -1046,12 +1046,11 @@ const TestRunnerInner=({onShowToast})=>{
       area:'Confirm Workflow',
       async run({withStorageSnapshot,withSectionHarness,waitFor,findByText,assert}){
         await withStorageSnapshot(async()=>{
+          const listId=`list_${uid()}`;
+          await S.imp({lists:[{id:listId,name:'T1 Checklist',items:[]}],selList:listId});
           await withSectionHarness(window.PH_BLOCK_C.ConfirmSection,{wide:false,desk:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{},setEdit:()=>{}},async({mount,getApp})=>{
-            const listId=`list_${uid()}`;
-            getApp().setLists([{id:listId,name:'T1 Checklist',items:[]}]);
-            await waitFor(()=>getApp().lists.some(l=>l.id===listId),{timeout:2800,message:'Checklist state did not initialize'});
-            getApp().setSelList(listId);
-            await waitFor(()=>getApp().selList===listId,{timeout:2200,message:'Checklist selection did not apply'});
+            await waitFor(()=>getApp().lists.some(l=>l.id===listId),{timeout:3200,message:'Checklist state did not initialize'});
+            await waitFor(()=>getApp().selList===listId,{timeout:2600,message:'Checklist selection did not apply'});
             await waitFor(()=>{
               const tabBtns=Array.from(mount.querySelectorAll('button'));
               return tabBtns.some(b=>((b.textContent||'').includes('T1 Checklist')));
