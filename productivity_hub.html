@@ -2291,7 +2291,7 @@ function useAppData(){
     // Tab/nav
     tab,setTab,selList,setSelList,
     // Handlers
-    handleTimerComplete,handleUpdatePoms,clearCompleted,
+    handleTimerComplete,clearCompleted,
     addFocus,doneFocus,doneList,doneTodo,undoneTodo,deleteTodo,
     linkTask,unlinkTask,openLinkedList,createAndLink,
     deleteListItem,deleteReminder,updateListName,deleteList,saveItem,
@@ -2498,7 +2498,7 @@ function ClarifySection({wide,desk,selMode,selSection,selIds,toggleSelId,enterSe
 
 // FocusSection — extracted from rFocus() (v16.2 refactor Step 5)
 function FocusSection({wide,desk,onTimerTick}){
-  const{tSet,poms,met,focus,setFocus,activeF,setActiveF,handleTimerComplete,handleUpdatePoms,doneFocus}=useApp();
+  const{tSet,poms,met,focus,setFocus,activeF,setActiveF,handleTimerComplete,doneFocus}=useApp();
   const[dragI,setDragI]=useState(null);
   const[dragO,setDragO]=useState(null);
   const handleDS=i=>setDragI(i);
