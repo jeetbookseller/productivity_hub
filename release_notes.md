@@ -17,6 +17,16 @@
 **productivity_hub.html** (`v17.0-Alpha`)
 
 ### Release Focus
+- Completed timer reliability + logging remediation (TDD-driven):
+  - Focus timer runtime now persists across remounts/tab switches via `focusTimerState`
+  - Focus completion logs pomodoros immediately (not gated on break completion)
+  - Focus minutes are logged from actual elapsed duration (floored minutes), not preset length
+  - Short/long break routing remains cycle-based while logging stays independent of break completion
+- Improved completion sound UX:
+  - Replaced harsh single beep with softer dual-tone chime + gentler vibration pulse
+- Added regression tests for timer reliability contracts:
+  - `t1.focus.timer-persists-across-remount`
+  - `t1.focus.timer-complete-passes-elapsed-seconds`
 - Added lazy-load runner APIs in `PH_BLOCK_B`:
   - `getTestRunner()` and `peekTestRunner()`
   - `createTestRunnerModel()` for split manifest + lazy case-registry build
@@ -35,7 +45,7 @@
   - Added conditional main content top-padding contract by active tab
   - Added `data-testid="main-content-wrap"` for deterministic layout assertions
   - Added `T2` layout tests for sticky tabs no-gap + `More` gap-preserved behavior
-  - Test inventory increased to **43** total (`T0=11`, `T1=13`, `T2=19`)
+  - Test inventory increased to **45** total (`T0=11`, `T1=15`, `T2=19`)
 - Suite baseline bumped:
   - suite version `2.1.0`
   - baseline date `2026-02-19`

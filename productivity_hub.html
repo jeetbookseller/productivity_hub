@@ -546,7 +546,7 @@ const createTestRunnerModel=()=>{
     baselineDate:TEST_BASELINE_DATE,
     tierOrder:[...TIER_ORDER],
     tierTargets:{...TIER_TARGETS},
-    counts:Object.freeze({total:43,T0:11,T1:13,T2:19})
+    counts:Object.freeze({total:45,T0:11,T1:15,T2:19})
   });
   let cachedTests=null;
   let loadCount=0;
@@ -1082,7 +1082,7 @@ const TestRunnerInner=({onShowToast})=>{
           const completed=[];
           const root=ReactDOM.createRoot(mount);
           mount.__root=root;
-          root.render(React.createElement(FocusTimer,{tSet:{work:0,shortBreak:0,longBreak:0},onComplete:(mode,activeTaskId,switchToBreak)=>{completed.push(mode);switchToBreak();},onUpdatePoms:()=>{},onUpdateMetrics:()=>{},onUpdateFocus:()=>{},onUpdateTodos:()=>{},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
+          root.render(React.createElement(FocusTimer,{tSet:{work:0,shortBreak:0,longBreak:0},onComplete:(mode)=>{completed.push(mode);},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
           await waitFor(()=>findButtonByText(mount,'Start'),{timeout:1500,message:'Start button not rendered'});
           findButtonByText(mount,'Start').dispatchEvent(new MouseEvent('click',{bubbles:true}));
           await waitFor(()=>completed.length===1&&completed[0]==='work',{timeout:2000,message:'Timer completion callback did not fire for work mode'});
@@ -1091,6 +1091,51 @@ const TestRunnerInner=({onShowToast})=>{
           const focusBtn=findButtonByText(mount,'Focus');
           focusBtn.dispatchEvent(new MouseEvent('click',{bubbles:true}));
           await waitFor(()=>findButtonByText(mount,'Focus')?.className.includes('bg-white/40'),{timeout:1200,message:'Timer did not return to work mode'});
+        });
+      }
+    },
+    {
+      id:'t1.focus.timer-persists-across-remount',
+      name:'Focus timer preserves in-flight state across remount',
+      tier:'T1',
+      area:'Focus Workflow',
+      async run({withDomFixture,waitFor,findButtonByText,assert}){
+        await S.set('focusTimerState',undefined);
+        await withDomFixture(async mount=>{
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(FocusTimer,{tSet:{work:1,shortBreak:1,longBreak:1},onComplete:()=>{},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
+          await waitFor(()=>findButtonByText(mount,'Start'),{timeout:1500,message:'Start button not rendered'});
+          findButtonByText(mount,'Start').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>{const d=mount.querySelector('.timer-display');return d&&d.textContent!=='01:00';},{timeout:2500,message:'Timer did not begin counting down'});
+          const beforeUnmount=mount.querySelector('.timer-display').textContent;
+          root.unmount();
+
+          const root2=ReactDOM.createRoot(mount);
+          mount.__root=root2;
+          root2.render(React.createElement(FocusTimer,{tSet:{work:1,shortBreak:1,longBreak:1},onComplete:()=>{},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
+          await waitFor(()=>mount.querySelector('.timer-display'),{timeout:1200,message:'Timer did not remount'});
+          const afterRemount=mount.querySelector('.timer-display').textContent;
+          assert(afterRemount===beforeUnmount||afterRemount<'01:00','Timer reset to full duration after remount');
+        });
+      }
+    },
+    {
+      id:'t1.focus.timer-complete-passes-elapsed-seconds',
+      name:'Focus completion callback receives elapsed seconds',
+      tier:'T1',
+      area:'Focus Workflow',
+      async run({withDomFixture,waitFor,findButtonByText,assert}){
+        await S.set('focusTimerState',undefined);
+        await withDomFixture(async mount=>{
+          let elapsedSec=null;
+          const root=ReactDOM.createRoot(mount);
+          mount.__root=root;
+          root.render(React.createElement(FocusTimer,{tSet:{work:0.02,shortBreak:1,longBreak:1},onComplete:(_mode,_taskId,elapsed)=>{elapsedSec=elapsed;return'shortBreak';},activeTaskId:null,activeTaskText:null,onTick:()=>{}}));
+          await waitFor(()=>findButtonByText(mount,'Start'),{timeout:1500,message:'Start button not rendered'});
+          findButtonByText(mount,'Start').dispatchEvent(new MouseEvent('click',{bubbles:true}));
+          await waitFor(()=>typeof elapsedSec==='number',{timeout:3000,message:'Elapsed seconds not provided on completion'});
+          assert(elapsedSec>=1&&elapsedSec<=2,`Expected elapsed seconds around 1-2, got ${elapsedSec}`);
         });
       }
     },
@@ -1963,61 +2008,112 @@ const TestRunner=(props)=>{
 };
 
 // Isolated FocusTimer Component with useReducer
-const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpdateFocus,onUpdateTodos,activeTaskId,activeTaskText,onTick})=>{
-  const[state,dispatch]=React.useReducer((s,a)=>{
-    switch(a.type){
-      case'SET_MODE':return{...s,mode:a.mode,left:a.left,run:false};
-      case'SET_LEFT':return{...s,left:a.left};
-      case'TOGGLE_RUN':return{...s,run:!s.run};
-      case'SET_RUN':return{...s,run:a.run};
-      case'SET_WAKE':return{...s,wake:a.wake};
-      default:return s;
-    }
-  },{mode:'work',left:tSet.work*60,run:false,wake:true});
-  
-  const{mode,left,run,wake}=state;
+const FocusTimer=React.memo(({tSet,onComplete,activeTaskId,activeTaskText,onTick})=>{
+  const getDurationSec=useCallback((m)=>Math.max(0,Math.round((m==='work'?tSet.work:m==='shortBreak'?tSet.shortBreak:tSet.longBreak)*60)),[tSet]);
+  const timerStoreKey='focusTimerState';
+  const[state,setState]=usePersistedState(timerStoreKey,{mode:'work',left:getDurationSec('work'),run:false,wake:true,endAt:null,startAt:null,elapsed:0});
+  const{mode,left,run,wake,endAt,startAt,elapsed}=state;
   const wakeRef=useRef(null);
-  const intRef=useRef(null);
-  
+
+  useEffect(()=>{
+    setState(prev=>{
+      if(prev&&typeof prev.left==='number')return prev;
+      return{mode:'work',left:getDurationSec('work'),run:false,wake:true,endAt:null,startAt:null,elapsed:0};
+    });
+  },[getDurationSec]);
+
   const fmt=s=>{const m=Math.floor(s/60),sec=s%60;return`${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;};
-  const prog=useMemo(()=>{const t=mode==='work'?tSet.work*60:mode==='shortBreak'?tSet.shortBreak*60:tSet.longBreak*60;return((t-left)/t)*100;},[left,mode,tSet]);
-  
-  const switchMode=useRef((m)=>{
-    const d=m==='work'?tSet.work:m==='shortBreak'?tSet.shortBreak:tSet.longBreak;
-    dispatch({type:'SET_MODE',mode:m,left:d*60});
-  }).current;
-  
-  const timerDone=useRef(()=>{
+  const prog=useMemo(()=>{const t=getDurationSec(mode)||1;return((t-left)/t)*100;},[left,mode,getDurationSec]);
+
+  const playSoftDing=useCallback(()=>{
     const isTestMode=!!window.__PH_TEST_MODE;
-    dispatch({type:'SET_RUN',run:false});
-    if(!isTestMode){
-      if('vibrate'in navigator)navigator.vibrate([200,100,200]);
-      try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=700;o.start();o.stop(c.currentTime+0.4);}catch{}
-    }
-    if(mode==='work'){
-      onComplete(mode,activeTaskId,()=>switchMode(onUpdatePoms()%4===0?'longBreak':'shortBreak'));
+    if(isTestMode)return;
+    if('vibrate'in navigator)navigator.vibrate([80]);
+    try{
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx)return;
+      const c=new Ctx();
+      const now=c.currentTime;
+      const g=c.createGain();
+      g.gain.setValueAtTime(0.0001,now);
+      g.gain.exponentialRampToValueAtTime(0.08,now+0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001,now+0.5);
+      g.connect(c.destination);
+      const tone=(freq,delay,duration)=>{
+        const o=c.createOscillator();
+        o.type='sine';
+        o.frequency.setValueAtTime(freq,now+delay);
+        o.connect(g);
+        o.start(now+delay);
+        o.stop(now+delay+duration);
+      };
+      tone(440,0,0.24);
+      tone(554,0.16,0.26);
+      setTimeout(()=>c.close().catch(()=>{}),900);
+    }catch{}
+  },[]);
+
+  const switchMode=useCallback((m)=>{
+    const d=getDurationSec(m);
+    setState(prev=>({...prev,mode:m,left:d,run:false,endAt:null,startAt:null,elapsed:0}));
+  },[getDurationSec,setState]);
+
+  const completeMode=useCallback((completedMode)=>{
+    setState(prev=>({...prev,run:false,endAt:null,startAt:null,elapsed:0,left:0}));
+    playSoftDing();
+    const elapsedSec=completedMode==='work'?Math.max(0,elapsed||Math.max(0,getDurationSec('work')-left)):getDurationSec(completedMode);
+    if(completedMode==='work'){
+      const nextMode=onComplete(completedMode,activeTaskId,elapsedSec);
+      switchMode(nextMode==='longBreak'?'longBreak':'shortBreak');
     }else{
       switchMode('work');
-      if(!isTestMode)notify('☀️ Break Complete!','Ready to focus again?');
+      if(!window.__PH_TEST_MODE)notify('☀️ Break Complete!','Ready to focus again?');
     }
-  }).current;
-  
-  useEffect(()=>{if(!run){const d=mode==='work'?tSet.work:mode==='shortBreak'?tSet.shortBreak:tSet.longBreak;dispatch({type:'SET_LEFT',left:d*60});}},[tSet,mode,run]);
-  
+  },[activeTaskId,elapsed,getDurationSec,left,onComplete,playSoftDing,switchMode]);
+
+  useEffect(()=>{
+    if(!run)return;
+    const int=setInterval(()=>{
+      const now=Date.now();
+      setState(prev=>{
+        if(!prev.run||!prev.endAt)return prev;
+        const nLeft=Math.max(0,Math.ceil((prev.endAt-now)/1000));
+        const next={...prev,left:nLeft};
+        if(prev.mode==='work'&&prev.startAt)next.elapsed=Math.max(prev.elapsed,Math.floor((now-prev.startAt)/1000));
+        return next;
+      });
+    },250);
+    return()=>clearInterval(int);
+  },[run,setState]);
+
+  useEffect(()=>{
+    if(run&&left<=0)completeMode(mode);
+  },[run,left,mode,completeMode]);
+
   useEffect(()=>{
     const req=async()=>{if(wake&&run&&'wakeLock'in navigator){try{wakeRef.current=await navigator.wakeLock.request('screen');}catch{}}};
     const rel=()=>{wakeRef.current?.release();wakeRef.current=null;};
     if(wake&&run)req();else rel();
     return()=>rel();
   },[wake,run]);
-  
+
+
   useEffect(()=>{
-    if(run&&left>0)intRef.current=setInterval(()=>dispatch({type:'SET_LEFT',left:Math.max(0,left-1)}),1000);
-    else if(left<=0&&run)timerDone();
-    return()=>clearInterval(intRef.current);
-  },[run,left]);
-  
-  useEffect(()=>{if(onTick)onTick({left,run,mode});},[left,run,mode]);
+    if(run)return;
+    const d=getDurationSec(mode);
+    setState(prev=>({...prev,left:d}));
+  },[tSet,mode,run,getDurationSec,setState]);
+
+  useEffect(()=>{if(onTick)onTick({left,run,mode});},[left,run,mode,onTick]);
+
+  const toggleRun=()=>{
+    setState(prev=>{
+      if(prev.run)return{...prev,run:false,endAt:null,elapsed:prev.mode==='work'&&prev.startAt?Math.floor((Date.now()-prev.startAt)/1000):prev.elapsed};
+      const now=Date.now();
+      const currentLeft=Math.max(0,prev.left||getDurationSec(prev.mode));
+      return{...prev,run:true,left:currentLeft,startAt:prev.mode==='work'?now:prev.startAt,endAt:now+(currentLeft*1000)};
+    });
+  };
   
   return(
     <div className={`rounded-3xl p-6 md:p-8 relative overflow-hidden soft-shadow ${mode==='work'?'bg-gradient-to-br from-sage-300 to-sage-400':mode==='shortBreak'?'bg-gradient-to-br from-ocean-300 to-ocean-400':'bg-gradient-to-br from-lavender-300 to-lavender-400'}`}>
@@ -2027,10 +2123,10 @@ const FocusTimer=React.memo(({tSet,onComplete,onUpdatePoms,onUpdateMetrics,onUpd
         <div className="text-7xl md:text-8xl font-extrabold text-center mb-3 md:mb-5 text-white drop-shadow-sm tracking-tight timer-display">{fmt(left)}</div>
         {activeTaskText&&<div className="text-center text-white/90 text-sm mb-4 font-medium sel">🎯 {activeTaskText}</div>}
         <div className="flex justify-center gap-3">
-          <button onClick={()=>dispatch({type:'TOGGLE_RUN'})} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
+          <button onClick={toggleRun} aria-label={run?'Pause timer':'Start timer'} className="px-8 md:px-10 py-3 md:py-3.5 bg-white rounded-2xl font-bold flex items-center gap-2 text-lg md:text-xl text-bark-600 soft-shadow">{run?<><I.Pause s={22}/>Pause</>:<><I.Play s={22}/>Start</>}</button>
           <button onClick={()=>switchMode(mode)} aria-label="Reset timer" className="p-3 bg-white/30 rounded-2xl text-white"><I.Reset s={24}/></button>
         </div>
-        <div className="flex items-center justify-center gap-2 mt-4"><span className="text-sm text-white/80 font-medium">Keep awake</span><button onClick={()=>dispatch({type:'SET_WAKE',wake:!wake})} aria-label={wake?'Disable keep awake':'Enable keep awake'} className={`w-11 h-6 rounded-full transition-colors p-0.5 ${wake?'bg-white/40':'bg-black/20'}`}><div className={`w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${wake?'translate-x-5':'translate-x-0'}`}/></button></div>
+        <div className="flex items-center justify-center gap-2 mt-4"><span className="text-sm text-white/80 font-medium">Keep awake</span><button onClick={()=>setState(prev=>({...prev,wake:!prev.wake}))} aria-label={wake?'Disable keep awake':'Enable keep awake'} className={`w-11 h-6 rounded-full transition-colors p-0.5 ${wake?'bg-white/40':'bg-black/20'}`}><div className={`w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${wake?'translate-x-5':'translate-x-0'}`}/></button></div>
       </div>
     </div>
   );
@@ -2102,25 +2198,22 @@ function useAppData(){
   const[tab,setTab]=usePersistedState('tab','notes');
   const[selList,setSelList]=usePersistedState('selList','');
 
+  const toLoggedMinutes=(elapsedSec)=>Math.max(0,Math.floor((Number(elapsedSec)||0)/60));
+
   // Timer completion callbacks
-  const handleTimerComplete=(mode,activeTaskId,switchToBreak)=>{
+  const handleTimerComplete=(mode,activeTaskId,elapsedSec)=>{
+    const workedMinutes=toLoggedMinutes(elapsedSec);
     setFHist(h=>[...h.slice(-500),{hr:new Date().getHours()}]);
     const nc=poms+1;
     setPoms(nc);
-    setMet(p=>({...p,d:{...p.d,p:p.d.p+1,m:p.d.m+tSet.work},w:{...p.w,p:p.w.p+1,m:p.w.m+tSet.work}}));
+    setMet(p=>({...p,d:{...p.d,p:p.d.p+1,m:p.d.m+workedMinutes},w:{...p.w,p:p.w.p+1,m:p.w.m+workedMinutes}}));
     if(activeTaskId){
       setFocus(f=>f.map(t=>t.id===activeTaskId?{...t,poms:(t.poms||0)+1}:t));
       setTodos(t=>t.map(x=>x.id===activeTaskId?{...x,poms:(x.poms||0)+1}:x));
     }
-    switchToBreak();
     notify('🌿 Great Focus!',nc%4===0?'Time for a long break (15 min)':'Time for a short break (5 min)');
     showT('🌿 Great focus!');
-  };
-
-  const handleUpdatePoms=()=>{
-    const nc=poms+1;
-    setPoms(nc);
-    return nc;
+    return nc%4===0?'longBreak':'shortBreak';
   };
 
   // CRUD handlers
@@ -2437,7 +2530,7 @@ function FocusSection({wide,desk,onTimerTick}){
       </StickyHeader>
       <div data-testid="focus-content" className="md:flex md:gap-6 md:items-start">
         <div className="flex-1 min-w-0 space-y-4 md:space-y-4">
-          <FocusTimer tSet={tSet} onComplete={handleTimerComplete} onUpdatePoms={handleUpdatePoms} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
+          <FocusTimer tSet={tSet} onComplete={handleTimerComplete} activeTaskId={activeF} activeTaskText={activeF?focus.find(t=>t.id===activeF)?.text:null} onTick={onTimerTick}/>
           <div className="grid grid-cols-3 gap-3 md:gap-2">{statsCards.map((s,i)=><div key={i} className="gcard rounded-2xl md:rounded-xl p-4 md:p-3 text-center"><div className={`text-2xl md:text-xl font-bold ${s.c}`}>{s.v}</div><div className="text-xs md:text-[11px] text-bark-400/60 dark:text-sand-300/60 font-medium">{s.i} {s.l}</div></div>)}</div>
         </div>
         <div className="flex-1 min-w-0 mt-5 md:mt-0">{renderQueue(desk)}</div>
