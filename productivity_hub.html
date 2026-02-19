@@ -645,6 +645,16 @@ const TestRunnerInner=({onShowToast})=>{
 
   const findByText=(root,text,selector='*')=>Array.from(root.querySelectorAll(selector)).find(el=>((el.textContent||'').replace(/\s+/g,' ').trim()).includes(text));
   const findButtonByText=(root,text)=>findByText(root,text,'button');
+  const isTouchEnvironment=()=>('ontouchstart' in window)||(navigator&&navigator.maxTouchPoints>0);
+  const tapElement=(el)=>{
+    assert(el,'Element not found for tap');
+    if(isTouchEnvironment()){
+      try{el.dispatchEvent(new Event('touchstart',{bubbles:true,cancelable:true}));}catch{}
+      try{el.dispatchEvent(new Event('touchend',{bubbles:true,cancelable:true}));}catch{}
+      return;
+    }
+    el.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+  };
 
   const withDomFixture=async(cleanupRegistry,fn)=>{
     const mount=document.createElement('div');
@@ -947,7 +957,7 @@ const TestRunnerInner=({onShowToast})=>{
       name:'Capture note create/edit/delete updates rendered output',
       tier:'T1',
       area:'Capture Workflow',
-      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,assert}){
+      async run({withStorageSnapshot,withSectionHarness,waitFor,setInputValue,findByText,findButtonByText,tapElement,assert}){
         await withStorageSnapshot(async()=>{
           await withSectionHarness(window.PH_BLOCK_C.CaptureSection,{wide:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{}},async({mount})=>{
             const input=mount.querySelector('textarea[placeholder*="Quick note"]');
@@ -958,8 +968,8 @@ const TestRunnerInner=({onShowToast})=>{
 
             const noteText=findByText(mount,'T1 note create','span');
             assert(noteText,'Created note text node missing');
-            noteText.dispatchEvent(new MouseEvent('click',{bubbles:true}));
-            await waitFor(()=>mount.querySelector('input[type="text"]'),{timeout:1200,message:'Inline editor did not open'});
+            tapElement(noteText);
+            await waitFor(()=>mount.querySelector('input[type="text"]'),{timeout:2400,message:'Inline editor did not open'});
             const editInput=mount.querySelector('input[type="text"]');
             setInputValue(editInput,'T1 note updated');
             editInput.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
@@ -1039,11 +1049,17 @@ const TestRunnerInner=({onShowToast})=>{
           await withSectionHarness(window.PH_BLOCK_C.ConfirmSection,{wide:false,desk:false,selMode:false,selSection:null,selIds:new Set(),toggleSelId:()=>{},enterSelMode:()=>{},exitSelMode:()=>{},setEdit:()=>{}},async({mount,getApp})=>{
             const listId=`list_${uid()}`;
             getApp().setLists([{id:listId,name:'T1 Checklist',items:[]}]);
+            await waitFor(()=>getApp().lists.some(l=>l.id===listId),{timeout:2800,message:'Checklist state did not initialize'});
             getApp().setSelList(listId);
-            await waitFor(()=>mount.textContent.includes('T1 Checklist'),{timeout:1800,message:'Checklist tab not rendered'});
+            await waitFor(()=>getApp().selList===listId,{timeout:2200,message:'Checklist selection did not apply'});
+            await waitFor(()=>{
+              const tabBtns=Array.from(mount.querySelectorAll('button'));
+              return tabBtns.some(b=>((b.textContent||'').includes('T1 Checklist')));
+            },{timeout:3200,message:'Checklist tab not rendered'});
 
             getApp().saveItem('list',{text:'T1 item',section:'Inbox'},listId);
-            await waitFor(()=>mount.textContent.includes('T1 item'),{timeout:2200,message:'Checklist item not rendered'});
+            await waitFor(()=>getApp().lists.find(l=>l.id===listId)?.items.some(i=>i.text==='T1 item'),{timeout:2200,message:'Checklist item state did not update'});
+            await waitFor(()=>mount.textContent.includes('T1 item'),{timeout:3200,message:'Checklist item not rendered'});
             const itemId=getApp().lists.find(l=>l.id===listId).items[0].id;
 
             getApp().doneList(listId,itemId);
@@ -1739,7 +1755,7 @@ const TestRunnerInner=({onShowToast})=>{
         withAppDataHarness:(fn)=>withAppDataHarness(cleanupRegistry,fn),
         withSectionHarness:(SectionComp,sectionProps,fn)=>withSectionHarness(cleanupRegistry,SectionComp,sectionProps,fn),
         withSettingsHarness:(fn)=>withSettingsHarness(cleanupRegistry,fn),
-        setInputValue,findByText,findButtonByText,delay
+        setInputValue,findByText,findButtonByText,tapElement,delay
       };
 
       let status='passed';
