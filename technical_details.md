@@ -23,16 +23,17 @@
 - **User:** Jeet
 - **Project:** Productivity Hub web app (React single-page HTML)
 - **Development style:** Iterative, version-based, incremental `str_replace` edits
-- **Current phase:** v17.0 lazy-loaded test suite shipped; next planned milestone is `P1` recurring tasks
+- **Current phase:** v17.0 timer reliability/logging remediation shipped; next planned milestone is `P1` recurring tasks
 - **Working files:** `productivity_hub.html`, `styles/app.css`, `scripts/pwa_setup.js`, `scripts/app_core.js`
 - **Key constraint:** Output token limits require incremental edits (avoid full-file rewrites)
 - **Encoding note:** File had double-encoded UTF-8 emoji issues in the past (fixed in v15_4)
-- **Test status:** 41 tiered deterministic tests (`T0=11`, `T1=13`, `T2=17`) in the modernized in-app runner
+- **Test status:** 45 tiered deterministic tests (`T0=11`, `T1=15`, `T2=19`) in the modernized in-app runner
 
 ## Documentation Boundaries
 
 - **Implemented work and release history:** `release_notes.md`
 - **Current architecture/contracts + future roadmap:** `technical_details.md` (this file)
+- **TDD remediation tracking:** timer/pomodoro remediation plan is captured in release + architecture notes (no standalone planning doc needed)
 
 ## Code File Map
 
@@ -145,7 +146,7 @@ State:      lists, todos, reminders, notes, focus, activeF, preset, customT, tSe
             poms, met, fHist, dHist, toast, tab, selList
 Setters:    setLists, setTodos, setReminders, setNotes, setFocus, setActiveF,
             setPreset, setCustomT, setPoms, setMet, setFHist, setDHist, setTab, setSelList
-Handlers:   handleTimerComplete, handleUpdatePoms, clearCompleted, addFocus,
+Handlers:   handleTimerComplete, clearCompleted, addFocus,
             doneFocus, doneList, doneTodo, undoneTodo, deleteTodo, linkTask,
             unlinkTask, openLinkedList, createAndLink, deleteListItem,
             deleteReminder, updateListName, deleteList, saveItem, seedSampleData
@@ -175,7 +176,8 @@ Removed: arc, reminders, Swipe component
 | `ConfirmSection` | Checklist tab/list management, edit/delete flows |
 | `ReviewSection` | Weekly stats, heatmap, matrix overview, insights |
 | `SettingsSection` | Settings/help/test tabs and collapsible behavior |
-| `FocusTimer` | Isolated Pomodoro timer (`React.memo` + reducer) |
+| `FocusTimer` | Isolated Pomodoro timer (`React.memo` + persisted runtime state + elapsed-time accounting) |
+| `App` nav timer sync | App-level `syncFromStorage` keeps sidebar/bottom-tab timer labels current when Focus view is unmounted |
 | `Heatmap` | 13-week streak heatmap visualization |
 | `ContextMenu` | Unified menu component (modal or positioned mode) |
 | `ConfirmDialog` | Unified confirm dialog with danger/info variants |
@@ -212,7 +214,8 @@ Removed: arc, reminders, Swipe component
 - Current baseline:
   - Suite version: `2.1.0`
   - Baseline date: `2026-02-19`
-  - Total tests: `41` (`T0=11`, `T1=13`, `T2=17`)
+  - Total tests: `45` (`T0=11`, `T1=15`, `T2=19`)
+  - Latest recorded gate run: `45/45` pass, `0` flaky tests, overall gate `PASS`
 
 ### CSS Architecture
 ```text
