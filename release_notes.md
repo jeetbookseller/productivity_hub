@@ -33,7 +33,7 @@
   - adds per-tier pass summaries and gate outcomes
   - retains copy/download human-readable report export
 - Clean re-baseline completed:
-  - test inventory reset to **36** total (`T0=10`, `T1=13`, `T2=14`)
+  - test inventory reset to **36** total (`T0=9`, `T1=13`, `T2=14`)
 
 ---
 
