@@ -2873,6 +2873,24 @@ function App(){
 
   const[timerInfo,setTimerInfo]=useState({left:0,run:false,mode:'work'});
   const onTimerTick=useCallback((info)=>setTimerInfo(info),[]);
+  useEffect(()=>{
+    let cancelled=false;
+    const syncFromStorage=async()=>{
+      try{
+        const st=await S.get('focusTimerState',null);
+        if(cancelled||!st)return;
+        if(st.run&&st.endAt){
+          const left=Math.max(0,Math.ceil((st.endAt-Date.now())/1000));
+          setTimerInfo({left,run:left>0,mode:st.mode||'work'});
+          return;
+        }
+        if(!st.run)setTimerInfo(prev=>prev.run?{left:st.left||0,run:false,mode:st.mode||'work'}:prev);
+      }catch{}
+    };
+    syncFromStorage();
+    const id=setInterval(syncFromStorage,1000);
+    return()=>{cancelled=true;clearInterval(id);};
+  },[]);
   const fmtSidebar=s=>{const m=Math.floor(s/60),sec=s%60;return`${m}:${sec.toString().padStart(2,'0')}`;};
   const[showHelp,setShowHelp]=useState(false);
   const[seenAbout,setSeenAbout]=usePersistedState('seenAbout',false);
